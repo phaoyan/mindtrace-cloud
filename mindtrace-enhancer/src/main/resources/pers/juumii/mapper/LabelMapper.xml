@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="pers.juumii.mapper.LabelMapper">
+
+
+    <select id="queryByEnhancerId" resultType="pers.juumii.data.Label">
+        SELECT
+            label.*
+        FROM
+            enhancer_label
+        LEFT JOIN label ON enhancer_label.label_name = label.name
+        WHERE enhancer_label.enhancer_id = #{enhancerId}
+    </select>
+</mapper>

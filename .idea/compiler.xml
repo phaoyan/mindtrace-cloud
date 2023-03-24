@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="mindtrace-tracing" />
+        <module name="mindtrace-data" />
+        <module name="mindtrace-enhancer" />
+        <module name="mindtrace-gateway" />
+        <module name="mindtrace-core" />
+        <module name="mindtrace-analyzer" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="mindtrace-security" target="18" />
+      <module name="mindtrace-trace" target="18" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="mindtrace-analyzer" options="-parameters" />
+      <module name="mindtrace-cloud" options="-parameters" />
+      <module name="mindtrace-core" options="-parameters" />
+      <module name="mindtrace-data" options="-parameters" />
+      <module name="mindtrace-enhancer" options="-parameters" />
+      <module name="mindtrace-gateway" options="-parameters" />
+      <module name="mindtrace-security" options="-parameters" />
+      <module name="mindtrace-trace" options="-parameters" />
+      <module name="mindtrace-tracing" options="-parameters" />
+    </option>
+  </component>
+</project>

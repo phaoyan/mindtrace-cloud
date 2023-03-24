@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="pers.juumii.mapper.EnhancerMapper">
+
+    <resultMap id="EnhancerMap" type="pers.juumii.data.Enhancer">
+        <id column="id" property="id"/>
+        <result column="introduction" property="introduction"/>
+        <result column="length" property="length" typeHandler="pers.juumii.handler.MybatisDurationTypeHandler"/>
+        <result column="create_time" property="createTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="privacy" property="privacy"/>
+        <collection property="labels" select="pers.juumii.mapper.LabelMapper.queryByEnhancerId" column="id"/>
+        <collection property="resources" select="pers.juumii.mapper.ResourceMapper.queryByEnhancerId" column="id"/>
+    </resultMap>
+    <insert id="connect">
+        INSERT INTO user_enhancer (user_id, enhancer_id) VALUE (#{userId}, #{enhancerId})
+    </insert>
+    <delete id="disconnect">
+        DELETE FROM user_enhancer WHERE user_id = #{userId} AND enhancer_id = #{enhancerId}
+    </delete>
+
+    <select id="queryEnhancersByUserId" resultMap="EnhancerMap">
+        SELECT
+            enhancer.*
+        FROM
+            user_enhancer
+        LEFT JOIN enhancer ON user_enhancer.enhancer_id = enhancer.id
+        WHERE user_enhancer.user_id = #{id}
+    </select>
+</mapper>

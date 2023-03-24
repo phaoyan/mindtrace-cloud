@@ -1,0 +1,10 @@
+server:
+  port: 36622
+spring:
+  application:
+    name: mindtrace-tracing
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      discovery:
+        service: mindtrace-tracing
