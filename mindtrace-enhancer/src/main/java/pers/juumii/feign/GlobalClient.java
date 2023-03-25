@@ -7,9 +7,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import pers.juumii.handler.FeignSecurityInterceptor;
 
 @FeignClient(name = "mindtrace-gateway", configuration = FeignSecurityInterceptor.class)
-public interface UserClient {
+public interface GlobalClient {
 
     @GetMapping("/user/{id}")
     SaResult userExists(@PathVariable Long id);
+
+    @GetMapping("/core/knode/{id}")
+    SaResult checkKnode(@PathVariable Long id);
+
+    @GetMapping("/core/hello")
+    SaResult echo();
 
 }

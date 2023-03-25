@@ -1,19 +1,34 @@
 package pers.juumii.service;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
-import pers.juumii.data.Enhancer;
 import pers.juumii.dto.EnhancerDTO;
-import pers.juumii.utils.SaResult;
 
 @Service
 public interface EnhancerService {
-    SaResult query(Long userId, Long enhancerId);
+
+
+    SaResult queryByUserId(Long userId, Long enhancerId);
+
+    SaResult queryByKnodeId(Long knodeId, Long enhancerId);
 
     SaResult create(Long userId, EnhancerDTO dto);
 
     SaResult update(Long userId, Long enhancerId, EnhancerDTO dto);
 
     SaResult delete(Long userId, Long enhancerId);
+
+    // 与用户连接
+    SaResult connect(Long userId, Long enhancerId);
+
+    // 与用户解绑
+    SaResult disconnect(Long userId, Long enhancerId);
+
+    // 与Knode连接
+    SaResult use(Long knodeId, Long enhancerId);
+
+    // 与Knode解绑
+    SaResult drop(Long knodeId, Long enhancerId);
 
     // 为enhancer挂载resource
     SaResult attach(Long enhancerId, Long resourceId);

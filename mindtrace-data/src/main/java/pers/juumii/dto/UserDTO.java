@@ -8,6 +8,6 @@ import java.util.List;
 public class UserDTO {
 
     private Long id;
-    private List<Long> rootIds;    // knode root id
+    private Long rootId;    // knode root id
 
 }

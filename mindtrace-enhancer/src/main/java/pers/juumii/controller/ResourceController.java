@@ -1,11 +1,11 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.service.ResourceService;
-import pers.juumii.utils.SaResult;
 
 @RestController
 @RequestMapping("user/{userId}/resource")
@@ -33,7 +33,7 @@ public class ResourceController {
         return resourceService.put(userId, file, meta);
     }
 
-    @PostMapping("/{id}")
+    @PostMapping("/meta/{id}")
     public SaResult modify(
             @PathVariable Long id,
             @PathVariable Long userId,
@@ -41,7 +41,7 @@ public class ResourceController {
         return resourceService.modify(id, userId, meta);
     }
 
-    @PostMapping("/{id}")
+    @PostMapping("/source/{id}")
     public SaResult alterSource(
             @PathVariable Long id,
             @PathVariable Long userId,

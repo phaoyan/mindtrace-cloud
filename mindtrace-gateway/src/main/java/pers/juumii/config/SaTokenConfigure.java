@@ -6,12 +6,13 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 /**
  * [Sa-Token 权限认证] 全局配置类
  */
 @Configuration
-public class SaTokenConfigure {
+public class SaTokenConfigure implements WebFluxConfigurer {
     /**
      * 注册 [Sa-Token全局过滤器]
      */
@@ -24,13 +25,19 @@ public class SaTokenConfigure {
                 .addExclude("/favicon.ico")
                 // 指定[认证函数]: 每次请求执行
                 .setAuth(obj ->
-                    SaRouter.match("/**", "/user/login", StpUtil::checkLogin))
+                    SaRouter
+                    .match("/**")
+                    .notMatch("/user/login")
+                    .check(StpUtil::checkLogin))
                 // 指定[异常处理函数]：每次[认证函数]发生异常时执行此函数
                 .setError(e -> {
                     System.out.println("---------- sa global error ");
+                    e.printStackTrace();
                     return SaResult.error(e.getMessage());
                 });
     }
+
+
 
 
 }

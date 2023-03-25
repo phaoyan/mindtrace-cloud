@@ -20,6 +20,12 @@ spring:
             - Path=/core/**
           filters:
             - StripPrefix=1
+        - id: enhancer
+          uri: lb://mindtrace-enhancer
+          predicates:
+            - Path=/enhancer/**
+          filters:
+            - StripPrefix=1
   # mysql
   datasource:
     type: com.zaxxer.hikari.HikariDataSource

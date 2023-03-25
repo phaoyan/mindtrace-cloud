@@ -7,6 +7,6 @@
         FROM
             enhancer_resource
         LEFT JOIN resource ON enhancer_resource.resource_id = resource.id
-        WHERE enhancer_resource.id = #{enhancerId}
+        WHERE enhancer_resource.enhancer_id = #{enhancerId}
     </select>
 </mapper>

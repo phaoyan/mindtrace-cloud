@@ -1,5 +1,6 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import pers.juumii.entity.User;
 import pers.juumii.service.LoginService;
 import pers.juumii.service.UserService;
+
+import java.net.http.HttpRequest;
 
 @RestController
 @RequestMapping("/user")
@@ -45,9 +48,10 @@ public class UserController {
         return SaResult.error("待开发");
     }
 
-    @GetMapping("/{id}")
-    public Boolean exists(@PathVariable Long id){
-        return userService.exists(id);
+    @SaIgnore
+    @GetMapping(value = "/{id}", produces = "application/json")
+    public SaResult exists(@PathVariable Long id){
+        return SaResult.data(userService.exists(id));
     }
 
 }

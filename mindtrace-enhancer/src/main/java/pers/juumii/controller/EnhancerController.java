@@ -1,11 +1,10 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pers.juumii.data.Enhancer;
 import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.service.EnhancerService;
-import pers.juumii.utils.SaResult;
 
 @RestController
 @RequestMapping("user/{userId}/enhancer")
@@ -22,7 +21,7 @@ public class EnhancerController {
     public SaResult query(
             @PathVariable Long userId,
             @PathVariable Long id){
-        return enhancerService.query(userId, id);
+        return enhancerService.queryByUserId(userId, id);
     }
 
     @PutMapping

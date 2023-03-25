@@ -1,5 +1,6 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -7,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class GeneralController {
 
     @GetMapping("/hello")
-    public String hello(){
-        return "hello mindtrace-core";
+    public Object hello(){
+        return SaResult.ok("hello mindtrace-core");
     }
 }

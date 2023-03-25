@@ -1,1 +1,6 @@
 /mindtrace-analyzer/target/
+/mindtrace-core/target/
+/mindtrace-data/target/
+/mindtrace-enhancer/target/
+/mindtrace-gateway/target/
+/mindtrace-tracing/target/

@@ -1,10 +1,10 @@
 package pers.juumii.service.impl;
 
+import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.lang.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.annotation.CheckEnhancerExistence;
-import pers.juumii.annotation.CheckUserExistence;
+import pers.juumii.annotation.*;
 import pers.juumii.data.Enhancer;
 import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.LabelDTO;
@@ -13,7 +13,6 @@ import pers.juumii.mapper.EnhancerMapper;
 import pers.juumii.mapper.LabelMapper;
 import pers.juumii.mapper.ResourceMapper;
 import pers.juumii.service.EnhancerService;
-import pers.juumii.utils.SaResult;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,8 +37,15 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     @CheckUserExistence
-    public SaResult query(Long userId, Long id) {
-        List<Enhancer> enhancers = enhancerMapper.queryEnhancersByUserId(userId);
+    public SaResult queryByUserId(Long userId, Long enhancerId) {
+        List<Enhancer> enhancers = enhancerMapper.queryByUserId(userId);
+        return SaResult.data(enhancers);
+    }
+
+    @Override
+    @CheckEnhancerExistence
+    public SaResult queryByKnodeId(Long knodeId, Long enhancerId) {
+        List<Enhancer> enhancers = enhancerMapper.queryByKnodeId(knodeId);
         return SaResult.data(enhancers);
     }
 
@@ -57,18 +63,18 @@ public class EnhancerServiceImpl implements EnhancerService {
     @CheckEnhancerExistence
     public SaResult update(Long userId, Long enhancerId, EnhancerDTO dto) {
         Enhancer enhancer = enhancerMapper.selectById(enhancerId);
-        Opt.of(dto.getCreateBy()).ifPresent(enhancer::setCreateBy);
-        Opt.of(dto.getDeleted()).ifPresent(enhancer::setDeleted);
-        Opt.of(dto.getCreateTime()).ifPresent(enhancer::setCreateTime);
-        Opt.of(dto.getIntroduction()).ifPresent(enhancer::setIntroduction);
-        Opt.of(dto.getLength()).ifPresent(enhancer::setLength);
-        Opt.of(dto.getPrivacy()).ifPresent(enhancer::setPrivacy);
-        Opt.of(dto.getLabels()).ifPresent(labelDTOs->
+        Opt.ofNullable(dto.getCreateBy()).ifPresent(enhancer::setCreateBy);
+        Opt.ofNullable(dto.getDeleted()).ifPresent(enhancer::setDeleted);
+        Opt.ofNullable(dto.getCreateTime()).ifPresent(enhancer::setCreateTime);
+        Opt.ofNullable(dto.getIntroduction()).ifPresent(enhancer::setIntroduction);
+        Opt.ofNullable(dto.getLength()).ifPresent(enhancer::setLength);
+        Opt.ofNullable(dto.getPrivacy()).ifPresent(enhancer::setPrivacy);
+        Opt.ofNullable(dto.getLabels()).ifPresent(labelDTOs->
             enhancer.setLabels(
                 labelMapper.selectBatchIds(labelDTOs
                 .stream().map(LabelDTO::getName)
                 .collect(Collectors.toList()))));
-        Opt.of(dto.getResources()).ifPresent(resourceDTOS ->
+        Opt.ofNullable(dto.getResources()).ifPresent(resourceDTOS ->
             enhancer.setResources(
                 resourceMapper.selectBatchIds(resourceDTOS
                 .stream().map(ResourceDTO::getId)
@@ -87,22 +93,66 @@ public class EnhancerServiceImpl implements EnhancerService {
     }
 
     @Override
+    @CheckUserExistence
+    @CheckEnhancerExistence
+    public SaResult connect(Long userId, Long enhancerId) {
+        enhancerMapper.connect(userId, enhancerId);
+        return SaResult.ok();
+    }
+
+    @Override
+    @CheckUserExistence
+    @CheckEnhancerExistence
+    public SaResult disconnect(Long userId, Long enhancerId) {
+        enhancerMapper.disconnect(userId, enhancerId);
+        return SaResult.ok();
+    }
+
+    @Override
+    @CheckKnodeExistence
+    @CheckEnhancerExistence
+    public SaResult use(Long knodeId, Long enhancerId) {
+        enhancerMapper.use(knodeId, enhancerId);
+        return SaResult.ok();
+    }
+
+    @Override
+    @CheckKnodeExistence
+    @CheckEnhancerExistence
+    public SaResult drop(Long knodeId, Long enhancerId) {
+        enhancerMapper.drop(knodeId, enhancerId);
+        return SaResult.ok();
+    }
+
+    @Override
+    @CheckEnhancerExistence
+    @CheckResourceExistence
     public SaResult attach(Long enhancerId, Long resourceId) {
-        return null;
+        enhancerMapper.attach(enhancerId, resourceId);
+        return SaResult.ok();
     }
 
     @Override
+    @CheckEnhancerExistence
+    @CheckResourceExistence
     public SaResult detach(Long enhancerId, Long resourceId) {
-        return null;
+        enhancerMapper.detach(enhancerId, resourceId);
+        return SaResult.ok();
     }
 
     @Override
+    @CheckEnhancerExistence
+    @CheckLabelExistence
     public SaResult label(Long enhancerId, String labelName) {
-        return null;
+        enhancerMapper.label(enhancerId, labelName);
+        return SaResult.ok();
     }
 
     @Override
+    @CheckEnhancerExistence
+    @CheckLabelExistence
     public SaResult unlabel(Long enhancerId, String labelName) {
-        return null;
+        enhancerMapper.unlabel(enhancerId, labelName);
+        return SaResult.ok();
     }
 }

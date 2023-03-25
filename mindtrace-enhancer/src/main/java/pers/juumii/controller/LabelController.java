@@ -1,11 +1,11 @@
 package pers.juumii.controller;
 
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.dto.LabelDTO;
 import pers.juumii.service.LabelService;
-import pers.juumii.utils.SaResult;
 
 @RestController
 @RequestMapping("/label")
@@ -26,7 +26,7 @@ public class LabelController {
 
     @PutMapping
     public SaResult create(@RequestBody LabelDTO dto){
-        return labelService.create(dto);
+        return labelService.create(dto.getName(), dto);
     }
 
     @PostMapping

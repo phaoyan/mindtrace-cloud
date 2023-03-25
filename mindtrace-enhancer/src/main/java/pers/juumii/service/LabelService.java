@@ -1,15 +1,14 @@
 package pers.juumii.service;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
-import pers.juumii.data.Label;
 import pers.juumii.dto.LabelDTO;
-import pers.juumii.utils.SaResult;
 
 @Service
 public interface LabelService {
     SaResult queryAll();
 
-    SaResult create(LabelDTO dto);
+    SaResult create(String name, LabelDTO dto);
 
     SaResult delete(String name);
 

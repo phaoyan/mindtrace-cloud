@@ -1,7 +1,5 @@
 package pers.juumii.service.impl;
 
-import cn.dev33.satoken.util.SaResult;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

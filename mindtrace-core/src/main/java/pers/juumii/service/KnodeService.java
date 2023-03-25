@@ -1,32 +1,22 @@
 package pers.juumii.service;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
-import pers.juumii.utils.SaResult;
 
 @Service
 public interface KnodeService {
 
-    SaResult branch(Long id, String title);
+    Knode branch(Long knodeId, String title);
 
-    SaResult branch(String stemTitle, String title);
+    SaResult delete(Long knodeId);
 
-    SaResult delete(Long id);
+    SaResult update(Long knodeId, KnodeDTO dto);
 
-    SaResult delete(String title);
+    SaResult label(Long knodeId, String label);
 
-    SaResult check(String title);
-
-    SaResult check(Long id);
-
-    SaResult update(Long id, KnodeDTO dto);
-
-    SaResult update(String title, KnodeDTO dto);
-
-    SaResult label(Long id, String label);
-
-    SaResult unlabel(Long id, String label);
+    SaResult unlabel(Long knodeId, String label);
 
     SaResult shift(Long stemId, Long branchId);
 

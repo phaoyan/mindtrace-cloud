@@ -1,6 +1,6 @@
 package pers.juumii.service.impl;
 
-import cn.hutool.core.util.StrUtil;
+import cn.dev33.satoken.util.SaResult;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,7 +10,6 @@ import pers.juumii.repo.KnodeRepository;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.service.KnodeService;
 import pers.juumii.repo.LabelRepository;
-import pers.juumii.utils.SaResult;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -32,76 +31,36 @@ public class KnodeServiceImpl implements KnodeService {
     }
 
     @Override
-    public SaResult branch(Long id, String title) {
-        Optional<Knode> sup = knodeRepo.findById(id);
-        String info;
+    public Knode branch(Long knodeId, String title) {
+        Optional<Knode> sup = knodeRepo.findById(knodeId);
         Knode data;
         if(sup.isPresent()){
             Knode stem = sup.get();
             Knode branch = knodeRepo.save(Knode.prototype(title, stem));
             stem.getBranches().add(branch);
             knodeRepo.save(stem);
-            info = StrUtil.format("Branch created: {} to {}", id, branch.getId());
             data = branch;
-        } else {
-            Knode stem = knodeRepo.save(Knode.prototype(title));
-            info = StrUtil.format("No knode with id {} is found. Knode {} created instead.", id, stem.getId());
-            data = stem;
-        }
-        return SaResult.get(200,info,data);
+        } else data = knodeRepo.save(Knode.prototype(title));
+        return data;
     }
-
-    @Override
-    public SaResult branch(String stemTitle, String title) {
-        Knode target = knodeRepo.findByTitle(stemTitle);
-        if(!Objects.isNull(target))
-            return branch(target.getId(), title);
-        return SaResult.error("Knode not found: " + stemTitle);
-    }
-
 
     // 逻辑删除
     @Override
-    public SaResult delete(Long id) {
-        Optional<Knode> knode = knodeRepo.findById(id);
+    public SaResult delete(Long knodeId) {
+        Optional<Knode> knode = knodeRepo.findById(knodeId);
         String info;
         if(knode.isPresent()){
             knode.get().setDeleted(true);
             knodeRepo.save(knode.get());
-            info = "Knode logically deleted: " + id;
+            info = "Knode logically deleted: " + knodeId;
         }else
-            info = "Knode not found: " + id;
+            info = "Knode not found: " + knodeId;
         return SaResult.ok(info);
     }
 
     @Override
-    public SaResult delete(String title) {
-        Knode target = knodeRepo.findByTitle(title);
-        if(!Objects.isNull(target))
-            return delete(target.getId());
-        return SaResult.error("Knode not found: " + title);
-    }
-
-    @Override
-    public SaResult check(Long id) {
-        Optional<Knode> selected = knodeRepo.findById(id).filter(knode -> !knode.getDeleted());
-        KnodeDTO dto = selected.map(Knode::transfer).orElse(null);
-        return SaResult.data(dto);
-    }
-
-    @Override
-    public SaResult check(String title) {
-        Knode target = knodeRepo.findByTitle(title);
-        if(!Objects.isNull(target))
-            return check(target.getId());
-        return SaResult.error("Knode not found: " + title);
-    }
-
-    @Override
-    public SaResult update(Long id, KnodeDTO dto) {
-        Knode target = knodeRepo.findById(id).orElse(null);
-        if(Objects.isNull(target))
-            return SaResult.error("Knode not found: " + id);
+    public SaResult update(Long knodeId, KnodeDTO dto) {
+        Knode target = knodeRepo.findById(knodeId).get();
         // title
         Opt.ifPresent(dto.getTitle(), target::setTitle);
         // deleted
@@ -123,22 +82,14 @@ public class KnodeServiceImpl implements KnodeService {
         Opt.ifPresent(dto.getConnectionIds(),
             connectionIds-> target.setConnections(knodeRepo.findAllById(connectionIds)));
         knodeRepo.save(target);
-        return SaResult.ok("Knode updated: " + id);
+        return SaResult.ok("Knode updated: " + knodeId);
     }
 
     @Override
-    public SaResult update(String title, KnodeDTO dto) {
-        Knode target = knodeRepo.findByTitle(title);
-        if(!Objects.isNull(target))
-            return update(target.getId(), dto);
-        return SaResult.error("Knode not found: " + title);
-    }
-
-    @Override
-    public SaResult label(Long id, String labelName) {
-        Optional<Knode> optionalKnode = knodeRepo.findById(id);
+    public SaResult label(Long knodeId, String labelName) {
+        Optional<Knode> optionalKnode = knodeRepo.findById(knodeId);
         if(optionalKnode.isEmpty())
-            return SaResult.error("Knode not found: " + id);
+            return SaResult.error("Knode not found: " + knodeId);
         Optional<Label> optionalLabel = labelRepo.findById(labelName);
         if(optionalLabel.isEmpty())
             return SaResult.error("Label not found: " + labelName);
@@ -150,11 +101,11 @@ public class KnodeServiceImpl implements KnodeService {
     }
 
     @Override
-    public SaResult unlabel(Long id, String labelName) {
-        Optional<Knode> optionalKnode = knodeRepo.findById(id);
+    public SaResult unlabel(Long knodeId, String labelName) {
+        Optional<Knode> optionalKnode = knodeRepo.findById(knodeId);
         if(optionalKnode.isEmpty())
-            return SaResult.error("Knode not found: " + id);
-        knodeRepo.unlabel(id, labelName);
+            return SaResult.error("Knode not found: " + knodeId);
+        knodeRepo.unlabel(knodeId, labelName);
         return SaResult.ok();
     }
 

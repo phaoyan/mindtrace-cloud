@@ -1,9 +1,9 @@
 package pers.juumii.service;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.dto.ResourceDTO;
-import pers.juumii.utils.SaResult;
 
 @Service
 public interface ResourceService {

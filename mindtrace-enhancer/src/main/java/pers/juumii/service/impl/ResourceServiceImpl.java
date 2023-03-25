@@ -1,5 +1,6 @@
 package pers.juumii.service.impl;
 
+import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.lang.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,6 @@ import pers.juumii.dto.ResourceDTO;
 import pers.juumii.mapper.ResourceMapper;
 import pers.juumii.service.ResourceService;
 import pers.juumii.service.impl.router.ResourceRouter;
-import pers.juumii.utils.SaResult;
 
 import java.util.Map;
 

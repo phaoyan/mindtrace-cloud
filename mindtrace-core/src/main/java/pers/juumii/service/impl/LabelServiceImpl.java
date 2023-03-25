@@ -1,5 +1,6 @@
 package pers.juumii.service.impl;
 
+import cn.dev33.satoken.util.SaResult;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -7,7 +8,6 @@ import pers.juumii.data.Label;
 import pers.juumii.dto.LabelDTO;
 import pers.juumii.repo.LabelRepository;
 import pers.juumii.service.LabelService;
-import pers.juumii.utils.SaResult;
 
 import java.util.List;
 import java.util.Optional;

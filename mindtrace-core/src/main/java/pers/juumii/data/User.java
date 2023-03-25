@@ -15,16 +15,13 @@ public class User {
 
     @Id
     private Long id;
-    @Property("name")
-    private String name;
     @Relationship(type = "POSSESS", direction = Relationship.Direction.OUTGOING)
-    private List<Knode> roots;
+    private Knode root;
 
-    public static User prototype(Long id, String name){
+    public static User prototype(Long id, Knode root){
         User res = new User();
         res.setId(id);
-        res.setName(name);
-        res.setRoots(new ArrayList<>());
+        res.setRoot(root);
         return res;
     }
 

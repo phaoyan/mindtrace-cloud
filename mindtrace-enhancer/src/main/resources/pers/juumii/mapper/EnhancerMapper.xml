@@ -15,16 +15,42 @@
     <insert id="connect">
         INSERT INTO user_enhancer (user_id, enhancer_id) VALUE (#{userId}, #{enhancerId})
     </insert>
+    <insert id="attach">
+        INSERT INTO enhancer_resource (enhancer_id, resource_id) VALUE (#{enhancerId}, #{resourceId})
+    </insert>
+    <insert id="label">
+        INSERT INTO enhancer_label (enhancer_id, label_name) VALUE (#{enhancerId}, #{labelName})
+    </insert>
+    <insert id="use">
+        INSERT INTO enhancer_knode (enhancer_id, knode_id) VALUE (#{enhancerId}, #{knodeId})
+    </insert>
     <delete id="disconnect">
         DELETE FROM user_enhancer WHERE user_id = #{userId} AND enhancer_id = #{enhancerId}
     </delete>
+    <delete id="detach">
+        DELETE FROM enhancer_resource WHERE enhancer_id = #{enhancerId} AND resource_id = #{resourceId}
+    </delete>
+    <delete id="unlabel">
+        DELETE FROM enhancer_label WHERE enhancer_id = #{enhancerId} AND label_name = #{labelName}
+    </delete>
+    <delete id="drop">
+        DELETE FROM enhancer_knode WHERE enhancer_id = #{enhancerId} AND knode_id = #{knodeId}
+    </delete>
 
-    <select id="queryEnhancersByUserId" resultMap="EnhancerMap">
+    <select id="queryByUserId" resultMap="EnhancerMap">
         SELECT
             enhancer.*
         FROM
             user_enhancer
         LEFT JOIN enhancer ON user_enhancer.enhancer_id = enhancer.id
         WHERE user_enhancer.user_id = #{id}
+    </select>
+    <select id="queryByKnodeId" resultMap="EnhancerMap">
+        SELECT
+            enhancer.*
+        FROM
+            enhancer_knode
+        LEFT JOIN enhancer ON enhancer_knode.enhancer_id = enhancer.id
+        WHERE enhancer_knode.knode_id = #{knodeId}
     </select>
 </mapper>

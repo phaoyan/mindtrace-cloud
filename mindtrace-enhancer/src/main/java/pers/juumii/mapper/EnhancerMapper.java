@@ -10,11 +10,25 @@ import java.util.List;
 @Mapper
 public interface EnhancerMapper extends BaseMapper<Enhancer> {
 
-    List<Enhancer> queryEnhancersByUserId(Long userId);
+    List<Enhancer> queryByUserId(Long userId);
+
+    List<Enhancer> queryByKnodeId(Long knodeId);
 
     // 将enhancer与user绑定
     void connect(@Param("userId") Long userId, @Param("enhancerId") Long id);
 
     // 将enhancer与user解绑
     void disconnect(@Param("userId") Long userId, @Param("enhancerId") Long enhancerId);
+
+    void attach(@Param("enhancerId") Long enhancerId, @Param("resourceId") Long resourceId);
+
+    void detach(@Param("enhancerId") Long enhancerId, @Param("resourceId") Long resourceId);
+
+    void label(@Param("enhancerId") Long enhancerId, @Param("labelName") String labelName);
+
+    void unlabel(@Param("enhancerId") Long enhancerId, @Param("labelName") String labelName);
+
+    void use(@Param("knodeId") Long knodeId, @Param("enhancerId") Long enhancerId);
+
+    void drop(@Param("knodeId") Long knodeId, @Param("enhancerId") Long enhancerId);
 }
