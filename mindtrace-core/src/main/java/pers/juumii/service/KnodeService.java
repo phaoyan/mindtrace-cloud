@@ -12,13 +12,16 @@ public interface KnodeService {
 
     SaResult delete(Long knodeId);
 
+    SaResult clear(Long userId);
+
     SaResult update(Long knodeId, KnodeDTO dto);
 
-    SaResult label(Long knodeId, String label);
+    SaResult addLabelToKnode(Long knodeId, String label);
 
-    SaResult unlabel(Long knodeId, String label);
+    SaResult removeLabelFromKnode(Long knodeId, String label);
 
     SaResult shift(Long stemId, Long branchId);
 
     SaResult connect(Long sourceId, Long targetId);
+
 }

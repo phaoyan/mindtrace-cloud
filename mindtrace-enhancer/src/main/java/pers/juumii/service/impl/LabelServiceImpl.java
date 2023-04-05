@@ -4,9 +4,7 @@ import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.lang.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.annotation.CheckLabelExistence;
 import pers.juumii.data.Label;
-import pers.juumii.dto.LabelDTO;
 import pers.juumii.mapper.LabelMapper;
 import pers.juumii.service.LabelService;
 
@@ -24,17 +22,15 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public SaResult queryAll() {
-        List<Label> all = labelMapper.selectList(null);
-        return SaResult.data(all);
+    public List<Label> queryAll() {
+        return labelMapper.selectList(null);
     }
 
     @Override
-    @CheckLabelExistence
-    public SaResult create(String labelName, LabelDTO dto) {
+    public SaResult create(String labelName, Label label) {
         if(!Objects.isNull(labelMapper.selectById(labelName)))
             return SaResult.error("Label already exists: " + labelName);
-        labelMapper.insert(Label.prototype(dto));
+        labelMapper.insert(label);
         return SaResult.ok();
     }
 
@@ -45,12 +41,11 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    @CheckLabelExistence
-    public SaResult update(String labelName, LabelDTO dto) {
+    public SaResult update(String labelName, Label newLabel) {
         Label label = labelMapper.selectById(labelName);
-        Opt.ofNullable(dto.getCreateBy()).ifPresent(label::setCreateBy);
-        Opt.ofNullable(dto.getCreateTime()).ifPresent(label::setCreateTime);
-        Opt.ofNullable(dto.getDeleted()).ifPresent(label::setDeleted);
+        Opt.ofNullable(newLabel.getCreateBy()).ifPresent(label::setCreateBy);
+        Opt.ofNullable(newLabel.getCreateTime()).ifPresent(label::setCreateTime);
+        Opt.ofNullable(newLabel.getDeleted()).ifPresent(label::setDeleted);
         labelMapper.updateById(label);
         return SaResult.ok();
     }

@@ -12,8 +12,8 @@ public interface GlobalClient {
     @GetMapping("/user/{id}")
     SaResult userExists(@PathVariable Long id);
 
-    @GetMapping("/core/knode/{id}")
-    SaResult checkKnode(@PathVariable Long id);
+    @GetMapping("/core/user/{userId}/knode/{knodeId}")
+    SaResult checkKnode(@PathVariable Long userId, @PathVariable Long knodeId);
 
     @GetMapping("/core/hello")
     SaResult echo();

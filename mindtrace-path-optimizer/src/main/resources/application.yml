@@ -1,0 +1,32 @@
+server:
+  port: 38050
+spring:
+  application:
+    name: mindtrace-path-optimizer
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      discovery:
+        service: mindtrace-path-optimizer
+
+  # mysql
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mindtrace_path_optimizer?serverTimezone=GMT%2B8&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: 2004131phy123
+
+  # redis
+  redis:
+    database: 0
+    host: 127.0.0.1
+    port: 6379
+    # 连接超时时间
+    timeout: 10s
+    lettuce:
+      pool:
+        max-active: 200
+        max-wait: -1ms
+        max-idle: 10
+        min-idle: 0

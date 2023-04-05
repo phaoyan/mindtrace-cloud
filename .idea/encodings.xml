@@ -6,6 +6,9 @@
     <file url="file://$PROJECT_DIR$/mindtrace-data/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-enhancer/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mindtrace-mastery/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mindtrace-path-optimizer/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mindtrace-recommend/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-security/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-trace/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-tracing/src/main/java" charset="UTF-8" />

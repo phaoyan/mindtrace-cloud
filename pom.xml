@@ -9,8 +9,10 @@
     <module>mindtrace-core</module>
     <module>mindtrace-tracing</module>
     <module>mindtrace-enhancer</module>
-    <module>mindtrace-analyzer</module>
     <module>mindtrace-data</module>
+      <module>mindtrace-mastery</module>
+      <module>mindtrace-path-optimizer</module>
+      <module>mindtrace-recommend</module>
   </modules>
 
   <parent>

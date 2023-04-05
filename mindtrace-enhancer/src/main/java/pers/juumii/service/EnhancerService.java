@@ -2,33 +2,31 @@ package pers.juumii.service;
 
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.data.Enhancer;
+
+import java.util.List;
 
 @Service
 public interface EnhancerService {
 
 
-    SaResult queryByUserId(Long userId, Long enhancerId);
+    List<Enhancer> getAllEnhancersFromUser(Long userId);
 
-    SaResult queryByKnodeId(Long knodeId, Long enhancerId);
+    List<Enhancer> queryByKnodeId(Long knodeId);
 
-    SaResult create(Long userId, EnhancerDTO dto);
+    Enhancer getEnhancerFromUser(Long userId, Long enhancerId);
 
-    SaResult update(Long userId, Long enhancerId, EnhancerDTO dto);
+    Enhancer addEnhancerToUser(Long userId);
 
-    SaResult delete(Long userId, Long enhancerId);
+    SaResult updateEnhancerOfUser(Long userId, Long enhancerId, Enhancer updated);
+
+    SaResult removeEnhancerFromUser(Long userId, Long enhancerId);
 
     // 与用户连接
     SaResult connect(Long userId, Long enhancerId);
 
     // 与用户解绑
     SaResult disconnect(Long userId, Long enhancerId);
-
-    // 与Knode连接
-    SaResult use(Long knodeId, Long enhancerId);
-
-    // 与Knode解绑
-    SaResult drop(Long knodeId, Long enhancerId);
 
     // 为enhancer挂载resource
     SaResult attach(Long enhancerId, Long resourceId);
@@ -40,4 +38,7 @@ public interface EnhancerService {
 
     SaResult unlabel(Long enhancerId, String labelName);
 
+    SaResult connectEnhancerToKnode(Long userId, Long enhancerId, Long knodeId);
+
+    SaResult disconnectEnhancerToKnode(Long userId, Long enhancerId, Long knodeId);
 }

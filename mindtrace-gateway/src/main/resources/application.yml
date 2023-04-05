@@ -26,6 +26,30 @@ spring:
             - Path=/enhancer/**
           filters:
             - StripPrefix=1
+        - id: tracing
+          uri: lb://mindtrace-tracing
+          predicates:
+            - Path=/tracing/**
+          filters:
+            - StripPrefix=1
+        - id: mastery
+          uri: lb://mindtrace-mastery
+          predicates:
+            - Path=/mastery/**
+          filters:
+            - StripPrefix=1
+        - id: path-optimizer
+          uri: lb://mindtrace-path-optimizer
+          predicates:
+            - Path=/path-optimizer/**
+          filters:
+            - StripPrefix=1
+        - id: recommend
+          uri: lb://mindtrace-recommend
+          predicates:
+            - Path=/recommend/**
+          filters:
+            - StripPrefix=1
   # mysql
   datasource:
     type: com.zaxxer.hikari.HikariDataSource

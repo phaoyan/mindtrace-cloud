@@ -2,7 +2,7 @@ package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pers.juumii.dto.LabelDTO;
+import pers.juumii.data.Label;
 import pers.juumii.service.LabelService;
 
 @RestController
@@ -30,8 +30,8 @@ public class LabelController {
     @PostMapping
     public Object update(
             @RequestParam("name") String name,
-            @RequestBody LabelDTO dto){
-        return labelService.update(name, dto);
+            @RequestBody Label label){
+        return labelService.update(name, label);
     }
 
     @DeleteMapping

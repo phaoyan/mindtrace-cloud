@@ -3,7 +3,6 @@ package pers.juumii.service;
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Label;
-import pers.juumii.dto.LabelDTO;
 
 import java.util.List;
 
@@ -15,5 +14,5 @@ public interface LabelService {
 
     SaResult remove(String name);
 
-    SaResult update(String name, LabelDTO dto);
+    SaResult update(String name, Label label);
 }

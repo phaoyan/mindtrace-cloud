@@ -5,7 +5,6 @@ import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Label;
-import pers.juumii.dto.LabelDTO;
 import pers.juumii.repo.LabelRepository;
 import pers.juumii.service.LabelService;
 
@@ -41,14 +40,14 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public SaResult update(String name, LabelDTO dto) {
+    public SaResult update(String name, Label newLabel) {
         Optional<Label> optional = labelRepo.findById(name);
         if(optional.isEmpty())
-            return SaResult.error("Label not found: " + name);
-        Label Label = optional.get();
-        Opt.ifPresent(dto.getName(), Label::setName);
-        Opt.ifPresent(dto.getDeleted(), Label::setDeleted);
-        labelRepo.save(Label);
-        return SaResult.data(Label);
+            return SaResult.error("label not found: " + name);
+        Label label = optional.get();
+        Opt.ifPresent(newLabel.getName(), label::setName);
+        Opt.ifPresent(newLabel.getDeleted(), label::setDeleted);
+        labelRepo.save(label);
+        return SaResult.data(label);
     }
 }

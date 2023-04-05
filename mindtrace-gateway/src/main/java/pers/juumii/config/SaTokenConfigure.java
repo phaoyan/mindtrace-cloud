@@ -1,5 +1,8 @@
 package pers.juumii.config;
 
+import cn.dev33.satoken.config.SaTokenConfig;
+import cn.dev33.satoken.context.SaHolder;
+import cn.dev33.satoken.context.model.SaRequest;
 import cn.dev33.satoken.reactor.filter.SaReactorFilter;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
@@ -31,6 +34,16 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                     .check(StpUtil::checkLogin))
                 // 指定[异常处理函数]：每次[认证函数]发生异常时执行此函数
                 .setError(e -> {
+                    // 处理预检请求
+                    if(SaHolder.getRequest().getMethod().equals("OPTIONS")){
+                        SaHolder.getResponse()
+                                .addHeader("Access-Control-Allow-Credentials","true")
+                                .addHeader("Access-Control-Allow-Origin","http://localhost:3000")
+                                .addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                                .addHeader("Access-Control-Allow-Headers","Content-Type,Authorization");
+                        return SaResult.ok();
+                    }
+
                     System.out.println("---------- sa global error ");
                     e.printStackTrace();
                     return SaResult.error(e.getMessage());

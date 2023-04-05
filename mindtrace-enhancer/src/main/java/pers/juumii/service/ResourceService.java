@@ -2,20 +2,37 @@ package pers.juumii.service;
 
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.data.Resource;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 public interface ResourceService {
-    SaResult fetch(Long resourceId, Long userId);
 
-    SaResult put(Long userId, MultipartFile file, ResourceDTO meta);
 
-    SaResult modify(Long resourceId, Long userId, ResourceDTO meta);
+    Boolean exists(Long userId, Long resourceId);
+    // 返回resource对象元数据
+    Resource getResourceMetadata(Long userId, Long resourceId);
 
-    SaResult alterSource(Long resourceId, Long userId, MultipartFile source);
+    // 将Resource中存储的所有资源以json的形式返回
+    Map<String, Object> getDataFromResource(Long userId, Long resourceId);
 
-    // 将resource与enhancer解绑（于是user同时也拿不到resource的链接）
-    SaResult disconnect(Long resourceId, Long enhancerId);
+    // 将Resource中ID为dataId的资源以json的形式返回
+    Object getDataFromResource(Long userId, Long resourceId, String dataName);
+
+    SaResult addResourceToUser(Long userId, Resource meta, Map<String, Object> data);
+
+    SaResult addDataToResource(Long userId, Long resourceId, Map<String, Object> data);
+
+    // 删除resource中特定的文件
+    SaResult release(Long userId, Long resourceId, List<String> data);
+
+    // 删除resource
+    SaResult delete(Long userId, Long resourceId);
+
+    Resource addResourceToEnhancer(Long userId, Long enhancerId, Resource meta, Map<String, Object> data);
+
+    List<Resource> getResourcesFromEnhancer(Long userId, Long enhancerId);
 
 }

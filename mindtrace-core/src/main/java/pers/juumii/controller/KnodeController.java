@@ -2,6 +2,8 @@ package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import pers.juumii.controller.aop.ControllerAspect;
+import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.service.KnodeService;
 
@@ -10,49 +12,64 @@ import pers.juumii.service.KnodeService;
 public class KnodeController {
 
     private final KnodeService knodeService;
+    private final ControllerAspect aspect;
 
     @Autowired
-    public KnodeController(KnodeService knodeService) {
+    public KnodeController(KnodeService knodeService, ControllerAspect aspect) {
         this.knodeService = knodeService;
+        this.aspect = aspect;
     }
 
-    @PostMapping("/{id}/branch")
+    @PostMapping("/{knodeId}/branch")
     public Object branch(
             @PathVariable Long userId,
-            @PathVariable Long id,
+            @PathVariable Long knodeId,
             @RequestParam("title") String title){
-        return knodeService.branch(id, title);
+        aspect.checkKnodeAvailability(userId, knodeId);
+        KnodeDTO res = Knode.transfer(knodeService.branch(knodeId, title));
+        return res;
     }
 
-    @PostMapping("/{id}/label")
-    public Object label(
+    @PostMapping("/{knodeId}/label")
+    public Object addLabelToKnode(
             @PathVariable Long userId,
-            @PathVariable Long id,
+            @PathVariable Long knodeId,
             @RequestParam("label") String label){
-        return knodeService.label(id, label);
+        aspect.checkKnodeAvailability(userId, knodeId);
+        return knodeService.addLabelToKnode(knodeId, label);
     }
 
-    @DeleteMapping("/{id}/label")
-    public Object unlabel(
+    @DeleteMapping("/{knodeId}/label")
+    public Object removeLabelFromKnode(
             @PathVariable Long userId,
-            @PathVariable Long id,
+            @PathVariable Long knodeId,
             @RequestParam("label") String label){
-        return knodeService.unlabel(id, label);
+        aspect.checkKnodeAvailability(userId, knodeId);
+        return knodeService.removeLabelFromKnode(knodeId, label);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{knodeId}")
     public Object delete(
             @PathVariable Long userId,
-            @PathVariable Long id){
-        return knodeService.delete(id);
+            @PathVariable Long knodeId){
+        aspect.checkKnodeAvailability(userId, knodeId);
+        return knodeService.delete(knodeId);
     }
 
-    @PostMapping("/{id}")
+    // 将标记为 deleted 的knode彻底删除
+    @DeleteMapping("/clear")
+    public Object clear(@PathVariable Long userId){
+        aspect.checkUserExistence(userId);
+        return knodeService.clear(userId);
+    }
+
+    @PostMapping("/{knodeId}")
     public Object update(
             @PathVariable Long userId,
-            @PathVariable Long id,
+            @PathVariable Long knodeId,
             @RequestBody KnodeDTO dto){
-        return knodeService.update(id, dto);
+        aspect.checkKnodeAvailability(userId, knodeId);
+        return knodeService.update(knodeId, dto);
     }
 
     // 将id为branchId的Knode移动到id为stemId的Knode下方
@@ -61,6 +78,8 @@ public class KnodeController {
             @PathVariable Long userId,
             @PathVariable Long stemId,
             @PathVariable Long branchId){
+        aspect.checkKnodeAvailability(userId, stemId);
+        aspect.checkKnodeAvailability(userId, branchId);
         return knodeService.shift(stemId, branchId);
     }
 
@@ -69,6 +88,8 @@ public class KnodeController {
             @PathVariable Long userId,
             @PathVariable Long sourceId,
             @PathVariable Long targetId){
+        aspect.checkKnodeAvailability(userId, sourceId);
+        aspect.checkKnodeAvailability(userId, targetId);
         return knodeService.connect(sourceId, targetId);
     }
 

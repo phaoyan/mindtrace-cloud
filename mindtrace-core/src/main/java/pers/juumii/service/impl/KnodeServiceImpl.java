@@ -5,13 +5,13 @@ import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.*;
-import pers.juumii.dto.LabelDTO;
 import pers.juumii.repo.KnodeRepository;
 import pers.juumii.dto.KnodeDTO;
+import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.KnodeService;
 import pers.juumii.repo.LabelRepository;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,14 +20,17 @@ public class KnodeServiceImpl implements KnodeService {
 
     private final KnodeRepository knodeRepo;
     private final LabelRepository labelRepo;
+    private final KnodeQueryService knodeQuery;
 
 
     @Autowired
     public KnodeServiceImpl(
             KnodeRepository knodeRepo,
-            LabelRepository labelRepo) {
+            LabelRepository labelRepo,
+            KnodeQueryService knodeQuery) {
         this.knodeRepo = knodeRepo;
         this.labelRepo = labelRepo;
+        this.knodeQuery = knodeQuery;
     }
 
     @Override
@@ -44,18 +47,30 @@ public class KnodeServiceImpl implements KnodeService {
         return data;
     }
 
-    // 逻辑删除
+    /**
+     * 不是逻辑删除而是物理删除；
+     * 会同时删除这个节点的所有offsprings
+     */
     @Override
     public SaResult delete(Long knodeId) {
         Optional<Knode> knode = knodeRepo.findById(knodeId);
         String info;
         if(knode.isPresent()){
-            knode.get().setDeleted(true);
-            knodeRepo.save(knode.get());
-            info = "Knode logically deleted: " + knodeId;
+            knodeRepo.deleteAllById(knodeQuery.offsprings(knodeId).stream().map(Knode::getId).toList());
+            knodeRepo.deleteById(knodeId);
+            info = "Knode deleted: " + knodeId;
         }else
             info = "Knode not found: " + knodeId;
         return SaResult.ok(info);
+    }
+
+    @Override
+    public SaResult clear(Long userId) {
+        List<Long> toBeDeletedIds = knodeQuery.checkAllIncludingDeleted(userId)
+                .stream().filter(Knode::getDeleted)
+                .map(Knode::getId).toList();
+        knodeRepo.deleteAllById(toBeDeletedIds);
+        return SaResult.ok();
     }
 
     @Override
@@ -66,12 +81,7 @@ public class KnodeServiceImpl implements KnodeService {
         // deleted
         Opt.ifPresent(dto.getDeleted(), target::setDeleted);
         // labels
-        Opt.ifPresent(dto.getLabels(),
-            labelDTOS -> target.setLabels(
-                labelRepo.findAllById(
-                labelDTOS
-                .stream().map(LabelDTO::getName)
-                .collect(Collectors.toList()))));
+        Opt.ifPresent(dto.getLabels(), labels -> target.setLabels(labelRepo.findAllById(labels.stream().map(Label::getName).toList())));
         // stem
         Opt.ifPresent(dto.getStemId(),
             stemId -> target.setStem(knodeRepo.findById(stemId).orElse(null)));
@@ -86,7 +96,7 @@ public class KnodeServiceImpl implements KnodeService {
     }
 
     @Override
-    public SaResult label(Long knodeId, String labelName) {
+    public SaResult addLabelToKnode(Long knodeId, String labelName) {
         Optional<Knode> optionalKnode = knodeRepo.findById(knodeId);
         if(optionalKnode.isEmpty())
             return SaResult.error("Knode not found: " + knodeId);
@@ -101,7 +111,7 @@ public class KnodeServiceImpl implements KnodeService {
     }
 
     @Override
-    public SaResult unlabel(Long knodeId, String labelName) {
+    public SaResult removeLabelFromKnode(Long knodeId, String labelName) {
         Optional<Knode> optionalKnode = knodeRepo.findById(knodeId);
         if(optionalKnode.isEmpty())
             return SaResult.error("Knode not found: " + knodeId);

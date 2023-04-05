@@ -1,6 +1,7 @@
 package pers.juumii.data;
 
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -12,6 +13,7 @@ import pers.juumii.dto.KnodeDTO;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Node
@@ -31,9 +33,9 @@ public class Knode{
     private LocalDateTime createTime;
     @Relationship(type = "TAG")
     private List<Label> labels;
-    @JsonBackReference
     @Relationship(type = "STEM_FROM")
     private Knode stem;
+    @JsonBackReference
     @Relationship(type = "BRANCH_TO")
     private List<Knode> branches;
     @Relationship(type = "CONNECT_TO")
@@ -51,6 +53,7 @@ public class Knode{
         res.setTitle(title);
         res.setLabels(new ArrayList<>());
         res.setCreateTime(LocalDateTime.now());
+        res.setPrivacy("private");
         res.setDeleted(false);
         res.setBranches(new ArrayList<>());
         res.setConnections(new ArrayList<>());
@@ -63,13 +66,21 @@ public class Knode{
         return res;
     }
 
+    public static Knode prototype(Map<String, Object> entity){
+        Knode res = new Knode();
+        res.setId(Convert.toLong(entity.get("id")));
+        res.setTitle(Convert.toStr(entity.get("title")));
+        res.setPrivacy(Convert.toStr(entity.get("privacy")));
+        res.setCreateTime(Convert.convert(LocalDateTime.class, entity.get("createTime")));
+        res.setDeleted(Convert.toBool(entity.get("deleted")));
+        return res;
+    }
+
     public static KnodeDTO transfer(Knode knode) {
         KnodeDTO res = new KnodeDTO();
         res.setId(knode.getId());
         res.setTitle(knode.getTitle());
-        res.setLabels(knode.getLabels()
-                .stream().map(Label::transfer)
-                .collect(Collectors.toList()));
+        res.setLabels(knode.getLabels());
         res.setCreateTime(knode.getCreateTime());
         res.setDeleted(knode.getDeleted());
         Opt.ifPresent(knode.getStem(), stem->res.setStemId(stem.getId()));
@@ -81,4 +92,9 @@ public class Knode{
                 .collect(Collectors.toList()));
         return res;
     }
+
+    public static List<KnodeDTO> transfer(List<Knode> knodeList){
+        return knodeList.stream().map(Knode::transfer).toList();
+    }
+
 }

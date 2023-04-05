@@ -12,7 +12,7 @@
         <collection property="labels" select="pers.juumii.mapper.LabelMapper.queryByEnhancerId" column="id"/>
         <collection property="resources" select="pers.juumii.mapper.ResourceMapper.queryByEnhancerId" column="id"/>
     </resultMap>
-    <insert id="connect">
+    <insert id="connectToUser">
         INSERT INTO user_enhancer (user_id, enhancer_id) VALUE (#{userId}, #{enhancerId})
     </insert>
     <insert id="attach">
@@ -21,10 +21,10 @@
     <insert id="label">
         INSERT INTO enhancer_label (enhancer_id, label_name) VALUE (#{enhancerId}, #{labelName})
     </insert>
-    <insert id="use">
+    <insert id="connectEnhancerToKnode">
         INSERT INTO enhancer_knode (enhancer_id, knode_id) VALUE (#{enhancerId}, #{knodeId})
     </insert>
-    <delete id="disconnect">
+    <delete id="disconnectFromUser">
         DELETE FROM user_enhancer WHERE user_id = #{userId} AND enhancer_id = #{enhancerId}
     </delete>
     <delete id="detach">
@@ -33,7 +33,7 @@
     <delete id="unlabel">
         DELETE FROM enhancer_label WHERE enhancer_id = #{enhancerId} AND label_name = #{labelName}
     </delete>
-    <delete id="drop">
+    <delete id="disconnectEnhancerToKnode">
         DELETE FROM enhancer_knode WHERE enhancer_id = #{enhancerId} AND knode_id = #{knodeId}
     </delete>
 
@@ -52,5 +52,12 @@
             enhancer_knode
         LEFT JOIN enhancer ON enhancer_knode.enhancer_id = enhancer.id
         WHERE enhancer_knode.knode_id = #{knodeId}
+    </select>
+    <select id="queryRelatedKnodeIds" resultType="java.lang.Long">
+        SELECT
+            knode_id
+        FROM
+            enhancer_knode
+        WHERE enhancer_id = #{enhancerId}
     </select>
 </mapper>

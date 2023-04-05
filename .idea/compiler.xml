@@ -7,15 +7,18 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="mindtrace-tracing" />
         <module name="mindtrace-data" />
         <module name="mindtrace-enhancer" />
         <module name="mindtrace-gateway" />
+        <module name="mindtrace-path-optimizer" />
+        <module name="mindtrace-tracing" />
+        <module name="mindtrace-recommend" />
+        <module name="mindtrace-mastery" />
         <module name="mindtrace-core" />
-        <module name="mindtrace-analyzer" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="mindtrace-analyzer" target="18" />
       <module name="mindtrace-security" target="18" />
       <module name="mindtrace-trace" target="18" />
     </bytecodeTargetLevel>
@@ -28,6 +31,9 @@
       <module name="mindtrace-data" options="-parameters" />
       <module name="mindtrace-enhancer" options="-parameters" />
       <module name="mindtrace-gateway" options="-parameters" />
+      <module name="mindtrace-mastery" options="-parameters" />
+      <module name="mindtrace-path-optimizer" options="-parameters" />
+      <module name="mindtrace-recommend" options="-parameters" />
       <module name="mindtrace-security" options="-parameters" />
       <module name="mindtrace-trace" options="-parameters" />
       <module name="mindtrace-tracing" options="-parameters" />

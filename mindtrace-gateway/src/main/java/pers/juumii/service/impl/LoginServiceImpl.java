@@ -32,10 +32,10 @@ public class LoginServiceImpl implements LoginService {
         if(Objects.isNull(_user))
             return SaResult.error("登陆失败: 用户不存在");
         // 若用户存在，继续验证密码
-        if(!SaSecureUtil.md5(user.getPassword()).equals(_user.getPassword()))
+        if(!user.getPassword().equals(_user.getPassword()))
             return SaResult.error("登陆失败：密码错误");
         // 用户存在且密码正确，则登陆成功
         StpUtil.login(_user.getId());
-        return SaResult.ok("登陆成功");
+        return SaResult.get(200,"登陆成功",_user.getId());
     }
 }

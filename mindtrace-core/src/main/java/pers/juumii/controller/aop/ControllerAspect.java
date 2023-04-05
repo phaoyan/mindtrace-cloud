@@ -2,25 +2,26 @@ package pers.juumii.controller.aop;
 
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.TypeUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import pers.juumii.data.Knode;
 import pers.juumii.feign.UserClient;
 import pers.juumii.repo.KnodeRepository;
 import pers.juumii.repo.UserRepository;
 import pers.juumii.service.UserService;
+
+import java.util.List;
 
 @Aspect
 @Component
 public class ControllerAspect {
 
     private final UserClient userClient;
-    private final UserRepository userRepo;
     private final UserService userService;
     private final KnodeRepository knodeRepo;
 
@@ -28,11 +29,9 @@ public class ControllerAspect {
     @Autowired
     public ControllerAspect(
             UserClient userClient,
-            UserRepository userRepo,
             UserService userService,
             KnodeRepository knodeRepo) {
         this.userClient = userClient;
-        this.userRepo = userRepo;
         this.userService = userService;
         this.knodeRepo = knodeRepo;
     }
@@ -40,15 +39,8 @@ public class ControllerAspect {
     @Pointcut("execution(Object pers.juumii.controller.*.* (..))")
     public void global(){}
 
-    @Pointcut(value = "execution(Object pers.juumii.controller.KnodeController.* (Long,Long,..)) && args(userId,knodeId,..)", argNames = "userId,knodeId")
-    public void knodeController(Long userId, Long knodeId){}
-
-    @Pointcut(value = "execution(Object pers.juumii.controller.KnodeQueryController.* (Long, Long)) && args(userId, knodeId)", argNames = "userId,knodeId")
-    public void knodeQueryController(Long userId, Long knodeId){}
-
-    @Pointcut("execution(Object pers.juumii.controller.UserController.* (Long,..)) && args(userId,..) && " +
-              "!execution(Object pers.juumii.controller.UserController.register(Long))")
-    public void userController(Long userId){}
+    @Pointcut("execution(Object pers.juumii.controller.KnodeQueryController.* (..))")
+    public void knodeQuery(){}
 
     @Around("global()")
     public Object wrapResult(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -58,40 +50,30 @@ public class ControllerAspect {
         else return SaResult.data(res);
     }
 
-    @Order(0)
-    @Around(value = "userController(userId)", argNames = "joinPoint,userId")
-    public Object checkUser(ProceedingJoinPoint joinPoint, Long userId) throws Throwable {
-        // 用户不存在
-        if(!userExists(userId))
-            return SaResult.error("User not found: " + userId);
-        // 用户未注册到Neo4J中
-        if(!userRegistered(userId))
-            return SaResult.error("User not registered: "  + userId);
-        return joinPoint.proceed();
+    // 服务类异常统一在此处理
+    @Around("global()")
+    public Object handleException(ProceedingJoinPoint joinPoint){
+        try{
+            return joinPoint.proceed();
+        }catch (Throwable e){
+            return SaResult.error(e.getMessage());
+        }
     }
 
-    @Around(value = "knodeQueryController(userId, knodeId) || knodeController(userId, knodeId)", argNames = "joinPoint,userId,knodeId")
-    public Object checkUser(ProceedingJoinPoint joinPoint, Long userId, Long knodeId) throws Throwable {
-        return checkUser(joinPoint, userId);
+    public void checkUserExistence(Long userId) {
+        if(!Convert.toBool(userClient.userExists(userId).getData()))
+            throw new RuntimeException("User not found: " + userId);
     }
 
-    @Around(value = "knodeQueryController(userId, knodeId) || knodeController(userId, knodeId)", argNames = "joinPoint,userId,knodeId")
-    public Object checkKnode(ProceedingJoinPoint joinPoint, Long userId, Long knodeId) throws Throwable {
-        // 节点不存在
+    public void checkKnodeExistence(Long knodeId) {
         if(!knodeRepo.existsById(knodeId))
-            return SaResult.error(StrUtil.format("Knode not found: " + knodeId));
-        // 用户并不拥有该节点
-        if(!userService.possesses(userId, knodeId))
-            return SaResult.error(StrUtil.format("Authentication failed: user {} does not possess knode {}", userId, knodeId));
-        return joinPoint.proceed();
+            throw new RuntimeException("Knode not found: " + knodeId);
     }
 
-    private Boolean userRegistered(Long userId) {
-        return userRepo.existsById(userId);
+    public void checkKnodeAvailability(Long userId, Long knodeId) {
+        checkUserExistence(userId);
+        checkKnodeExistence(knodeId);
+        if(!userService.findUserId(knodeId).equals(userId))
+            throw new RuntimeException("Knode not available: " + knodeId + " for user " + userId);
     }
-
-    private Boolean userExists(Long userId) {
-        return Convert.toBool(userClient.userExists(userId).getData());
-    }
-
 }

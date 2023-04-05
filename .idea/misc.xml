@@ -9,6 +9,7 @@
     </option>
     <option name="ignoredFiles">
       <set>
+        <option value="$PROJECT_DIR$/mindtrace-analyzer/pom.xml" />
         <option value="$PROJECT_DIR$/mindtrace-security/pom.xml" />
         <option value="$PROJECT_DIR$/mindtrace-trace/pom.xml" />
       </set>

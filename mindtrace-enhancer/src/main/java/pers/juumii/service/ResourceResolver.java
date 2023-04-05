@@ -5,6 +5,9 @@ import pers.juumii.data.Resource;
 import java.util.Map;
 
 public interface ResourceResolver {
-    // 传入一个url，ResourceResolver负责对url对应的资源文件进行信息解析，将信息封装为Map返回
+    // 通过Resource拿到相应资源文件并进行适当解析，将数据以json的格式返回给前端
     Map<String, Object> resolve(Resource resource);
+
+    Object resolve(Resource resource, String name);
+
 }
