@@ -15,9 +15,6 @@
     <insert id="connectToUser">
         INSERT INTO user_enhancer (user_id, enhancer_id) VALUE (#{userId}, #{enhancerId})
     </insert>
-    <insert id="attach">
-        INSERT INTO enhancer_resource (enhancer_id, resource_id) VALUE (#{enhancerId}, #{resourceId})
-    </insert>
     <insert id="label">
         INSERT INTO enhancer_label (enhancer_id, label_name) VALUE (#{enhancerId}, #{labelName})
     </insert>
@@ -27,13 +24,10 @@
     <delete id="disconnectFromUser">
         DELETE FROM user_enhancer WHERE user_id = #{userId} AND enhancer_id = #{enhancerId}
     </delete>
-    <delete id="detach">
-        DELETE FROM enhancer_resource WHERE enhancer_id = #{enhancerId} AND resource_id = #{resourceId}
-    </delete>
     <delete id="unlabel">
         DELETE FROM enhancer_label WHERE enhancer_id = #{enhancerId} AND label_name = #{labelName}
     </delete>
-    <delete id="disconnectEnhancerToKnode">
+    <delete id="disconnectEnhancerFromKnode">
         DELETE FROM enhancer_knode WHERE enhancer_id = #{enhancerId} AND knode_id = #{knodeId}
     </delete>
 

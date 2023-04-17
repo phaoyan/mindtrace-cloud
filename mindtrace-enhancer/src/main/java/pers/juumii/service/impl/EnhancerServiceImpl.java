@@ -3,33 +3,28 @@ package pers.juumii.service.impl;
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pers.juumii.annotation.ResourceType;
 import pers.juumii.data.Enhancer;
-import pers.juumii.feign.GlobalClient;
+import pers.juumii.data.Resource;
 import pers.juumii.mapper.EnhancerMapper;
-import pers.juumii.mapper.LabelMapper;
-import pers.juumii.mapper.ResourceMapper;
 import pers.juumii.service.EnhancerService;
+import pers.juumii.service.ResourceService;
+import pers.juumii.service.impl.serializer.QuizcardSerializer;
 
 import java.util.List;
 
 @Service
 public class EnhancerServiceImpl implements EnhancerService {
 
-    private final GlobalClient client;
     private final EnhancerMapper enhancerMapper;
-    private final LabelMapper labelMapper;
-    private final ResourceMapper resourceMapper;
+    private final ResourceService resourceService;
 
     @Autowired
     public EnhancerServiceImpl(
-            GlobalClient client,
             EnhancerMapper enhancerMapper,
-            LabelMapper labelMapper,
-            ResourceMapper resourceMapper) {
-        this.client = client;
+            ResourceService resourceService) {
         this.enhancerMapper = enhancerMapper;
-        this.labelMapper = labelMapper;
-        this.resourceMapper = resourceMapper;
+        this.resourceService = resourceService;
     }
 
 
@@ -39,16 +34,13 @@ public class EnhancerServiceImpl implements EnhancerService {
     }
 
     @Override
-    public List<Enhancer> queryByKnodeId(Long knodeId) {
+    public List<Enhancer> getEnhancersFromKnode(Long knodeId) {
         return enhancerMapper.queryByKnodeId(knodeId);
     }
 
     @Override
-    public Enhancer getEnhancerFromUser(Long userId, Long enhancerId) {
-        Enhancer enhancer = enhancerMapper.selectById(enhancerId);
-        if(!enhancer.getCreateBy().equals(userId))
-            throw new RuntimeException("Enhancer access failure: " + enhancer + " of user " + userId);
-        return enhancer;
+    public Enhancer getEnhancerById(Long enhancerId) {
+        return enhancerMapper.selectById(enhancerId);
     }
 
     @Override
@@ -60,41 +52,36 @@ public class EnhancerServiceImpl implements EnhancerService {
     }
 
     @Override
+    public Enhancer addEnhancerToKnode(Long userId, Long knodeId) {
+        Enhancer enhancer = addEnhancerToUser(userId);
+        connectEnhancerToKnode(userId, knodeId, enhancer.getId());
+        return enhancer;
+    }
+
+    @Override
     public SaResult updateEnhancerOfUser(Long userId, Long enhancerId, Enhancer updated) {
         enhancerMapper.updateById(updated);
         return SaResult.ok("Enhancer updated:" + enhancerId);
     }
 
     @Override
-    public SaResult removeEnhancerFromUser(Long userId, Long enhancerId) {
+    public void removeEnhancerFromUser(Long userId, Long enhancerId) {
+        resourceService.removeAllResourcesFromEnhancer(enhancerId);
         enhancerMapper.deleteById(enhancerId);
         enhancerMapper.disconnectFromUser(userId, enhancerId);
         List<Long> knodeIds = enhancerMapper.queryRelatedKnodeIds(enhancerId);
-        knodeIds.forEach(knodeId->enhancerMapper.disconnectEnhancerToKnode(knodeId, enhancerId));
-        return SaResult.ok("Enhancer deleted:" + enhancerId);
+        knodeIds.forEach(knodeId->enhancerMapper.disconnectEnhancerFromKnode(knodeId, enhancerId));
     }
 
     @Override
-    public SaResult connect(Long userId, Long enhancerId) {
+    public SaResult connectToUser(Long userId, Long enhancerId) {
         enhancerMapper.connectToUser(userId, enhancerId);
         return SaResult.ok();
     }
 
     @Override
-    public SaResult disconnect(Long userId, Long enhancerId) {
+    public SaResult disconnectFromUser(Long userId, Long enhancerId) {
         enhancerMapper.disconnectFromUser(userId, enhancerId);
-        return SaResult.ok();
-    }
-
-    @Override
-    public SaResult attach(Long enhancerId, Long resourceId) {
-        enhancerMapper.attach(enhancerId, resourceId);
-        return SaResult.ok();
-    }
-
-    @Override
-    public SaResult detach(Long enhancerId, Long resourceId) {
-        enhancerMapper.detach(enhancerId, resourceId);
         return SaResult.ok();
     }
 
@@ -111,14 +98,24 @@ public class EnhancerServiceImpl implements EnhancerService {
     }
 
     @Override
-    public SaResult connectEnhancerToKnode(Long userId, Long enhancerId, Long knodeId) {
+    public SaResult connectEnhancerToKnode(Long userId, Long knodeId, Long enhancerId) {
         enhancerMapper.connectEnhancerToKnode(knodeId, enhancerId);
         return SaResult.ok();
     }
 
     @Override
-    public SaResult disconnectEnhancerToKnode(Long userId, Long enhancerId, Long knodeId){
-        enhancerMapper.disconnectEnhancerToKnode(knodeId, enhancerId);
+    public SaResult disconnectEnhancerToKnode(Long userId, Long knodeId, Long enhancerId){
+        enhancerMapper.disconnectEnhancerFromKnode(knodeId, enhancerId);
         return SaResult.ok();
+    }
+
+    @Override
+    public Enhancer addEnhancerWithQuizcardToKnode(Long userId, Long knodeId) {
+        Enhancer enhancer = addEnhancerToKnode(userId, knodeId);
+        resourceService.addResourceToEnhancer(
+                enhancer.getId(),
+                Resource.prototype(ResourceType.QUIZCARD, userId),
+                QuizcardSerializer.prototype());
+        return enhancer;
     }
 }

@@ -41,4 +41,11 @@ public class Resource {
         res.setPrivacy(Constants.PRIVACY_PRIVATE);
         return res;
     }
+
+    public static Resource prototype(String type, Long createBy){
+        Resource resource = new Resource();
+        resource.setType(type);
+        resource.setCreateBy(createBy);
+        return prototype(resource);
+    }
 }

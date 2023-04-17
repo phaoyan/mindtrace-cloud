@@ -1,9 +1,10 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.aop.ControllerAspect;
-import pers.juumii.data.Resource;
+import pers.juumii.dto.ResourceWithData;
 import pers.juumii.service.ResourceService;
 
 import java.util.Map;
@@ -26,15 +27,15 @@ public class ResourceOfUserController {
             @PathVariable Long userId,
             @PathVariable Long resourceId){
         aspect.checkResourceAvailability(userId, resourceId);
-        return resourceService.getResourceMetadata(userId,resourceId);
+        return resourceService.getResourceMetadata(resourceId);
     }
 
-    @GetMapping("/{resourceId}")
+    @GetMapping("/{resourceId}/data")
     public Object getDataFromResource(
             @PathVariable Long userId,
             @PathVariable Long resourceId){
         aspect.checkResourceAvailability(userId, resourceId);
-        return resourceService.getDataFromResource(userId, resourceId);
+        return resourceService.getDataFromResource(resourceId);
     }
 
     @GetMapping("/{resourceId}/data/{dataName}")
@@ -43,25 +44,33 @@ public class ResourceOfUserController {
             @PathVariable Long resourceId,
             @PathVariable String dataName){
         aspect.checkResourceAvailability(userId, resourceId);
-        return resourceService.getDataFromResource(userId, resourceId, dataName);
+        return resourceService.getDataFromResource( resourceId, dataName);
     }
 
     @PutMapping
     public Object addResourceToUser(
             @PathVariable Long userId,
-            @RequestParam("meta") Resource meta,
-            @RequestBody Map<String, Object> data){
+            @RequestBody ResourceWithData params){
         aspect.checkUserExistence(userId);
-        return resourceService.addResourceToUser(userId, meta, data);
+        return resourceService.addResourceToUser(userId, params.getMeta(), params.getData());
     }
 
-    @PostMapping("/{resourceId}")
+    @PostMapping("/{resourceId}/data")
     public Object addDataToResource(
             @PathVariable Long userId,
             @PathVariable Long resourceId,
             @RequestBody Map<String, Object> data){
         aspect.checkResourceAvailability(userId, resourceId);
-        return resourceService.addDataToResource(userId, resourceId, data);
+        return resourceService.addDataToResource(resourceId, data);
+    }
+
+    @DeleteMapping("/{resourceId}")
+    public Object removeResourceFromUser(
+            @PathVariable Long userId,
+            @PathVariable Long resourceId){
+        aspect.checkResourceAvailability(userId, resourceId);
+        resourceService.removeResourceFromUser(resourceId);
+        return SaResult.ok();
     }
 
 }

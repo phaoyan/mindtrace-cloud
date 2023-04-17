@@ -12,33 +12,32 @@ public interface EnhancerService {
 
     List<Enhancer> getAllEnhancersFromUser(Long userId);
 
-    List<Enhancer> queryByKnodeId(Long knodeId);
+    List<Enhancer> getEnhancersFromKnode(Long knodeId);
 
-    Enhancer getEnhancerFromUser(Long userId, Long enhancerId);
+    Enhancer getEnhancerById(Long enhancerId);
 
     Enhancer addEnhancerToUser(Long userId);
 
+    Enhancer addEnhancerToKnode(Long userId, Long knodeId);
+
     SaResult updateEnhancerOfUser(Long userId, Long enhancerId, Enhancer updated);
 
-    SaResult removeEnhancerFromUser(Long userId, Long enhancerId);
+    void removeEnhancerFromUser(Long userId, Long enhancerId);
 
     // 与用户连接
-    SaResult connect(Long userId, Long enhancerId);
+    SaResult connectToUser(Long userId, Long enhancerId);
 
     // 与用户解绑
-    SaResult disconnect(Long userId, Long enhancerId);
-
-    // 为enhancer挂载resource
-    SaResult attach(Long enhancerId, Long resourceId);
-
-    // 将enhancer与resource解绑
-    SaResult detach(Long enhancerId, Long resourceId);
+    SaResult disconnectFromUser(Long userId, Long enhancerId);
 
     SaResult label(Long enhancerId, String labelName);
 
     SaResult unlabel(Long enhancerId, String labelName);
 
-    SaResult connectEnhancerToKnode(Long userId, Long enhancerId, Long knodeId);
+    SaResult connectEnhancerToKnode(Long userId, Long knodeId, Long enhancerId);
 
-    SaResult disconnectEnhancerToKnode(Long userId, Long enhancerId, Long knodeId);
+    SaResult disconnectEnhancerToKnode(Long userId, Long knodeId, Long enhancerId);
+
+    Enhancer addEnhancerWithQuizcardToKnode(Long userId, Long knodeId);
+
 }

@@ -38,6 +38,9 @@ public class QuizcardSerializer implements ResourceSerializer {
 
     @Override
     public void serialize(Resource meta, Map<String, Object> data) {
+        if(data == null)
+            data = prototype();
+
         // 提取数据
         String front = Convert.toStr(data.get("front"));
         String back = Convert.toStr(data.get("back"));
@@ -57,6 +60,15 @@ public class QuizcardSerializer implements ResourceSerializer {
     private String removePrefix(String base64) {
         if(!base64.contains(",")) return base64;
         else return base64.split(",")[1];
+    }
+
+    public static Map<String, Object> prototype() {
+        HashMap<String, Object> res = new HashMap<>();
+        res.put("front", "");
+        res.put("back","");
+        res.put("imgs", new HashMap<>());
+
+        return res;
     }
 
 }

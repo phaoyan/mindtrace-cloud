@@ -1,5 +1,6 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.aop.ControllerAspect;
@@ -30,7 +31,7 @@ public class EnhancerOfUserController {
             @PathVariable Long userId,
             @PathVariable Long enhancerId){
         aspect.checkEnhancerAvailability(userId,enhancerId);
-        return enhancerService.getEnhancerFromUser(userId, enhancerId);
+        return enhancerService.getEnhancerById(enhancerId);
     }
 
     @PutMapping
@@ -53,7 +54,8 @@ public class EnhancerOfUserController {
             @PathVariable Long userId,
             @PathVariable Long enhancerId){
         aspect.checkEnhancerAvailability(userId,enhancerId);
-        return enhancerService.removeEnhancerFromUser(userId, enhancerId);
+        enhancerService.removeEnhancerFromUser(userId, enhancerId);
+        return SaResult.ok();
     }
 
 }

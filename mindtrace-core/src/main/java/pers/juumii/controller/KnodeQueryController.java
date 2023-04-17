@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.controller.aop.ControllerAspect;
 import pers.juumii.data.Knode;
+import pers.juumii.repo.UserRepository;
 import pers.juumii.service.KnodeQueryService;
 
 @RestController
@@ -14,13 +15,16 @@ public class KnodeQueryController {
     private final KnodeQueryService knodeQuery;
 
     @Autowired
-    public KnodeQueryController(ControllerAspect aspect, KnodeQueryService knodeQuery) {
+    public KnodeQueryController(
+            ControllerAspect aspect,
+            KnodeQueryService knodeQuery) {
         this.aspect = aspect;
         this.knodeQuery = knodeQuery;
     }
 
     @GetMapping
     public Object checkAll(@PathVariable Long userId){
+        aspect.checkUserExistence(userId);
         return Knode.transfer(knodeQuery.checkAll(userId));
     }
 
@@ -91,5 +95,12 @@ public class KnodeQueryController {
         return Knode.transfer(knodeQuery.ancestors(knodeId));
     }
 
+    @GetMapping("/{knodeId}/chainStyleTitle")
+    public Object getChainStyleTitle(
+            @PathVariable Long userId,
+            @PathVariable Long knodeId){
+        aspect.checkKnodeAvailability(userId, knodeId);
+        return knodeQuery.chainStyleTitle(knodeId);
+    }
 
 }

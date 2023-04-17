@@ -1,15 +1,19 @@
 package pers.juumii.data;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import pers.juumii.dto.MindtraceDTO;
+import pers.juumii.utils.TimeUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Data
+@TableName("mindtrace")
 public class Mindtrace {
 
     @TableId
@@ -21,7 +25,6 @@ public class Mindtrace {
     private Double retentionBefore;
     private Integer reviewLayer = 1;
     private LocalDateTime createTime;
-    private Duration duration;
     private String remark;
     @TableLogic
     private Boolean deleted;
@@ -32,18 +35,15 @@ public class Mindtrace {
             Long userId,
             Double RA,
             Double RB,
-            Integer layer,
-            Duration duration,
             String remark){
         Mindtrace res = new Mindtrace();
         res.setId(IdUtil.getSnowflakeNextId());
         res.setEnhancerId(enhancerId);
         res.setKnodeId(knodeId);
         res.setCreateBy(userId);
+        res.setCreateTime(LocalDateTime.now());
         res.setRetentionAfter(RA);
         res.setRetentionBefore(RB);
-        res.setReviewLayer(layer);
-        res.setDuration(duration);
         res.setRemark(remark);
         res.setDeleted(false);
         return res;
@@ -51,13 +51,11 @@ public class Mindtrace {
 
     public static Mindtrace prototype(MindtraceDTO dto){
         return prototype(
-                dto.getEnhancerId(),
-                dto.getKnodeId(),
-                dto.getCreateBy(),
+                Convert.toLong(dto.getEnhancerId()),
+                Convert.toLong(dto.getKnodeId()),
+                Convert.toLong(dto.getCreateBy()),
                 dto.getRetentionAfter(),
                 dto.getRetentionBefore(),
-                dto.getReviewLayer(),
-                dto.getDuration(),
                 dto.getRemark());
     }
 

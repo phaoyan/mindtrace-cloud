@@ -71,6 +71,11 @@ public class ResourceRepositoryImpl implements ResourceRepository {
     }
 
     @Override
+    public Boolean releaseAll(Long userId, Long resourceId) {
+        return FileUtil.del(path(userId, resourceId));
+    }
+
+    @Override
     public File[] peek(Long userId, Long resourceId) {
         return FileUtil.ls(path(userId, resourceId));
     }

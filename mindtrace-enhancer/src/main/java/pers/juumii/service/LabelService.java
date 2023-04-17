@@ -8,7 +8,7 @@ import java.util.List;
 
 @Service
 public interface LabelService {
-    List<Label> queryAll();
+    List<Label> getAll();
 
     SaResult create(String name, Label label);
 

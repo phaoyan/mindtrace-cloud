@@ -2,18 +2,22 @@ package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import pers.juumii.controller.aop.ControllerAspect;
 import pers.juumii.data.Mindtrace;
 import pers.juumii.service.SamplingService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/trace/user/{userId}")
+@RequestMapping("/user/{userId}/mind")
 public class SamplingController {
+
+    private final ControllerAspect aspect;
     private final SamplingService samplingService;
 
     @Autowired
-    public SamplingController(SamplingService samplingService) {
+    public SamplingController(ControllerAspect aspect, SamplingService samplingService) {
+        this.aspect = aspect;
         this.samplingService = samplingService;
     }
 
@@ -21,6 +25,7 @@ public class SamplingController {
     public List<Mindtrace> getKnodeTrace(
             @PathVariable Long userId,
             @PathVariable Long knodeId) {
+        aspect.checkKnodeAvailability(userId, knodeId);
         return samplingService.knodeTrace(userId, knodeId);
     }
 
@@ -28,6 +33,7 @@ public class SamplingController {
     public List<Mindtrace> getEnhancerTrace(
             @PathVariable Long userId,
             @PathVariable Long enhancerId) {
+        aspect.checkEnhancerAvailability(userId, enhancerId);
         return samplingService.enhancerTrace(userId, enhancerId);
     }
 

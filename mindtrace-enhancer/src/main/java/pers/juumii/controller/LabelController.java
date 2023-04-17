@@ -20,7 +20,7 @@ public class LabelController {
     //返回所有注册的标签
     @GetMapping
     public Object queryAll(){
-        return labelService.queryAll();
+        return labelService.getAll();
     }
 
     @PutMapping

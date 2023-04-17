@@ -79,7 +79,7 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
     @Override
     public List<Knode> leaves(Long knodeId) {
         String cypher = """
-                MATCH (knode)-[:STEM_FROM*]->(stem) WHERE stem.id=$knodeId
+                MATCH (knode)-[:STEM_FROM*]->(ancestor) WHERE ancestor.id=$knodeId
                 MATCH (knode) WHERE NOT EXISTS {
                     MATCH (knode)-[:BRANCH_TO]->(other)
                     RETURN other
@@ -140,31 +140,6 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
         return DataUtils.join(offsprings(rootId), check(rootId));
     }
 
-    @Override
-    public List<Knode> checkAllIncludingDeleted(Long userId) {
-        Long rootId = userService.checkRootId(userId);
-        String cypher = """
-                MATCH (root)-[:BRANCH_TO*]->(knode) WHERE root.id=$knodeId
-                """;
-        List<Knode> offsprings = query(cypherBasic(cypher), Map.of("knodeId", rootId));
-        return DataUtils.join(offsprings, check(rootId));
-    }
-
-    private String cypherNotMatchDeleted(String raw){
-        return raw + """
-                MATCH (knode) WHERE knode.deleted = false
-                OPTIONAL MATCH (knode)-[tag:TAG]->(label)
-                OPTIONAL MATCH (knode)-[br:BRANCH_TO]->(branch)
-                OPTIONAL MATCH (knode)-[st:STEM_FROM]->(stem)
-                OPTIONAL MATCH (knode)-[con:CONNECT_TO]->(connection)
-                RETURN  knode AS knode,
-                        collect(label) AS labels,
-                        stem AS stem,
-                        collect(branch) AS branches,
-                        collect(connection) AS connections
-                """;
-    }
-
     private String cypherBasic(String raw){
         return raw + """
                 OPTIONAL MATCH (knode)-[tag:TAG]->(label)
@@ -199,7 +174,7 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
     }
 
     private List<Knode> wrappedQuery(String raw, Map<String, Object> params){
-        return query(cypherNotMatchDeleted(raw), params);
+        return query(cypherBasic(raw), params);
     }
 
 }

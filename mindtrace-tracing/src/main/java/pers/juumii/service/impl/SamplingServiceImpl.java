@@ -29,6 +29,7 @@ public class SamplingServiceImpl implements SamplingService {
     }
 
 
+
     @Override
     public List<Mindtrace> knodeTrace(Long userId, Long knodeId) {
         LambdaQueryWrapper<Mindtrace> wrapper = new LambdaQueryWrapper<>();

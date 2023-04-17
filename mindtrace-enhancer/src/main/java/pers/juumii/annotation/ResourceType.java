@@ -10,24 +10,34 @@ import java.lang.annotation.Target;
 public @interface ResourceType {
     String value();
 
-    String QUIZCARD = "QUIZCARD";
-    String MARKDOWN = "MARKDOWN";
+    String QUIZCARD = "quizcard";
+    String MARKDOWN = "markdown";
+    // 一个知识点的标题可以承载问题，但是其容量决定了其无法承载答案。
+    // 为一个knode添加backcard以给出标题问题的答案
+    // backcard比quizcard更轻量
+    String BACKCARD = "backcard";
+    // 完形填空
+    String CLOZE = "cloze";
+    // 该资源收集一个Knode的所有子节点的Quizcard
+    // 应当支持一定的配置以供筛选quiz
+    String QUIZCARD_COLLECTION = "quizcard collection";
     // 利用GPT学习需要prompts，GPT_PROMPTS存储这些prompts
-    String GPT_PROMPTS = "GPT_PROMPTS";
+    String GPT_PROMPTS = "gpt prompts";
     // 音频学习资料（如口语练习，听力练习资料）
-    String AUDIO = "AUDIO";
+    String AUDIO = "audio";
     // 视频学习资料
-    String VIDEO = "VIDEO";
+    String VIDEO = "video";
     // 项目式学习需要一些“里程碑”，PROJECT文件记录这些里程碑数据
-    String PROJECT = "PROJECT";
+    String PROJECT = "project";
     // 一些资源仅靠url无法访问（如本地应用程序内的资源），
     // LINK_SCRIPT尝试用一系列脚本实现这类资源的一键访问
-    String LINK_SCRIPT = "LINK_SCRIPT";
+    String LINK_SCRIPT = "link script";
     // 一些例如B站视频合集的url资源，分p之间具有关联性，这些资源如果每一个resource都把整个url存起来会很麻烦
     // ASSOCIATED_RESOURCE用于将这些url整合起来便于访问
-    String ASSOCIATED_RESOURCE = "ASSOCIATED_RESOURCE";
+    String ASSOCIATED_RESOURCE = "associated resource";
     // 将整个Ktree中部分节点的子节点隐藏起来，让用户回忆一个节点包含什么节点，这也是一种学习方式，
     // HIDDEN_KNODE_SET负责存储这些隐藏的节点
-    String HIDDEN_KNODE_SET = "HIDDEN_KNODE_SET";
+    String HIDDEN_KNODE_SET = "hidden knode set";
+    String STROKE = "stroke";
 
 }

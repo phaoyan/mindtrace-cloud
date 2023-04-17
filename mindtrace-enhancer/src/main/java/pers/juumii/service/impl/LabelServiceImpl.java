@@ -22,7 +22,7 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public List<Label> queryAll() {
+    public List<Label> getAll() {
         return labelMapper.selectList(null);
     }
 

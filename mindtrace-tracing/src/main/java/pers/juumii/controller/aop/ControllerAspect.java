@@ -25,21 +25,37 @@ public class ControllerAspect {
     @Pointcut("execution(Object pers.juumii.controller.*.* (..))")
     public void global(){}
 
-    @Pointcut("execution(Object pers.juumii.controller.*.* (Long,..)) && args(userId)")
-    public void userRequirement(Long userId){}
-
     @Around("global()")
-    public Object wrapResult(ProceedingJoinPoint joinPoint) throws Throwable{
-        // 如果controller使用的service不返回SaResult，则将其包装为SaResult
-        Object res = joinPoint.proceed();
-        if(res instanceof SaResult) return res;
-        else return SaResult.data(res);
+    public Object globalActs(ProceedingJoinPoint joinPoint) throws Throwable{
+        try {
+            Object res = joinPoint.proceed();
+            // 如果controller使用的service不返回SaResult，则将其包装为SaResult
+            if(res instanceof SaResult) return res;
+            else return SaResult.data(res);
+            // 服务类的异常在此处捕获，通过SaResult.error返回
+        } catch (RuntimeException e){
+            return SaResult.error(e.getMessage());
+        }
     }
 
-    @Around(value = "userRequirement(userId)", argNames = "joinPoint,userId")
-    public Object checkUser(ProceedingJoinPoint joinPoint, Long userId) throws Throwable {
+    public void checkUserExistence(Long userId){
         if(!Convert.toBool(client.userExists(userId).getData()))
-            return SaResult.error("User not found: " + userId);
-        return joinPoint.proceed();
+            throw new RuntimeException("User not found: " + userId);
+    }
+
+    public void checkTraceExistent(Long traceId){
+
+    }
+
+    public void checkTraceAvailability(Long userId, Long traceId){
+
+    }
+
+    public void checkKnodeAvailability(Long userId, Long knodeId) {
+
+    }
+
+    public void checkEnhancerAvailability(Long userId, Long enhancerId) {
+
     }
 }

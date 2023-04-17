@@ -11,17 +11,15 @@ import java.util.List;
 @Data
 public class KnodeDTO {
 
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long id;
+    private String id;
+    private Integer index;
     private String title;
     private List<Label> labels;
     private LocalDateTime createTime;
     private Boolean deleted;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long stemId;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private List<Long> branchIds;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private List<Long> connectionIds;
+    private String stemId;
+    private List<String> branchIds;
+    private List<String> connectionIds;
+    private Boolean isLeaf;
 
 }

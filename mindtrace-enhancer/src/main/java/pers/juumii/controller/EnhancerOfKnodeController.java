@@ -24,17 +24,33 @@ public class EnhancerOfKnodeController {
             @PathVariable Long userId,
             @PathVariable Long knodeId){
         aspect.checkKnodeAvailability(userId, knodeId);
-        return enhancerService.queryByKnodeId(knodeId);
+        return enhancerService.getEnhancersFromKnode(knodeId);
+    }
+
+    @PutMapping
+    public Object addEnhancerToKnode(
+            @PathVariable Long userId,
+            @PathVariable Long knodeId){
+        aspect.checkKnodeAvailability(userId, knodeId);
+        return enhancerService.addEnhancerToKnode(userId, knodeId);
+    }
+
+    @PutMapping("/quizcard")
+    public Object addEnhancerWithQuizcardToKnode(
+            @PathVariable Long userId,
+            @PathVariable Long knodeId){
+        aspect.checkKnodeAvailability(userId, knodeId);
+        return enhancerService.addEnhancerWithQuizcardToKnode(userId, knodeId);
     }
 
     @PostMapping("/{enhancerId}")
     public Object connectEnhancerToKnode(
             @PathVariable Long userId,
-            @PathVariable Long enhancerId,
-            @PathVariable Long knodeId){
+            @PathVariable Long knodeId,
+            @PathVariable Long enhancerId){
         aspect.checkEnhancerAvailability(userId,enhancerId);
         aspect.checkKnodeAvailability(userId, knodeId);
-        return enhancerService.connectEnhancerToKnode(userId, enhancerId, knodeId);
+        return enhancerService.connectEnhancerToKnode(userId, knodeId, enhancerId);
     }
 
     @DeleteMapping("/{enhancerId}")
@@ -44,6 +60,6 @@ public class EnhancerOfKnodeController {
             @PathVariable Long knodeId){
         aspect.checkEnhancerAvailability(userId,enhancerId);
         aspect.checkKnodeAvailability(userId, knodeId);
-        return enhancerService.disconnectEnhancerToKnode(userId,enhancerId,knodeId);
+        return enhancerService.disconnectEnhancerToKnode(userId,knodeId,enhancerId);
     }
 }

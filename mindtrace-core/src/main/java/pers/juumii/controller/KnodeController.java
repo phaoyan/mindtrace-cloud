@@ -1,5 +1,6 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.controller.aop.ControllerAspect;
@@ -26,8 +27,7 @@ public class KnodeController {
             @PathVariable Long knodeId,
             @RequestParam("title") String title){
         aspect.checkKnodeAvailability(userId, knodeId);
-        KnodeDTO res = Knode.transfer(knodeService.branch(knodeId, title));
-        return res;
+        return Knode.transfer(knodeService.branch(knodeId, title));
     }
 
     @PostMapping("/{knodeId}/label")
@@ -80,7 +80,7 @@ public class KnodeController {
             @PathVariable Long branchId){
         aspect.checkKnodeAvailability(userId, stemId);
         aspect.checkKnodeAvailability(userId, branchId);
-        return knodeService.shift(stemId, branchId);
+        return Knode.transfer(knodeService.shift(stemId, branchId, userId));
     }
 
     @PostMapping("/{sourceId}/connection/{targetId}")
@@ -91,6 +91,23 @@ public class KnodeController {
         aspect.checkKnodeAvailability(userId, sourceId);
         aspect.checkKnodeAvailability(userId, targetId);
         return knodeService.connect(sourceId, targetId);
+    }
+
+    @PostMapping("/index")
+    public Object initIndex(@PathVariable Long userId){
+        aspect.checkUserExistence(userId);
+        return Knode.transfer(knodeService.initIndex(userId));
+    }
+
+    @PostMapping("/{knodeId}/branch/index/{index1}/{index2}")
+    public Object swapIndex(
+            @PathVariable Long userId,
+            @PathVariable Long knodeId,
+            @PathVariable Integer index1,
+            @PathVariable Integer index2){
+        aspect.checkKnodeAvailability(userId, knodeId);
+        knodeService.swapIndex(knodeId, index1, index2);
+        return SaResult.ok();
     }
 
 }

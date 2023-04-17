@@ -1,23 +1,26 @@
 package pers.juumii.service.impl;
 
 import cn.dev33.satoken.util.SaResult;
+import cn.hutool.core.convert.Convert;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.*;
 import pers.juumii.repo.KnodeRepository;
 import pers.juumii.dto.KnodeDTO;
+import pers.juumii.repo.UserRepository;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.KnodeService;
 import pers.juumii.repo.LabelRepository;
+import pers.juumii.utils.DataUtils;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class KnodeServiceImpl implements KnodeService {
 
+    private final UserRepository userRepo;
     private final KnodeRepository knodeRepo;
     private final LabelRepository labelRepo;
     private final KnodeQueryService knodeQuery;
@@ -27,10 +30,12 @@ public class KnodeServiceImpl implements KnodeService {
     public KnodeServiceImpl(
             KnodeRepository knodeRepo,
             LabelRepository labelRepo,
-            KnodeQueryService knodeQuery) {
+            KnodeQueryService knodeQuery,
+            UserRepository userRepo) {
         this.knodeRepo = knodeRepo;
         this.labelRepo = labelRepo;
         this.knodeQuery = knodeQuery;
+        this.userRepo = userRepo;
     }
 
     @Override
@@ -39,7 +44,9 @@ public class KnodeServiceImpl implements KnodeService {
         Knode data;
         if(sup.isPresent()){
             Knode stem = sup.get();
-            Knode branch = knodeRepo.save(Knode.prototype(title, stem));
+            Knode prototype = Knode.prototype(title, stem);
+            prototype.setIndex(stem.getBranches().size());
+            Knode branch = knodeRepo.save(prototype);
             stem.getBranches().add(branch);
             knodeRepo.save(stem);
             data = branch;
@@ -66,10 +73,6 @@ public class KnodeServiceImpl implements KnodeService {
 
     @Override
     public SaResult clear(Long userId) {
-        List<Long> toBeDeletedIds = knodeQuery.checkAllIncludingDeleted(userId)
-                .stream().filter(Knode::getDeleted)
-                .map(Knode::getId).toList();
-        knodeRepo.deleteAllById(toBeDeletedIds);
         return SaResult.ok();
     }
 
@@ -79,18 +82,18 @@ public class KnodeServiceImpl implements KnodeService {
         // title
         Opt.ifPresent(dto.getTitle(), target::setTitle);
         // deleted
-        Opt.ifPresent(dto.getDeleted(), target::setDeleted);
+        Opt.ifPresent(dto.getIsLeaf(), target::setIsLeaf);
         // labels
         Opt.ifPresent(dto.getLabels(), labels -> target.setLabels(labelRepo.findAllById(labels.stream().map(Label::getName).toList())));
         // stem
         Opt.ifPresent(dto.getStemId(),
-            stemId -> target.setStem(knodeRepo.findById(stemId).orElse(null)));
+            stemId -> target.setStem(knodeRepo.findById(Convert.toLong(stemId)).orElse(null)));
         // branches
         Opt.ifPresent(dto.getBranchIds(),
-            branchIds-> target.setBranches(knodeRepo.findAllById(branchIds)));
+            branchIds-> target.setBranches(knodeRepo.findAllById(Convert.toList(Long.class, branchIds))));
         // connections
         Opt.ifPresent(dto.getConnectionIds(),
-            connectionIds-> target.setConnections(knodeRepo.findAllById(connectionIds)));
+            connectionIds-> target.setConnections(knodeRepo.findAllById(Convert.toList(Long.class, connectionIds))));
         knodeRepo.save(target);
         return SaResult.ok("Knode updated: " + knodeId);
     }
@@ -120,14 +123,9 @@ public class KnodeServiceImpl implements KnodeService {
     }
 
     @Override
-    public SaResult shift(Long stemId, Long branchId) {
-        Optional<Knode> stemOptional = knodeRepo.findById(stemId);
-        Optional<Knode> branchOptional = knodeRepo.findById(branchId);
-        if(stemOptional.isEmpty() || branchOptional.isEmpty())
-            return SaResult.error("Stem knode or branch knode not found.");
+    public List<Knode> shift(Long stemId, Long branchId, Long userId) {
         knodeRepo.shift(stemId, branchId);
-
-        return SaResult.ok();
+        return knodeQuery.checkAll(userId);
     }
 
     @Override
@@ -145,6 +143,32 @@ public class KnodeServiceImpl implements KnodeService {
         knodeRepo.save(source);
         knodeRepo.save(target);
         return SaResult.ok();
+    }
+
+    public void initIndex(Knode knode){
+        for(int i = 0; i < knode.getBranches().size(); i ++){
+            Knode branch = knode.getBranches().get(i);
+            branch.setIndex(i);
+            knodeRepo.save(branch);
+            initIndex(branch);
+        }
+    }
+
+    @Override
+    public List<Knode> initIndex(Long userId) {
+        initIndex(knodeQuery.check(userRepo.checkRootId(userId)));
+        return knodeQuery.checkAll(userId);
+    }
+
+    public void swapIndex(Long stemId, Integer index1, Integer index2){
+        Optional<Knode> stem = knodeRepo.findById(stemId);
+        List<Knode> branches = stem.get().getBranches();
+        Knode knode1 = DataUtils.getIf(branches, branch -> branch.getIndex().equals(index1));
+        Knode knode2 = DataUtils.getIf(branches, branch -> branch.getIndex().equals(index2));
+        knode1.setIndex(index2);
+        knode2.setIndex(index1);
+        knodeRepo.save(knode1);
+        knodeRepo.save(knode2);
     }
 
 }

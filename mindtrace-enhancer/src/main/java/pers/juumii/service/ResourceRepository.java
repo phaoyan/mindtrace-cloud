@@ -25,6 +25,8 @@ public interface ResourceRepository {
 
     Boolean release(Long userId, Long resourceId, String dataName);
 
+    Boolean releaseAll(Long userId, Long resourceId);
+
     // 返回这个resource的所有资源文件的File对象
     File[] peek(Long userId, Long resourceId);
 
@@ -35,7 +37,5 @@ public interface ResourceRepository {
     default InputStream load(Resource resource, String name){
         return load(resource.getCreateBy(), resource.getId(), name);
     }
-
-
 
 }

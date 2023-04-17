@@ -20,17 +20,13 @@ public interface EnhancerMapper extends BaseMapper<Enhancer> {
     // 将enhancer与user解绑
     void disconnectFromUser(@Param("userId") Long userId, @Param("enhancerId") Long enhancerId);
 
-    void attach(@Param("enhancerId") Long enhancerId, @Param("resourceId") Long resourceId);
-
-    void detach(@Param("enhancerId") Long enhancerId, @Param("resourceId") Long resourceId);
-
     void label(@Param("enhancerId") Long enhancerId, @Param("labelName") String labelName);
 
     void unlabel(@Param("enhancerId") Long enhancerId, @Param("labelName") String labelName);
 
     void connectEnhancerToKnode(@Param("knodeId") Long knodeId, @Param("enhancerId") Long enhancerId);
 
-    void disconnectEnhancerToKnode(@Param("knodeId") Long knodeId, @Param("enhancerId") Long enhancerId);
+    void disconnectEnhancerFromKnode(@Param("knodeId") Long knodeId, @Param("enhancerId") Long enhancerId);
 
     List<Long> queryRelatedKnodeIds(@Param("enhancerId") Long enhancerId);
 }

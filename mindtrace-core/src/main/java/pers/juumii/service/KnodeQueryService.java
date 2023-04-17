@@ -34,6 +34,4 @@ public interface KnodeQueryService {
     String chainStyleTitle(Long knodeId);
 
     List<Knode> checkAll(Long userId);
-
-    List<Knode> checkAllIncludingDeleted(Long userId);
 }

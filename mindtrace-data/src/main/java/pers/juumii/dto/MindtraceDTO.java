@@ -12,17 +12,16 @@ import java.time.LocalDateTime;
 public class MindtraceDTO {
 
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long id;
+    private String id;
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long enhancerId;
+    private String enhancerId;
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long knodeId;
+    private String knodeId;
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long createBy;
+    private String createBy;
     private Double retentionAfter;
     private Double retentionBefore;
     private Integer reviewLayer = 1;
-    private LocalDateTime createTime;
-    private Duration duration;
+    private String createTime;
     private String remark;
 }
