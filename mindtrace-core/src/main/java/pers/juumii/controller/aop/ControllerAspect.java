@@ -2,50 +2,55 @@ package pers.juumii.controller.aop;
 
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
-import cn.hutool.core.util.TypeUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.TimeInterval;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import pers.juumii.data.Knode;
-import pers.juumii.feign.UserClient;
+import pers.juumii.feign.GlobalClient;
 import pers.juumii.repo.KnodeRepository;
-import pers.juumii.repo.UserRepository;
 import pers.juumii.service.UserService;
 
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Aspect
 @Component
 public class ControllerAspect {
 
-    private final UserClient userClient;
+    private final GlobalClient userClient;
     private final UserService userService;
     private final KnodeRepository knodeRepo;
 
+    private final Map<Long, BlockingQueue<Runnable>> userBlockingQueues;
 
     @Autowired
     public ControllerAspect(
-            UserClient userClient,
+            GlobalClient userClient,
             UserService userService,
-            KnodeRepository knodeRepo) {
+            KnodeRepository knodeRepo,
+            Map<Long, BlockingQueue<Runnable>> userBlockingQueues) {
         this.userClient = userClient;
         this.userService = userService;
         this.knodeRepo = knodeRepo;
+        this.userBlockingQueues = userBlockingQueues;
     }
 
     @Pointcut("execution(Object pers.juumii.controller.*.* (..))")
     public void global(){}
 
-    @Pointcut("execution(Object pers.juumii.controller.KnodeQueryController.* (..))")
-    public void knodeQuery(){}
-
     @Around("global()")
     public Object wrapResult(ProceedingJoinPoint joinPoint) throws Throwable {
+        TimeInterval timer = DateUtil.timer();
+
         // 如果controller使用的service不返回SaResult，则将其包装为SaResult
         Object res = joinPoint.proceed();
+
+        System.out.println(joinPoint.getSignature() + " --- " + timer.interval());
         if(res instanceof SaResult) return res;
         else return SaResult.data(res);
     }
@@ -75,5 +80,9 @@ public class ControllerAspect {
         checkKnodeExistence(knodeId);
         if(!userService.findUserId(knodeId).equals(userId))
             throw new RuntimeException("Knode not available: " + knodeId + " for user " + userId);
+    }
+
+    public BlockingQueue<Runnable> getUserBlockingQueue(Long userId){
+        return userBlockingQueues.computeIfAbsent(userId, key -> new LinkedBlockingQueue<>());
     }
 }

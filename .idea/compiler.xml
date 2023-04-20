@@ -10,6 +10,7 @@
         <module name="mindtrace-data" />
         <module name="mindtrace-enhancer" />
         <module name="mindtrace-gateway" />
+        <module name="mindtrace-share" />
         <module name="mindtrace-path-optimizer" />
         <module name="mindtrace-tracing" />
         <module name="mindtrace-recommend" />
@@ -35,6 +36,7 @@
       <module name="mindtrace-path-optimizer" options="-parameters" />
       <module name="mindtrace-recommend" options="-parameters" />
       <module name="mindtrace-security" options="-parameters" />
+      <module name="mindtrace-share" options="-parameters" />
       <module name="mindtrace-trace" options="-parameters" />
       <module name="mindtrace-tracing" options="-parameters" />
     </option>

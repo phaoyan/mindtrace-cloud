@@ -33,6 +33,8 @@ public class Knode{
     // 只有非叶子节点这个属性才可能生效
     @Property("isLeaf")
     private Boolean isLeaf;
+    @Property("createBy")
+    private Long createBy;
     @Property("createTime")
     private LocalDateTime createTime;
     @Relationship(type = "TAG")
@@ -64,9 +66,10 @@ public class Knode{
         return res;
     }
 
-    public static Knode prototype(String title, Knode stem){
+    public static Knode prototype(String title, Knode stem, Long userId){
         Knode res = prototype(title);
         res.setStem(stem);
+        res.setCreateBy(userId);
         return res;
     }
 
@@ -75,6 +78,7 @@ public class Knode{
         res.setId(Convert.toLong(entity.get("id")));
         res.setIndex(Convert.toInt(entity.get("index")));
         res.setTitle(Convert.toStr(entity.get("title")));
+        res.setCreateBy(Convert.toLong(entity.get("createBy")));
         res.setPrivacy(Convert.toStr(entity.get("privacy")));
         res.setCreateTime(Convert.convert(LocalDateTime.class, entity.get("createTime")));
         res.setIsLeaf(Convert.toBool(entity.get("deleted")));
@@ -86,6 +90,7 @@ public class Knode{
         res.setId(knode.getId().toString());
         res.setTitle(knode.getTitle());
         res.setLabels(knode.getLabels());
+        res.setCreateBy(knode.getCreateBy().toString());
         res.setCreateTime(knode.getCreateTime());
         res.setIsLeaf(knode.getIsLeaf());
         res.setIndex(knode.index);

@@ -50,6 +50,12 @@ spring:
             - Path=/recommend/**
           filters:
             - StripPrefix=1
+        - id: knode-similarity-python
+          uri: lb://mindtrace-knode-similarity-python
+          predicates:
+            - Path=/similarity/knode/**
+          filters:
+            - StripPrefix=1
   # mysql
   datasource:
     type: com.zaxxer.hikari.HikariDataSource

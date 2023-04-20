@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Long register(Long userId) {
-        Knode root = knodeService.branch(-1L, "ROOT");
+        Knode root = knodeService.branch(userId,-1L, "ROOT");
         userRepo.save(User.prototype(userId, root));
         return root.getId();
     }

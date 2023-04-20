@@ -13,6 +13,7 @@
       <module>mindtrace-mastery</module>
       <module>mindtrace-path-optimizer</module>
       <module>mindtrace-recommend</module>
+      <module>mindtrace-share</module>
   </modules>
 
   <parent>

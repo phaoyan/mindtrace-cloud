@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public interface KnodeService {
 
-    Knode branch(Long knodeId, String title);
+    Knode branch(Long userId, Long knodeId, String title);
 
     SaResult delete(Long knodeId);
 
@@ -29,5 +29,5 @@ public interface KnodeService {
 
     List<Knode> initIndex(Long userId);
 
-    void swapIndex(Long stemId, Integer index1, Integer index2);
+    void swapIndex(Long userId, Long stemId, Integer index1, Integer index2);
 }

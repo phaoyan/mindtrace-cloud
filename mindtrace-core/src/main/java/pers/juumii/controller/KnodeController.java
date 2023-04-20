@@ -27,7 +27,7 @@ public class KnodeController {
             @PathVariable Long knodeId,
             @RequestParam("title") String title){
         aspect.checkKnodeAvailability(userId, knodeId);
-        return Knode.transfer(knodeService.branch(knodeId, title));
+        return Knode.transfer(knodeService.branch(userId, knodeId, title));
     }
 
     @PostMapping("/{knodeId}/label")
@@ -106,7 +106,7 @@ public class KnodeController {
             @PathVariable Integer index1,
             @PathVariable Integer index2){
         aspect.checkKnodeAvailability(userId, knodeId);
-        knodeService.swapIndex(knodeId, index1, index2);
+        knodeService.swapIndex(userId, knodeId, index1, index2);
         return SaResult.ok();
     }
 

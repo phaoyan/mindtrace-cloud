@@ -13,6 +13,11 @@ spring:
     authentication:
       username: neo4j
       password: 12345678
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 
   # mysql
   datasource:

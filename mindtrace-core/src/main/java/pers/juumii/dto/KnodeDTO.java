@@ -1,7 +1,5 @@
 package pers.juumii.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import pers.juumii.data.Label;
 
@@ -15,6 +13,7 @@ public class KnodeDTO {
     private Integer index;
     private String title;
     private List<Label> labels;
+    private String createBy;
     private LocalDateTime createTime;
     private Boolean deleted;
     private String stemId;

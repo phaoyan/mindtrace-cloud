@@ -22,5 +22,12 @@
       <jdbc-url>jdbc:mysql://localhost:3306/mindtrace_tracing</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="mindtrace_share@localhost" uuid="b20f2b29-7919-4ab2-b58a-d3b06c63fb35">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://localhost:3306/mindtrace_share</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

@@ -7,9 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import pers.juumii.dto.MindtraceDTO;
-import pers.juumii.utils.TimeUtils;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Data

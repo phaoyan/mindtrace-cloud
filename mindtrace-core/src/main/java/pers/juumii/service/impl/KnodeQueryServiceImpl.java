@@ -14,6 +14,7 @@ import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.UserService;
 import pers.juumii.utils.DataUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,6 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
 
     private final KnodeRepository knodeRepo;
     private final Neo4jClient client;
-
     private UserService userService;
 
     @Lazy
@@ -33,12 +33,15 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
     }
 
     @Autowired
-    public KnodeQueryServiceImpl(KnodeRepository knodeRepo, Neo4jClient client) {
+    public KnodeQueryServiceImpl(
+            KnodeRepository knodeRepo,
+            Neo4jClient neo4j) {
         this.knodeRepo = knodeRepo;
-        this.client = client;
+        this.client = neo4j;
     }
 
     @Override
+    @SuppressWarnings("all")
     public Knode check(Long knodeId) {
         // 存在性在Aspect中已经检验
         return knodeRepo.findById(knodeId).get();
@@ -126,12 +129,12 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
     }
 
     @Override
-    public String chainStyleTitle(Long knodeId) {
-        StringBuilder res = new StringBuilder();
+    public List<String> chainStyleTitle(Long knodeId) {
+        List<String> res = new ArrayList<>();
+        res.add(check(knodeId).getTitle());
         for (Knode knode: ancestors(knodeId))
-            res.append(knode.getTitle()).append(".");
-        res.append(check(knodeId).getTitle());
-        return res.toString();
+            res.add(knode.getTitle());
+        return res;
     }
 
     @Override

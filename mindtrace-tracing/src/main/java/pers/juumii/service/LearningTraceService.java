@@ -3,7 +3,6 @@ package pers.juumii.service;
 import cn.dev33.satoken.util.SaResult;
 import pers.juumii.data.LearningTrace;
 import pers.juumii.data.Mindtrace;
-import pers.juumii.dto.MindtraceDTO;
 import pers.juumii.dto.TraceInfo;
 
 import java.util.List;

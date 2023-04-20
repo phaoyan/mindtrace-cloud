@@ -6,7 +6,7 @@ import pers.juumii.controller.aop.ControllerAspect;
 import pers.juumii.service.UserService;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/user/{userId}")
 public class UserController {
 
     private final ControllerAspect aspect;
@@ -18,18 +18,18 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/{userId}")
+    @PostMapping
     public Object register(@PathVariable Long userId){
         return userService.register(userId);
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping
     public Object unregister(@PathVariable Long userId){
         aspect.checkUserExistence(userId);
         return userService.unregister(userId);
     }
 
-    @GetMapping("/{userId}/root")
+    @GetMapping("/root")
     public Object rootId(@PathVariable Long userId){
         aspect.checkUserExistence(userId);
         return userService.checkRootId(userId);

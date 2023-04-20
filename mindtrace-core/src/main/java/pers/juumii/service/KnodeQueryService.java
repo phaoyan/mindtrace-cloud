@@ -31,7 +31,8 @@ public interface KnodeQueryService {
 
     Knode findRoot(Long knodeId);
 
-    String chainStyleTitle(Long knodeId);
+    List<String> chainStyleTitle(Long knodeId);
 
     List<Knode> checkAll(Long userId);
+
 }
