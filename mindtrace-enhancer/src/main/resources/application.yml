@@ -11,6 +11,7 @@ spring:
   cloud:
     nacos:
       server-addr: localhost:8848
+#      server-addr: 39.108.71.232:8848
       discovery:
         service: mindtrace-enhancer
   # mysql
