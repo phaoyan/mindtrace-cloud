@@ -1,8 +1,6 @@
 package pers.juumii.config;
 
-import cn.dev33.satoken.config.SaTokenConfig;
 import cn.dev33.satoken.context.SaHolder;
-import cn.dev33.satoken.context.model.SaRequest;
 import cn.dev33.satoken.reactor.filter.SaReactorFilter;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;

@@ -10,7 +10,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import pers.juumii.feign.GlobalClient;
+import pers.juumii.feign.GatewayClient;
 import pers.juumii.repo.KnodeRepository;
 import pers.juumii.service.UserService;
 
@@ -22,22 +22,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Component
 public class ControllerAspect {
 
-    private final GlobalClient userClient;
+    private final GatewayClient gatewayClient;
     private final UserService userService;
     private final KnodeRepository knodeRepo;
 
-    private final Map<Long, BlockingQueue<Runnable>> userBlockingQueues;
-
     @Autowired
     public ControllerAspect(
-            GlobalClient userClient,
+            GatewayClient gatewayClient,
             UserService userService,
-            KnodeRepository knodeRepo,
-            Map<Long, BlockingQueue<Runnable>> userBlockingQueues) {
-        this.userClient = userClient;
+            KnodeRepository knodeRepo) {
+        this.gatewayClient = gatewayClient;
         this.userService = userService;
         this.knodeRepo = knodeRepo;
-        this.userBlockingQueues = userBlockingQueues;
     }
 
     @Pointcut("execution(Object pers.juumii.controller.*.* (..))")
@@ -66,7 +62,7 @@ public class ControllerAspect {
     }
 
     public void checkUserExistence(Long userId) {
-        if(!Convert.toBool(userClient.userExists(userId).getData()))
+        if(!Convert.toBool(gatewayClient.userExists(userId).getData()))
             throw new RuntimeException("User not found: " + userId);
     }
 
@@ -80,9 +76,5 @@ public class ControllerAspect {
         checkKnodeExistence(knodeId);
         if(!userService.findUserId(knodeId).equals(userId))
             throw new RuntimeException("Knode not available: " + knodeId + " for user " + userId);
-    }
-
-    public BlockingQueue<Runnable> getUserBlockingQueue(Long userId){
-        return userBlockingQueues.computeIfAbsent(userId, key -> new LinkedBlockingQueue<>());
     }
 }

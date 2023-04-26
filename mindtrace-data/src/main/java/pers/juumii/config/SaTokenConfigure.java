@@ -7,6 +7,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * 配置类
+ * 作用：外部无法直接通过ip访问服务，必须通过gateway
+ */
 @Configuration
 public class SaTokenConfigure implements WebMvcConfigurer {
 

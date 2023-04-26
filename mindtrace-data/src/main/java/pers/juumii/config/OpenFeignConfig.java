@@ -1,5 +1,6 @@
 package pers.juumii.config;
 
+
 import feign.codec.Decoder;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
@@ -8,8 +9,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import pers.juumii.handler.MyJackson2HttpMessageConverter;
 
+/**
+ * 作用：实现服务间相互畅通访问
+ */
 @Configuration
-public class OpenFeignConfigure {
+public class OpenFeignConfig {
 
     @Bean
     public Decoder feignDecoder() {

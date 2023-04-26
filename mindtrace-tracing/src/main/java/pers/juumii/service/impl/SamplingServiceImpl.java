@@ -2,12 +2,11 @@ package pers.juumii.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
-import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Mindtrace;
-import pers.juumii.feign.GlobalClient;
+import pers.juumii.feign.GatewayClient;
 import pers.juumii.mapper.MindtraceMapper;
 import pers.juumii.service.SamplingService;
 
@@ -17,14 +16,10 @@ import java.util.List;
 @Service
 public class SamplingServiceImpl implements SamplingService {
 
-    private final GlobalClient client;
     private final MindtraceMapper mindtraceMapper;
 
     @Autowired
-    public SamplingServiceImpl(
-            GlobalClient client,
-            MindtraceMapper mindtraceMapper) {
-        this.client = client;
+    public SamplingServiceImpl(MindtraceMapper mindtraceMapper) {
         this.mindtraceMapper = mindtraceMapper;
     }
 

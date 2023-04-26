@@ -12,7 +12,7 @@ import pers.juumii.data.Mindtrace;
 import pers.juumii.dto.LearningTraceDTO;
 import pers.juumii.dto.MindtraceDTO;
 import pers.juumii.dto.TraceInfo;
-import pers.juumii.feign.GlobalClient;
+import pers.juumii.feign.CoreClient;
 import pers.juumii.mapper.LearnMindTraceRelationshipMapper;
 import pers.juumii.mapper.LearningTraceMapper;
 import pers.juumii.mapper.MindtraceMapper;
@@ -29,18 +29,18 @@ public class LearningTraceServiceImpl implements LearningTraceService {
     private final MindtraceMapper mindtraceMapper;
     private final LearningTraceMapper learningTraceMapper;
     private final LearnMindTraceRelationshipMapper relationshipMapper;
-    private final GlobalClient client;
+    private final CoreClient coreClient;
 
     @Autowired
     public LearningTraceServiceImpl(
             MindtraceMapper mindtraceMapper,
             LearningTraceMapper learningTraceMapper,
             LearnMindTraceRelationshipMapper relationshipMapper,
-            GlobalClient client) {
+            CoreClient coreClient) {
         this.mindtraceMapper = mindtraceMapper;
         this.learningTraceMapper = learningTraceMapper;
         this.relationshipMapper = relationshipMapper;
-        this.client = client;
+        this.coreClient = coreClient;
     }
 
     @Override
@@ -122,8 +122,11 @@ public class LearningTraceServiceImpl implements LearningTraceService {
         // 找这个Knode 的 leaves对应的 mindtrace
         LambdaQueryWrapper<Mindtrace> wrapper = new LambdaQueryWrapper<>();
         List<Long> subKnodeIds = new ArrayList<>();
-        for(Object data: Convert.toList(client.getKnodeLeaves(userId, knodeId).getData()))
+        for(Object data: Convert.toList(coreClient.getKnodeLeaves(userId, knodeId).getData()))
             subKnodeIds.add(Convert.toLong(((Map<String, Object>)data).get("id")));
+        // 如果没有收集到任何leaf，说明这个knode本身是leaf，将其加入
+        if(subKnodeIds.isEmpty())
+            subKnodeIds.add(knodeId);
         wrapper.in(Mindtrace::getKnodeId, subKnodeIds);
         List<Mindtrace> mindtraces = mindtraceMapper.selectList(wrapper);
 

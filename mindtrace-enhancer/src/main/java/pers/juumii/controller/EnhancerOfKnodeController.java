@@ -2,7 +2,7 @@ package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pers.juumii.aop.ControllerAspect;
+import pers.juumii.controller.aop.ControllerAspect;
 import pers.juumii.service.EnhancerService;
 
 @RestController

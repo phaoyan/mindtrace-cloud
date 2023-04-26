@@ -1,4 +1,4 @@
-package pers.juumii.handler;
+package pers.juumii.feign.interceptor;
 
 import cn.dev33.satoken.context.SaHolder;
 import feign.RequestInterceptor;

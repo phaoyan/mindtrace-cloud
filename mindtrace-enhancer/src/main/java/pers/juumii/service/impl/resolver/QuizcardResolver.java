@@ -35,11 +35,6 @@ public class QuizcardResolver implements ResourceResolver {
     }
 
     @Override
-    public Map<String, Object> resolve(Resource resource) {
-        return resolve(repository.load(resource));
-    }
-
-    @Override
     public Object resolve(Resource resource, String name) {
         InputStream data = repository.load(resource, name);
         Map<String, Object> resolve = resolve(Map.of(name, data));
@@ -48,7 +43,8 @@ public class QuizcardResolver implements ResourceResolver {
     }
 
 
-    private Map<String, Object> resolve(Map<String, InputStream> dataList){
+    @Override
+    public Map<String, Object> resolve(Map<String, InputStream> dataList){
         Map<String, Object> res = new HashMap<>();
         HashMap<Object, Object> imgs = new HashMap<>();
         res.put("imgs", imgs);

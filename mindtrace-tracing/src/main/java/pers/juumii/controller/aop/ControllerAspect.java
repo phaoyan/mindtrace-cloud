@@ -9,17 +9,30 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import pers.juumii.feign.GlobalClient;
+import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.EnhancerClient;
+import pers.juumii.feign.GatewayClient;
+import pers.juumii.mapper.LearningTraceMapper;
 
 @Aspect
 @Component
 public class ControllerAspect {
 
-    private final GlobalClient client;
+    private final LearningTraceMapper learningTraceMapper;
+    private final CoreClient coreClient;
+    private final EnhancerClient enhancerClient;
+    private final GatewayClient gatewayClient;
 
     @Autowired
-    public ControllerAspect(GlobalClient client) {
-        this.client = client;
+    public ControllerAspect(
+            LearningTraceMapper learningTraceMapper,
+            CoreClient coreClient,
+            EnhancerClient enhancerClient,
+            GatewayClient gatewayClient) {
+        this.learningTraceMapper = learningTraceMapper;
+        this.coreClient = coreClient;
+        this.enhancerClient = enhancerClient;
+        this.gatewayClient = gatewayClient;
     }
 
     @Pointcut("execution(Object pers.juumii.controller.*.* (..))")
@@ -39,23 +52,30 @@ public class ControllerAspect {
     }
 
     public void checkUserExistence(Long userId){
-        if(!Convert.toBool(client.userExists(userId).getData()))
+        if(!Convert.toBool(gatewayClient.userExists(userId).getData()))
             throw new RuntimeException("User not found: " + userId);
     }
 
-    public void checkTraceExistent(Long traceId){
+    public void checkTraceExistence(Long traceId){
+        if(learningTraceMapper.selectById(traceId) == null)
+            throw new RuntimeException("Trace not found: " + traceId);
 
     }
 
     public void checkTraceAvailability(Long userId, Long traceId){
-
+        checkUserExistence(userId);
+        checkTraceExistence(traceId);
+        if(!learningTraceMapper.selectById(traceId).getCreateBy().equals(userId))
+            throw new RuntimeException("Trace not available: " + traceId + " for user " + userId);
     }
 
     public void checkKnodeAvailability(Long userId, Long knodeId) {
-
+        if(coreClient.checkKnode(userId, knodeId).getData() == null)
+            throw new RuntimeException("Knode not available: " + knodeId + " for user " + userId);
     }
 
     public void checkEnhancerAvailability(Long userId, Long enhancerId) {
-
+        if(enhancerClient.getEnhancerFromUser(userId, enhancerId).getData() == null)
+            throw new RuntimeException("Enhancer not available: " + enhancerId + " for user " + userId);
     }
 }

@@ -4,7 +4,6 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
@@ -19,18 +18,19 @@ import java.util.Map;
 
 /**
  * data格式：
- * content->markdown字符串
- * config->json配置项，包括hide（是否为隐藏状态）
- * 因为milkdown默认图片直接存在文档里，所以暂不写图片存储的逻辑
+ * type: 这个linkout的类型，目前支持： bilibili
+ * url: 实际的url
+ *
+ * 不过在serializer这里数据的格式都是一样的，不一样的在于resolver对type的解析
  */
 @Service
-@ResourceType(ResourceType.MARKDOWN)
-public class MarkdownSerializer implements ResourceSerializer {
+@ResourceType(ResourceType.LINKOUT)
+public class LinkoutSerializer implements ResourceSerializer {
 
     private final ResourceRepository repository;
 
     @Autowired
-    public MarkdownSerializer(ResourceRepository repository) {
+    public LinkoutSerializer(ResourceRepository repository) {
         this.repository = repository;
     }
 
@@ -40,20 +40,23 @@ public class MarkdownSerializer implements ResourceSerializer {
             data = prototype();
 
         // 提取数据
-        String content = Convert.toStr(data.get("content"));
-        JSONObject config = JSONUtil.parseObj(data.get("config"));
+        String type = Convert.toStr(data.get("type"));
+        String url = Convert.toStr(data.get("url"));
 
         // 封装数据
+        JSONObject json = JSONUtil.createObj();
+        json.set("type", type);
+        json.set("url", url);
         Map<String, InputStream> dataList = new HashMap<>();
-        Opt.ifPresent(content, c->dataList.put("content.md", IoUtil.toStream(c, StandardCharsets.UTF_8)));
-        Opt.ifPresent(config, c->dataList.put("config.json", IoUtil.toStream(config.toString(), StandardCharsets.UTF_8)));
+        dataList.put("data.json", IoUtil.toStream(json.toStringPretty(), StandardCharsets.UTF_8));
 
         repository.save(meta.getCreateBy(), meta.getId(), dataList);
     }
 
-    public static Map<String, Object> prototype(){
+    private Map<String, Object> prototype() {
         HashMap<String, Object> res = new HashMap<>();
-        res.put("content", "");
+        res.put("type", "");
+        res.put("url","");
         return res;
     }
 }

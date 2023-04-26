@@ -15,6 +15,13 @@ spring:
     # spring cloud gateway
     gateway:
       routes:
+        - id: dynamic-route
+          uri: lb://{header.x-service-name}
+          predicates:
+            - Header=x-service-name, \w+
+          filters:
+            - RemoveRequestHeader=x-service-name
+            - StripPrefix=1
         - id: core
           uri: lb://mindtrace-core
           predicates:

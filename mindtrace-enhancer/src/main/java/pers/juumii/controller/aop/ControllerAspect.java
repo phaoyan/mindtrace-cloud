@@ -1,4 +1,4 @@
-package pers.juumii.aop;
+package pers.juumii.controller.aop;
 
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
@@ -8,30 +8,32 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import pers.juumii.feign.GlobalClient;
+import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.GatewayClient;
 import pers.juumii.mapper.EnhancerMapper;
-import pers.juumii.mapper.LabelMapper;
 import pers.juumii.mapper.ResourceMapper;
-
-import java.util.Objects;
 
 @Aspect
 @Component
 public class ControllerAspect {
 
-    private final GlobalClient client;
+    private final GatewayClient gatewayClient;
+    private final CoreClient coreClient;
     private final EnhancerMapper enhancerMapper;
     private final ResourceMapper resourceMapper;
 
     @Autowired
     public ControllerAspect(
-            GlobalClient client,
+            GatewayClient gatewayClient,
+            CoreClient coreClient,
             EnhancerMapper enhancerMapper,
             ResourceMapper resourceMapper) {
-        this.client = client;
+        this.gatewayClient = gatewayClient;
+        this.coreClient = coreClient;
         this.enhancerMapper = enhancerMapper;
         this.resourceMapper = resourceMapper;
     }
+
 
     @Pointcut("execution(Object pers.juumii.controller.*.* (..))")
     public void global(){}
@@ -50,14 +52,8 @@ public class ControllerAspect {
     }
 
     public void checkUserExistence(Long userId) {
-        if(!Convert.toBool(client.userExists(userId).getData()))
+        if(!Convert.toBool(gatewayClient.userExists(userId).getData()))
             throw new RuntimeException("User not found : " + userId);
-    }
-
-    public void checkKnodeExistence(Long userId, Long knodeId){
-        checkUserExistence(userId);
-        if(client.checkKnode(userId, knodeId).getData() == null)
-            throw new RuntimeException("Knode not found: " + knodeId);
     }
 
     public void checkEnhancerExistence(Long enhancerId){
@@ -66,8 +62,7 @@ public class ControllerAspect {
     }
 
     public void checkKnodeAvailability(Long userId, Long knodeId){
-        checkKnodeExistence(userId, knodeId);
-        if(client.checkKnode(userId, knodeId).getData() == null)
+        if(coreClient.checkKnode(userId, knodeId).getData() == null)
             throw new RuntimeException("Knode not available: " + knodeId + " for user " + userId);
     }
 
