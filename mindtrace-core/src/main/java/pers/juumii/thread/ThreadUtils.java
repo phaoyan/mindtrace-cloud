@@ -1,5 +1,6 @@
 package pers.juumii.thread;
 
+import cn.dev33.satoken.stp.StpUtil;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,14 @@ public class ThreadUtils {
     // 使用时直接 getUserBlockingQueue(userId).add(()->{...}) 即可
     public BlockingQueue<Runnable> getUserBlockingQueue(Long userId){
         return userBlockingQueues.computeIfAbsent(userId, key->{
+            BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
+            globalExecutor.execute(new UserTaskHandler(queue));
+            return queue;
+        });
+    }
+
+    public BlockingQueue<Runnable> getUserBlockingQueue(){
+        return userBlockingQueues.computeIfAbsent(StpUtil.getLoginIdAsLong(), key->{
             BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
             globalExecutor.execute(new UserTaskHandler(queue));
             return queue;

@@ -7,6 +7,7 @@ import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import pers.juumii.dto.UserDTO;
 import pers.juumii.entity.User;
 import pers.juumii.service.LoginService;
 import pers.juumii.service.UserService;
@@ -29,10 +30,8 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public SaResult register(
-            @RequestParam("username") String username,
-            @RequestParam("password") String password){
-        return userService.register(username, password);
+    public SaResult register(@RequestBody User user){
+        return userService.register(user.getUsername(), user.getPassword());
     }
 
     @PostMapping("/login")
@@ -61,7 +60,7 @@ public class UserController {
     public SaResult userInfo(){
         Long loginId = Convert.toLong(StpUtil.getLoginId());
         if(Convert.toBool(exists(loginId).getData()))
-            return SaResult.data(userService.check(loginId));
+            return SaResult.data(UserDTO.transfer(userService.check(loginId)));
         else return SaResult.error("用户未登录");
     }
 

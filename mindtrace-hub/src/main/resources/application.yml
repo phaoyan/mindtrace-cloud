@@ -1,0 +1,18 @@
+server:
+  port: 31657
+spring:
+  application:
+    name: mindtrace-hub
+  cloud:
+    nacos:
+      server-addr: localhost:8848
+      discovery:
+        service: mindtrace-hub
+
+  # mysql
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mindtrace_hub?serverTimezone=GMT%2B8&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: 2004131phy123

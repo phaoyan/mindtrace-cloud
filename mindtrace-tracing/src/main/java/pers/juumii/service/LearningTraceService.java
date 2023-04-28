@@ -19,6 +19,8 @@ public interface LearningTraceService {
 
     List<Mindtrace> settleLearning(Long userId, TraceInfo traceInfo);
 
+    SaResult dropLearning(Long userId, TraceInfo traceInfo);
+
     // 检查该用户当前有无正在进行的LearningTrace，如果有则返回它，如果没有则返回空
     LearningTrace checkNow(Long userId);
 

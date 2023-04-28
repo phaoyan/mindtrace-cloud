@@ -9,6 +9,7 @@ public class SerialTimer {
 
     private Long curMilli;
     private Long counter;
+    private String info;
 
     public void start(){
         setCurMilli(System.currentTimeMillis());
@@ -24,12 +25,21 @@ public class SerialTimer {
     }
 
     public void logAndRestart(){
-        System.out.println("T" + counter + " --- " + restart());
+        System.out.println(info + "T" + counter + " --- " + restart());
     }
 
     public static SerialTimer timer(){
         SerialTimer res = new SerialTimer();
         res.setCounter(0L);
+        res.setInfo("    ");
+        res.start();
+        return res;
+    }
+
+    public static SerialTimer timer(String info){
+        SerialTimer res = new SerialTimer();
+        res.setCounter(0L);
+        res.setInfo(info);
         res.start();
         return res;
     }

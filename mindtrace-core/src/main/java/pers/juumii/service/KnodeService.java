@@ -11,11 +11,11 @@ import java.util.List;
 @Service
 public interface KnodeService {
 
+    Knode createRoot(Long userId);
+
     Knode branch(Long userId, Long knodeId, String title);
 
     SaResult delete(Long knodeId);
-
-    SaResult clear(Long userId);
 
     SaResult update(Long knodeId, KnodeDTO dto);
 

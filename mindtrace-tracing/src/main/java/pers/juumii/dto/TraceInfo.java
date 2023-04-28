@@ -13,6 +13,7 @@ public class TraceInfo {
     public static final String PAUSE_LEARNING = "pause learning";
     public static final String CONTINUE_LEARNING = "continue learning";
     public static final String SETTLE_LEARNING = "settle learning";
+    public static final String DROP_LEARNING = "drop learning";
 
 
     private String type;

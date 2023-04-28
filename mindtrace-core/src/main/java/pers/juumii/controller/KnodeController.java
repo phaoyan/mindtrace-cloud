@@ -16,7 +16,9 @@ public class KnodeController {
     private final ControllerAspect aspect;
 
     @Autowired
-    public KnodeController(KnodeService knodeService, ControllerAspect aspect) {
+    public KnodeController(
+            KnodeService knodeService,
+            ControllerAspect aspect) {
         this.knodeService = knodeService;
         this.aspect = aspect;
     }
@@ -54,13 +56,6 @@ public class KnodeController {
             @PathVariable Long knodeId){
         aspect.checkKnodeAvailability(userId, knodeId);
         return knodeService.delete(knodeId);
-    }
-
-    // 将标记为 deleted 的knode彻底删除
-    @DeleteMapping("/clear")
-    public Object clear(@PathVariable Long userId){
-        aspect.checkUserExistence(userId);
-        return knodeService.clear(userId);
     }
 
     @PostMapping("/{knodeId}")

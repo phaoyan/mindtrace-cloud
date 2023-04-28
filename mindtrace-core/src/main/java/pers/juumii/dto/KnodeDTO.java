@@ -15,7 +15,6 @@ public class KnodeDTO {
     private List<Label> labels;
     private String createBy;
     private LocalDateTime createTime;
-    private Boolean deleted;
     private String stemId;
     private List<String> branchIds;
     private List<String> connectionIds;

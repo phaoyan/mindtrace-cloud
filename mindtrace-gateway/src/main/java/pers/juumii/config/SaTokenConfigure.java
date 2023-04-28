@@ -29,6 +29,7 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                     SaRouter
                     .match("/**")
                     .notMatch("/user/login")
+                    .notMatch("/user/register")
                     .check(StpUtil::checkLogin))
                 // 指定[异常处理函数]：每次[认证函数]发生异常时执行此函数
                 .setError(e -> {

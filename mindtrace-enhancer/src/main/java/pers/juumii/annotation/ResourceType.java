@@ -16,9 +16,6 @@ public @interface ResourceType {
     String LINKOUT = "linkout";
     // 完形填空
     String CLOZE = "cloze";
-    // 云端资源的统一type：用户可将一些本地资源如pdf等上传到resources，
-    // 然后每次打开mindtrace就可以直接通过mindtrace访问到这些资源
-    String RESOURCE_CLOUD = "resource cloud";
     // 该资源收集一个Knode的所有子节点的Quizcard
     // 应当支持一定的配置以供筛选quiz
     String QUIZCARD_COLLECTION = "quizcard collection";

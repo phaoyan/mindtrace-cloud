@@ -2,6 +2,7 @@ package pers.juumii.service.impl;
 
 import cn.dev33.satoken.util.SaResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.entity.User;
@@ -12,10 +13,14 @@ import pers.juumii.service.UserService;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final RabbitTemplate rabbit;
 
     @Autowired
-    public UserServiceImpl(UserMapper userMapper) {
+    public UserServiceImpl(
+            UserMapper userMapper,
+            RabbitTemplate rabbit) {
         this.userMapper = userMapper;
+        this.rabbit = rabbit;
     }
 
     @Override
@@ -37,7 +42,8 @@ public class UserServiceImpl implements UserService {
 
         User user = User.prototype(username, password);
         userMapper.insert(user);
-        return SaResult.ok("User registered: " + username + " " + user.getId());
+        rabbit.convertAndSend("user_event_exchange", "register", user.getId());
+        return SaResult.data(user.getId());
     }
 
     @Override

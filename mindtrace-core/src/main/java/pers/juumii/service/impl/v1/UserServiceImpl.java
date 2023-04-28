@@ -1,5 +1,6 @@
-package pers.juumii.service.impl;
+package pers.juumii.service.impl.v1;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Knode;
@@ -9,7 +10,7 @@ import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.KnodeService;
 import pers.juumii.service.UserService;
 
-@Service
+//@Service
 public class UserServiceImpl implements UserService {
 
     private final KnodeService knodeService;
@@ -19,44 +20,30 @@ public class UserServiceImpl implements UserService {
     @Autowired
     public UserServiceImpl(
             KnodeService knodeService,
-            KnodeQueryService knodeQuery, UserRepository userRepo) {
+            KnodeQueryService knodeQuery,
+            UserRepository userRepo) {
         this.knodeService = knodeService;
         this.knodeQuery = knodeQuery;
         this.userRepo = userRepo;
     }
 
     @Override
-    public Long register(Long userId) {
-        Knode root = knodeService.branch(userId,-1L, "ROOT");
+    public SaResult register(Long userId) {
+        Knode root = knodeService.createRoot(userId);
         userRepo.save(User.prototype(userId, root));
-        return root.getId();
+        return SaResult.data(root.getId().toString());
     }
 
     @Override
-    public Long unregister(Long userId) {
+    public SaResult unregister(Long userId) {
         Long rootId = checkRootId(userId);
         userRepo.deleteById(userId);
-        return rootId;
+        return SaResult.data(rootId.toString());
     }
 
     @Override
     public Long checkRootId(Long userId) {
         return userRepo.checkRootId(userId);
     }
-
-    @Override
-    public Boolean possesses(Long userId, Long knodeId) {
-        return findUserId(knodeId).equals(userId);
-    }
-
-    @Override
-    public Long findUserId(Long knodeId) {
-        // 两步：先从knodeId找rootId，再从rootId找userId
-        return userRepo.findUserId(knodeQuery.findRoot(knodeId).getId());
-    }
-
-
-
-
 
 }

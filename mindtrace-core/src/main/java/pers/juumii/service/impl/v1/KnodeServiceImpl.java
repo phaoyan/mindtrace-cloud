@@ -1,4 +1,4 @@
-package pers.juumii.service.impl;
+package pers.juumii.service.impl.v1;
 
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
@@ -6,9 +6,8 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import pers.juumii.config.RabbitMQConfig;
 import pers.juumii.data.*;
+import pers.juumii.mq.KnodeExchange;
 import pers.juumii.repo.KnodeRepository;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.repo.UserRepository;
@@ -17,11 +16,12 @@ import pers.juumii.service.KnodeService;
 import pers.juumii.repo.LabelRepository;
 import pers.juumii.thread.ThreadUtils;
 import pers.juumii.utils.DataUtils;
+import pers.juumii.utils.SerialTimer;
 
 import java.util.List;
 import java.util.Optional;
 
-@Service
+//@Service
 public class KnodeServiceImpl implements KnodeService {
 
     private final UserRepository userRepo;
@@ -48,15 +48,25 @@ public class KnodeServiceImpl implements KnodeService {
     }
 
     @Override
+    public Knode createRoot(Long userId){
+        Knode root = Knode.prototype("ROOT");
+        root.setCreateBy(userId);
+        knodeRepo.save(root);
+        return root;
+    }
+
+    @Override
     public Knode branch(Long userId, Long knodeId, String title) {
         Knode stem = knodeQuery.check(knodeId);
         Knode branch = Knode.prototype(title, stem, userId);
         branch.setIndex(stem.getBranches().size());
 
         threadUtils.getUserBlockingQueue(userId).add(()->{
+            SerialTimer timer = SerialTimer.timer("TEST BRANCH: ");
             knodeRepo.save(branch);
             stem.getBranches().add(branch);
             knodeRepo.save(stem);
+            timer.logAndRestart();
         });
         return branch;
     }
@@ -79,16 +89,10 @@ public class KnodeServiceImpl implements KnodeService {
     }
 
     @Override
-    public SaResult clear(Long userId) {
-        return SaResult.ok();
-    }
-
-    @Override
     public SaResult update(Long knodeId, KnodeDTO dto) {
         Knode target = knodeQuery.check(knodeId);
         Opt.ifPresent(dto.getTitle(), target::setTitle);
         Opt.ifPresent(dto.getIsLeaf(), target::setIsLeaf);
-        Opt.ifPresent(dto.getLabels(), labels -> target.setLabels(labelRepo.findAllById(labels.stream().map(Label::getName).toList())));
         Opt.ifPresent(dto.getStemId(),
             stemId -> target.setStem(knodeRepo.findById(Convert.toLong(stemId)).orElse(null)));
         Opt.ifPresent(dto.getBranchIds(),
@@ -99,34 +103,20 @@ public class KnodeServiceImpl implements KnodeService {
 
         // 发送MQ消息
         rabbit.convertAndSend(
-                RabbitMQConfig.KNODE_EVENT_EXCHANGE,
-                RabbitMQConfig.ROUTING_KEY_UPDATE,
+                KnodeExchange.KNODE_EVENT_EXCHANGE,
+                KnodeExchange.ROUTING_KEY_UPDATE,
                 JSONUtil.toJsonStr(Knode.transfer(target)));
         return SaResult.ok("Knode updated: " + knodeId);
     }
 
     @Override
     public SaResult addLabelToKnode(Long knodeId, String labelName) {
-        Optional<Knode> optionalKnode = knodeRepo.findById(knodeId);
-        if(optionalKnode.isEmpty())
-            return SaResult.error("Knode not found: " + knodeId);
-        Optional<Label> optionalLabel = labelRepo.findById(labelName);
-        if(optionalLabel.isEmpty())
-            return SaResult.error("Label not found: " + labelName);
-        Knode knode = optionalKnode.get();
-        Label Label = optionalLabel.get();
-        knode.getLabels().add(Label);
-        knodeRepo.save(knode);
-        return SaResult.data(knode);
+        return null;
     }
 
     @Override
     public SaResult removeLabelFromKnode(Long knodeId, String labelName) {
-        Optional<Knode> optionalKnode = knodeRepo.findById(knodeId);
-        if(optionalKnode.isEmpty())
-            return SaResult.error("Knode not found: " + knodeId);
-        knodeRepo.unlabel(knodeId, labelName);
-        return SaResult.ok();
+        return null;
     }
 
     @Override

@@ -16,6 +16,7 @@ public class UserTaskHandler implements Runnable {
                 queue.take().run();
         } catch (InterruptedException e) {
             // 线程被中断，可以在这里处理清理逻辑
+            e.printStackTrace();
         }
     }
 }

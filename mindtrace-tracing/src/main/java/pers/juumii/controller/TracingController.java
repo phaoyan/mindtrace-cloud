@@ -71,6 +71,7 @@ public class TracingController {
             case TraceInfo.PAUSE_LEARNING -> LearningTraceDTO.transfer(learningTraceService.pauseLearning(userId, traceInfo));
             case TraceInfo.CONTINUE_LEARNING -> LearningTraceDTO.transfer(learningTraceService.continueLearning(userId, traceInfo));
             case TraceInfo.SETTLE_LEARNING -> learningTraceService.settleLearning(userId, traceInfo);
+            case TraceInfo.DROP_LEARNING -> learningTraceService.dropLearning(userId, traceInfo);
             default -> SaResult.error("Wrong Trace Info Type: " + traceInfo.getType());
         };
     }

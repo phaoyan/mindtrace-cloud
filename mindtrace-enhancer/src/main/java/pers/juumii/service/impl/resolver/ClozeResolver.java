@@ -49,7 +49,7 @@ public class ClozeResolver implements ResourceResolver {
         Matcher matcher = Pattern.compile(CLOZE_TEXT_REGEX).matcher(raw);
         while (matcher.find()){
             String answer = matcher.group(1);
-            matcher.appendReplacement(noAnswer, "    ");
+            matcher.appendReplacement(noAnswer, "");
             JSONObject index = JSONUtil.createObj();
             index.set("txt", answer);
             index.set("start", matcher.start());

@@ -1,4 +1,4 @@
-package pers.juumii.service.impl;
+package pers.juumii.service.impl.v1;
 
 import cn.dev33.satoken.util.SaResult;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
@@ -11,7 +11,7 @@ import pers.juumii.service.LabelService;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+//@Service
 public class LabelServiceImpl implements LabelService {
 
     private final LabelRepository labelRepo;
@@ -23,31 +23,22 @@ public class LabelServiceImpl implements LabelService {
 
     @Override
     public List<Label> checkAll() {
-        return labelRepo.findAll();
+        return null;
     }
 
     @Override
     public SaResult create(String name) {
-        Label label = labelRepo.save(Label.prototype(name));
-        return SaResult.data(label);
+        return null;
     }
 
     @Override
     public SaResult remove(String name) {
-        Optional<Label> optional = labelRepo.findById(name);
-        optional.ifPresent(label -> labelRepo.deleteById(label.getName()));
-        return SaResult.ok();
+        return null;
     }
 
     @Override
     public SaResult update(String name, Label newLabel) {
-        Optional<Label> optional = labelRepo.findById(name);
-        if(optional.isEmpty())
-            return SaResult.error("label not found: " + name);
-        Label label = optional.get();
-        Opt.ifPresent(newLabel.getName(), label::setName);
-        Opt.ifPresent(newLabel.getDeleted(), label::setDeleted);
-        labelRepo.save(label);
-        return SaResult.data(label);
+        return null;
+
     }
 }

@@ -10,13 +10,12 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import pers.juumii.data.Knode;
 import pers.juumii.feign.GatewayClient;
 import pers.juumii.repo.KnodeRepository;
+import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.UserService;
 
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 @Aspect
 @Component
@@ -25,15 +24,17 @@ public class ControllerAspect {
     private final GatewayClient gatewayClient;
     private final UserService userService;
     private final KnodeRepository knodeRepo;
+    private final KnodeQueryService knodeQuery;
 
     @Autowired
     public ControllerAspect(
             GatewayClient gatewayClient,
             UserService userService,
-            KnodeRepository knodeRepo) {
+            KnodeRepository knodeRepo, KnodeQueryService knodeQuery) {
         this.gatewayClient = gatewayClient;
         this.userService = userService;
         this.knodeRepo = knodeRepo;
+        this.knodeQuery = knodeQuery;
     }
 
     @Pointcut("execution(Object pers.juumii.controller.*.* (..))")
@@ -66,15 +67,9 @@ public class ControllerAspect {
             throw new RuntimeException("User not found: " + userId);
     }
 
-    public void checkKnodeExistence(Long knodeId) {
-        if(!knodeRepo.existsById(knodeId))
-            throw new RuntimeException("Knode not found: " + knodeId);
-    }
-
     public void checkKnodeAvailability(Long userId, Long knodeId) {
-        checkUserExistence(userId);
-        checkKnodeExistence(knodeId);
-        if(!userService.findUserId(knodeId).equals(userId))
+        Knode check = knodeQuery.check(knodeId);
+        if(check == null || !check.getCreateBy().equals(userId))
             throw new RuntimeException("Knode not available: " + knodeId + " for user " + userId);
     }
 }

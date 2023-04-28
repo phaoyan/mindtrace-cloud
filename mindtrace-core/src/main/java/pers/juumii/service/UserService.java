@@ -1,5 +1,6 @@
 package pers.juumii.service;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
 
 /**
@@ -10,16 +11,12 @@ import org.springframework.stereotype.Service;
 public interface UserService {
 
     //返回关联根节点的id
-    Long register(Long userId);
+    SaResult register(Long userId);
 
     //返回关联根节点的id
-    Long unregister(Long userId);
+    SaResult unregister(Long userId);
 
     //返回关联根节点的id
     Long checkRootId(Long userId);
-
-    Boolean possesses(Long userId, Long knodeId);
-
-    Long findUserId(Long knodeId);
 
 }

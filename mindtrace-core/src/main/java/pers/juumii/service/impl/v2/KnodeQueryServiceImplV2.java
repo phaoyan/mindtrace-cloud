@@ -1,0 +1,194 @@
+package pers.juumii.service.impl.v2;
+
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.internal.InternalNode;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import pers.juumii.data.Knode;
+import pers.juumii.data.Label;
+import pers.juumii.service.KnodeQueryService;
+import pers.juumii.service.impl.v2.utils.Cypher;
+import pers.juumii.service.impl.v2.utils.Neo4jUtils;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+@Service
+public class KnodeQueryServiceImplV2 implements KnodeQueryService {
+
+    private final Neo4jUtils neo4j;
+
+    public static Cypher shallowLink(){
+        return Cypher.cypher("""
+                OPTIONAL MATCH (knode)-[tag:TAG]->(label)
+                OPTIONAL MATCH (knode)-[br:BRANCH_TO]->(branch)
+                OPTIONAL MATCH (knode)-[st:STEM_FROM]->(stem)
+                OPTIONAL MATCH (knode)-[con:CONNECT_TO]->(connection)
+                """, Map.of());
+    }
+
+    public static Cypher basicReturn(){
+        return Cypher.cypher("""
+                RETURN
+                        knode AS knode,
+                        collect(label) AS labels,
+                        stem AS stem,
+                        collect(branch) AS branches,
+                        collect(connection) AS connections
+                """, Map.of());
+    }
+
+    public static Function<Record, Knode> knodeResolver = (record)->{
+        Map<String, Object> knode = record.get("knode").asMap();
+        Value stemValue = record.get("stem");
+        Map<String, Object> stem = stemValue.isNull() ? null : stemValue.asMap();
+        List<Object> branches = record.get("branches").asList();
+        List<Object> labels = record.get("labels").asList();
+        List<Object> connections = record.get("connections").asList();
+
+        Knode _knode = Knode.prototype(knode);
+        Knode _stem = stem == null ? null : Knode.prototype(stem);
+        List<Knode> _branches = branches.stream().map(br->Knode.prototype(((InternalNode) br).asMap())).toList();
+        List<Knode> _connections = connections.stream().map(conn->Knode.prototype((((InternalNode) conn).asMap()))).toList();
+        List<Label> _labels = labels.stream().map(l->Label.prototype(((InternalNode) l).asMap())).toList();
+
+        _knode.setStem(_stem);
+        _knode.setBranches(_branches);
+        _knode.setConnections(_connections);
+        _knode.setLabels(_labels);
+
+        return _knode;
+    };
+
+    @Autowired
+    public KnodeQueryServiceImplV2(Neo4jUtils neo4j) {
+        this.neo4j = neo4j;
+    }
+
+    @Override
+    public Knode check(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("MATCH (knode:Knode {id: $knodeId})", Map.of("knodeId", knodeId))
+                .append(shallowLink())
+                .append(basicReturn());
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(res.isEmpty())
+            throw new RuntimeException("Knode check failed: Knode not found " + knodeId);
+        return res.get(0);
+    }
+
+    @Override
+    public List<Knode> checkByLabel(String labelName) {
+        return null;
+    }
+
+    @Override
+    public Knode checkFully(Long knodeId) {
+        return null;
+    }
+
+    @Override
+    public List<Knode> checkByTitle(Long userId, String title) {
+        return null;
+    }
+
+    @Override
+    public List<Knode> branches(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (ori)-[:BRANCH_TO]->(knode) WHERE ori.id=$knodeId
+                        """, Map.of("knodeId", knodeId))
+                .append(shallowLink())
+                .append(basicReturn());
+        return neo4j.session(cypher, knodeResolver);
+    }
+
+    @Override
+    public List<Knode> offsprings(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (n:Knode {id: $knodeId})
+                        CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                        UNWIND nodes AS knode
+                        """, Map.of("knodeId", knodeId))
+                .append(shallowLink())
+                .append(basicReturn());
+        return neo4j.session(cypher, knodeResolver);
+    }
+
+    @Override
+    public List<Knode> leaves(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (n:Knode {id: $knodeId})
+                        CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                        WITH nodes, [node IN nodes WHERE NOT (node)-[:BRANCH_TO]->()] AS leafNodes
+                        UNWIND leafNodes AS knode
+                        """, Map.of("knodeId", knodeId))
+                .append(shallowLink())
+                .append(basicReturn());
+        return neo4j.session(cypher, knodeResolver);
+    }
+
+    @Override
+    public Knode stem(Long knodeId) {
+        return check(check(knodeId).getStem().getId());
+    }
+
+    @Override
+    public List<Knode> ancestors(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (target: Knode {id:$knodeId})-[:STEM_FROM*]->(knode: Knode)
+                        """, Map.of("knodeId", knodeId))
+                .append(shallowLink())
+                .append(basicReturn());
+        return neo4j.session(cypher, knodeResolver);
+    }
+
+    @Override
+    public List<Knode> knodeChain(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (target: Knode {id:$knodeId})-[:STEM_FROM*0..]->(knode: Knode)
+                        """, Map.of("knodeId", knodeId))
+                .append(shallowLink())
+                .append(basicReturn());
+        return neo4j.session(cypher, knodeResolver);
+    }
+
+    @Override
+    public Knode findRoot(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                    MATCH (u:User {id:$userId})-[:POSSESS]->(knode)
+                    """, Map.of("userId", check(knodeId).getCreateBy()))
+                .append(shallowLink())
+                .append(basicReturn());
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(res.isEmpty())
+            throw new RuntimeException("Root finding failed: Knode not found " + knodeId);
+        return res.get(0);
+    }
+
+    @Override
+    public List<String> chainStyleTitle(Long knodeId) {
+        return knodeChain(knodeId).stream().map(Knode::getTitle).toList();
+    }
+
+    @Override
+    public List<Knode> checkAll(Long userId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (u: User {id:$userId})-[:POSSESS]->(root: Knode)
+                        CALL apoc.path.subgraphAll(root, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                        WITH nodes + root as all
+                        UNWIND all AS knode
+                        """, Map.of("userId", userId))
+                .append(shallowLink())
+                .append(basicReturn());
+        return neo4j.session(cypher, knodeResolver);
+    }
+}

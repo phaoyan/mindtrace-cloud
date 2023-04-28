@@ -27,8 +27,6 @@ public class Knode{
     private Integer index;
     @Property("title")
     private String title;
-    @Property("privacy")
-    private String privacy;
     // 此处的isLeaf并不一定是说它为叶子节点，而是说其承载了具体的知识
     // 只有非叶子节点这个属性才可能生效
     @Property("isLeaf")
@@ -59,7 +57,6 @@ public class Knode{
         res.setTitle(title);
         res.setLabels(new ArrayList<>());
         res.setCreateTime(LocalDateTime.now());
-        res.setPrivacy("private");
         res.setIsLeaf(false);
         res.setBranches(new ArrayList<>());
         res.setConnections(new ArrayList<>());
@@ -73,15 +70,20 @@ public class Knode{
         return res;
     }
 
+    public static Knode sudoPrototype(String title, Long stemId, Long userId){
+        Knode sudoStem = new Knode();
+        sudoStem.setId(stemId);
+        return prototype(title, sudoStem, userId);
+    }
+
     public static Knode prototype(Map<String, Object> entity){
         Knode res = new Knode();
         res.setId(Convert.toLong(entity.get("id")));
         res.setIndex(Convert.toInt(entity.get("index")));
         res.setTitle(Convert.toStr(entity.get("title")));
         res.setCreateBy(Convert.toLong(entity.get("createBy")));
-        res.setPrivacy(Convert.toStr(entity.get("privacy")));
         res.setCreateTime(Convert.convert(LocalDateTime.class, entity.get("createTime")));
-        res.setIsLeaf(Convert.toBool(entity.get("deleted")));
+        res.setIsLeaf(Convert.toBool(entity.get("isLeaf")));
         return res;
     }
 

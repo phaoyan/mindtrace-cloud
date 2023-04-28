@@ -1,6 +1,7 @@
 package pers.juumii.data;
 
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.IdUtil;
 import lombok.Data;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class Label {
 
     @Id
+    private Long id;
     @Property("name")
     private String name;
     @Property("deleted")
@@ -28,6 +30,7 @@ public class Label {
 
     public static Label prototype(String name){
         Label res = new Label();
+        res.setId(IdUtil.getSnowflakeNextId());
         res.setName(name);
         res.setDeleted(false);
         return res;
@@ -35,6 +38,7 @@ public class Label {
 
     public static Label prototype(Map<String, Object> params) {
         Label res = new Label();
+        res.setId(Convert.toLong(params.get("id")));
         res.setName(Convert.toStr(params.get("name")));
         res.setDeleted(Convert.toBool(params.get("deleted")));
         return res;

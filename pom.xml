@@ -14,6 +14,7 @@
       <module>mindtrace-path-optimizer</module>
       <module>mindtrace-recommend</module>
       <module>mindtrace-share</module>
+      <module>mindtrace-hub</module>
   </modules>
 
   <parent>

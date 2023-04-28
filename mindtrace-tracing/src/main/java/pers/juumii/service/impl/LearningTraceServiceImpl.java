@@ -96,6 +96,14 @@ public class LearningTraceServiceImpl implements LearningTraceService {
     }
 
     @Override
+    public SaResult dropLearning(Long userId, TraceInfo traceInfo) {
+        Long id = Convert.toLong(traceInfo.getData().get("id"));
+        learningTraceMapper.deleteById(id);
+        return SaResult.ok();
+    }
+
+
+    @Override
     public LearningTrace checkNow(Long userId) {
         LearningTrace latest = checkLatest(userId);
         return latest.getFinishTime() == null ? latest : null;

@@ -1,4 +1,4 @@
-package pers.juumii.service.impl;
+package pers.juumii.service.impl.v1;
 
 import cn.hutool.core.collection.ListUtil;
 import org.neo4j.driver.Value;
@@ -19,10 +19,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-@Service
+//@Service
 public class KnodeQueryServiceImpl implements KnodeQueryService {
 
-    private final KnodeRepository knodeRepo;
     private final Neo4jClient client;
     private UserService userService;
 
@@ -33,24 +32,23 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
     }
 
     @Autowired
-    public KnodeQueryServiceImpl(
-            KnodeRepository knodeRepo,
-            Neo4jClient neo4j) {
-        this.knodeRepo = knodeRepo;
+    public KnodeQueryServiceImpl(Neo4jClient neo4j) {
         this.client = neo4j;
     }
 
     @Override
     @SuppressWarnings("all")
     public Knode check(Long knodeId) {
-        // 存在性在Aspect中已经检验
-        return knodeRepo.findById(knodeId).get();
+        String cypher = """
+            MATCH (knode:Knode {id: $knodeId})
+            """;
+        Map<String, Object> params = Map.of("knodeId", knodeId);
+        return wrappedQuery(cypher, params).get(0);
     }
 
     @Override
     public Knode checkFully(Long knodeId) {
         // TODO
-
         return null;
     }
 
@@ -74,7 +72,9 @@ public class KnodeQueryServiceImpl implements KnodeQueryService {
     @Override
     public List<Knode> offsprings(Long knodeId) {
         String cypher = """
-                MATCH (root)-[:BRANCH_TO*]->(knode) WHERE root.id=$knodeId
+                MATCH (n:Knode {id: $knodeId})
+                CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                UNWIND nodes AS knode
                 """;
         return wrappedQuery(cypher, Map.of("knodeId", knodeId));
     }

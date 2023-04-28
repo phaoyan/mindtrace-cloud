@@ -1,6 +1,5 @@
 package pers.juumii.service.impl;
 
-import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -36,6 +35,6 @@ public class LoginServiceImpl implements LoginService {
             return SaResult.error("登陆失败：密码错误");
         // 用户存在且密码正确，则登陆成功
         StpUtil.login(_user.getId());
-        return SaResult.get(200,"登陆成功",_user.getId());
+        return SaResult.get(200,"登陆成功",_user.getId().toString());
     }
 }
