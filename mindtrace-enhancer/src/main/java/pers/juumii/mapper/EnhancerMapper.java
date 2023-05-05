@@ -1,32 +1,30 @@
 package pers.juumii.mapper;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import pers.juumii.data.Enhancer;
+import pers.juumii.data.EnhancerKnodeRelationship;
+import pers.juumii.utils.SpringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mapper
 public interface EnhancerMapper extends BaseMapper<Enhancer> {
 
-    List<Enhancer> queryByUserId(Long userId);
+    default List<Enhancer> queryByUserId(Long userId){
+        LambdaQueryWrapper<Enhancer> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Enhancer::getCreateBy, userId);
+        return selectList(wrapper);
+    }
 
-    List<Enhancer> queryByKnodeId(Long knodeId);
+    default List<Enhancer> queryByKnodeId(Long knodeId){
+        EnhancerKnodeRelationshipMapper relMapper = SpringUtils.getBean(EnhancerKnodeRelationshipMapper.class);
+        List<EnhancerKnodeRelationship> rels = relMapper.getByKnodeId(knodeId);
+        List<Long> ids = rels.stream().map(EnhancerKnodeRelationship::getEnhancerId).toList();
+        return ids.isEmpty() ? new ArrayList<>() : selectBatchIds(ids);
+    }
 
-    // 将enhancer与user绑定
-    void connectToUser(@Param("userId") Long userId, @Param("enhancerId") Long id);
-
-    // 将enhancer与user解绑
-    void disconnectFromUser(@Param("userId") Long userId, @Param("enhancerId") Long enhancerId);
-
-    void label(@Param("enhancerId") Long enhancerId, @Param("labelName") String labelName);
-
-    void unlabel(@Param("enhancerId") Long enhancerId, @Param("labelName") String labelName);
-
-    void connectEnhancerToKnode(@Param("knodeId") Long knodeId, @Param("enhancerId") Long enhancerId);
-
-    void disconnectEnhancerFromKnode(@Param("knodeId") Long knodeId, @Param("enhancerId") Long enhancerId);
-
-    List<Long> queryRelatedKnodeIds(@Param("enhancerId") Long enhancerId);
 }

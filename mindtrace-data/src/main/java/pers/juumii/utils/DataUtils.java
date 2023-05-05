@@ -214,4 +214,8 @@ public class DataUtils {
         return new ArrayList<>(Arrays.asList(arr));
     }
 
+    public static <T> List<T> subList(List<T> list, int start, int end) {
+        if(list.isEmpty()) return list;
+        return list.subList(Math.min(start, list.size()), Math.min(end, list.size()));
+    }
 }

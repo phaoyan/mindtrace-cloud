@@ -1,5 +1,6 @@
 package pers.juumii.utils;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class TimeUtils {
@@ -9,5 +10,7 @@ public class TimeUtils {
     public static final DateTimeFormatter SPACED_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(SPACED_DATE_TIME_PATTERN);
 
 
-
+    public static String format(LocalDateTime time) {
+        return time.format(DEFAULT_DATE_TIME_FORMATTER);
+    }
 }

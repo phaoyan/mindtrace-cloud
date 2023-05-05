@@ -10,61 +10,59 @@ import pers.juumii.mapper.LearningTraceMapper;
 import pers.juumii.mapper.MindtraceMapper;
 import pers.juumii.service.LearningTraceService;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/user/{userId}/learn")
 public class TracingController {
 
-    private final ControllerAspect aspect;
     private final LearningTraceService learningTraceService;
 
     @Autowired
-    public TracingController(
-            ControllerAspect aspect,
-            LearningTraceService learningTraceService) {
-        this.aspect = aspect;
+    public TracingController(LearningTraceService learningTraceService) {
         this.learningTraceService = learningTraceService;
     }
 
-    @GetMapping("/now")
-    public Object checkNow(@PathVariable Long userId){
-        aspect.checkUserExistence(userId);
+    @GetMapping("/user/{userId}/learn/now")
+    public LearningTraceDTO checkNow(@PathVariable Long userId){
         return LearningTraceDTO.transfer(learningTraceService.checkNow(userId));
     }
 
-    @GetMapping
-    public Object checkAll(@PathVariable Long userId){
-        aspect.checkUserExistence(userId);
+    @GetMapping("/user/{userId}/learn")
+    public List<LearningTraceDTO> checkAll(@PathVariable Long userId){
         return LearningTraceDTO.transfer(learningTraceService.checkAll(userId));
     }
 
-    @GetMapping("/knode/{knodeId}")
-    public Object checkKnodeRelatedLearningTraces(
+    @GetMapping("/user/{userId}/learn/knode/{knodeId}")
+    public List<LearningTraceDTO> checkKnodeRelatedLearningTraces(
             @PathVariable Long userId,
             @PathVariable Long knodeId){
-        aspect.checkKnodeAvailability(userId, knodeId);
         return LearningTraceDTO.transfer(learningTraceService.checkKnodeRelatedLearningTraces(userId, knodeId));
     }
 
-    @GetMapping("/latest")
-    public Object checkLatest(@PathVariable Long userId){
-        aspect.checkUserExistence(userId);
+    @GetMapping("/user/{userId}/learn/latest")
+    public LearningTraceDTO checkLatest(@PathVariable Long userId){
         return LearningTraceDTO.transfer(learningTraceService.checkLatest(userId));
     }
 
-    @GetMapping("/trace/{learningTraceId}/knode")
-    public Object getRelatedKnodeIdsOfLearningTrace(
+    @GetMapping("/user/{userId}/learn/trace/{learningTraceId}/knode")
+    public List<String> getRelatedKnodeIdsOfLearningTrace(
             @PathVariable Long userId,
             @PathVariable Long learningTraceId){
-        aspect.checkTraceAvailability(userId, learningTraceId);
         return learningTraceService.getRelatedKnodeIdsOfLearningTrace(learningTraceId)
                 .stream().map(Object::toString).toList();
     }
 
-    @PostMapping
+    @DeleteMapping("/user/{userId}/learn/trace/{traceId}")
+    public SaResult removeLearningTrace(
+            @PathVariable Long userId,
+            @PathVariable Long traceId){
+        return learningTraceService.removeLearningTraceById(traceId);
+    }
+
+    @PostMapping("/user/{userId}/learn")
     public Object postLearningState(
             @PathVariable Long userId,
             @RequestBody TraceInfo traceInfo){
-        aspect.checkUserExistence(userId);
         return switch (traceInfo.getType()){
             case TraceInfo.START_LEARNING -> learningTraceService.startLearning(userId, traceInfo);
             case TraceInfo.FINISH_LEARNING -> learningTraceService.finishLearning(userId, traceInfo);
@@ -76,11 +74,5 @@ public class TracingController {
         };
     }
 
-    @DeleteMapping("/trace/{traceId}")
-    public Object removeLearningTrace(
-            @PathVariable Long userId,
-            @PathVariable Long traceId){
-        aspect.checkTraceAvailability(userId, traceId);
-        return learningTraceService.removeLearningTraceById(traceId);
-    }
+
 }

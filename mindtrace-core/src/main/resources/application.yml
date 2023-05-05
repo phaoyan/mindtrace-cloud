@@ -19,8 +19,6 @@ spring:
     port: 5672
     username: guest
     password: guest
-
-  # mysql
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver

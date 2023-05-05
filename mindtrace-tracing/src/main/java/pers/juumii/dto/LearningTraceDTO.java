@@ -22,6 +22,8 @@ public class LearningTraceDTO {
     private List<Long> relatedKnodeIds;
 
     public static LearningTraceDTO transfer(LearningTrace ori){
+        if(ori == null) return null;
+
         LearningTraceDTO res = new LearningTraceDTO();
         res.setId(ori.getId().toString());
         res.setCreateBy(ori.getCreateBy().toString());

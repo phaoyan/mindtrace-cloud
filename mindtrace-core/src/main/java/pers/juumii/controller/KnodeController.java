@@ -3,105 +3,62 @@ package pers.juumii.controller;
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pers.juumii.controller.aop.ControllerAspect;
 import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.service.KnodeService;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/user/{userId}/knode")
 public class KnodeController {
 
     private final KnodeService knodeService;
-    private final ControllerAspect aspect;
 
     @Autowired
-    public KnodeController(
-            KnodeService knodeService,
-            ControllerAspect aspect) {
+    public KnodeController(KnodeService knodeService) {
         this.knodeService = knodeService;
-        this.aspect = aspect;
     }
 
-    @PostMapping("/{knodeId}/branch")
-    public Object branch(
-            @PathVariable Long userId,
+    @PostMapping("/knode/{knodeId}/branch")
+    public KnodeDTO branch(
             @PathVariable Long knodeId,
             @RequestParam("title") String title){
-        aspect.checkKnodeAvailability(userId, knodeId);
-        return Knode.transfer(knodeService.branch(userId, knodeId, title));
+        return Knode.transfer(knodeService.branch(knodeId, title));
     }
 
-    @PostMapping("/{knodeId}/label")
-    public Object addLabelToKnode(
-            @PathVariable Long userId,
-            @PathVariable Long knodeId,
-            @RequestParam("label") String label){
-        aspect.checkKnodeAvailability(userId, knodeId);
-        return knodeService.addLabelToKnode(knodeId, label);
-    }
-
-    @DeleteMapping("/{knodeId}/label")
-    public Object removeLabelFromKnode(
-            @PathVariable Long userId,
-            @PathVariable Long knodeId,
-            @RequestParam("label") String label){
-        aspect.checkKnodeAvailability(userId, knodeId);
-        return knodeService.removeLabelFromKnode(knodeId, label);
-    }
-
-    @DeleteMapping("/{knodeId}")
-    public Object delete(
-            @PathVariable Long userId,
-            @PathVariable Long knodeId){
-        aspect.checkKnodeAvailability(userId, knodeId);
+    @DeleteMapping("/knode/{knodeId}")
+    public SaResult delete(@PathVariable Long knodeId){
         return knodeService.delete(knodeId);
     }
 
-    @PostMapping("/{knodeId}")
-    public Object update(
-            @PathVariable Long userId,
+    @PostMapping("/knode/{knodeId}")
+    public SaResult update(
             @PathVariable Long knodeId,
             @RequestBody KnodeDTO dto){
-        aspect.checkKnodeAvailability(userId, knodeId);
         return knodeService.update(knodeId, dto);
     }
 
     // 将id为branchId的Knode移动到id为stemId的Knode下方
-    @PostMapping("/{stemId}/branch/{branchId}")
-    public Object shift(
-            @PathVariable Long userId,
+    @PostMapping("/knode/{stemId}/branch/{branchId}")
+    public List<KnodeDTO> shift(
             @PathVariable Long stemId,
             @PathVariable Long branchId){
-        aspect.checkKnodeAvailability(userId, stemId);
-        aspect.checkKnodeAvailability(userId, branchId);
-        return Knode.transfer(knodeService.shift(stemId, branchId, userId));
+        return Knode.transfer(knodeService.shift(stemId, branchId));
     }
 
-    @PostMapping("/{sourceId}/connection/{targetId}")
-    public Object connect(
-            @PathVariable Long userId,
+    @PostMapping("/knode/{sourceId}/connection/{targetId}")
+    public SaResult connect(
             @PathVariable Long sourceId,
             @PathVariable Long targetId){
-        aspect.checkKnodeAvailability(userId, sourceId);
-        aspect.checkKnodeAvailability(userId, targetId);
         return knodeService.connect(sourceId, targetId);
     }
 
-    @PostMapping("/index")
-    public Object initIndex(@PathVariable Long userId){
-        aspect.checkUserExistence(userId);
-        return Knode.transfer(knodeService.initIndex(userId));
-    }
-
-    @PostMapping("/{knodeId}/branch/index/{index1}/{index2}")
-    public Object swapIndex(
-            @PathVariable Long userId,
+    @PostMapping("/knode/{knodeId}/branch/index/{index1}/{index2}")
+    public SaResult swapIndex(
             @PathVariable Long knodeId,
             @PathVariable Integer index1,
             @PathVariable Integer index2){
-        aspect.checkKnodeAvailability(userId, knodeId);
-        knodeService.swapIndex(userId, knodeId, index1, index2);
+        knodeService.swapIndex(knodeId, index1, index2);
         return SaResult.ok();
     }
 

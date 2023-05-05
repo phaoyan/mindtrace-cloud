@@ -1,9 +1,16 @@
 package pers.juumii.service;
 
-import cn.dev33.satoken.util.SaResult;
+import pers.juumii.data.KnodeShare;
+import pers.juumii.dto.share.KnodeShareDTO;
+
+import java.util.List;
 
 public interface KnodeShareService {
-    SaResult shareKnode(Long userId, Long knodeId);
+    List<KnodeShare> getRelatedKnodeShare(Long knodeId, Long count);
 
-    SaResult hideKnode(Long userId, Long knodeId);
+    KnodeShare getKnodeShare(Long knodeId);
+
+    void updateKnodeShare(Long knodeId, KnodeShareDTO dto);
+
+    void forkKnodeShare(Long shareId, Long targetId);
 }

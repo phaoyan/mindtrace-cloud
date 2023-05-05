@@ -1,11 +1,12 @@
 package pers.juumii.feign;
 
-import cn.dev33.satoken.util.SaResult;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.interceptor.FeignSecurityInterceptor;
+
+import java.util.List;
 
 @FeignClient(
         contextId = "mindtrace-core",
@@ -13,13 +14,11 @@ import pers.juumii.feign.interceptor.FeignSecurityInterceptor;
         configuration = FeignSecurityInterceptor.class)
 public interface CoreClient {
 
-    // mindtrace-core
-    @GetMapping("/core/user/{userId}/knode/{knodeId}")
-    SaResult checkKnode(@PathVariable Long userId, @PathVariable Long knodeId);
-    @GetMapping("/core/user/{userId}/knode/label")
-    SaResult checkKnodeByLabel(@PathVariable Long userId, @RequestParam("labelName") String labelName);
-    @GetMapping("/core/user/{userId}/knode/{knodeId}/leaves")
-    SaResult getKnodeLeaves(@PathVariable Long userId, @PathVariable Long knodeId);
-
+    @GetMapping("/core/knode/{knodeId}")
+    KnodeDTO check(@PathVariable Long knodeId);
+    @GetMapping("/core/knode/{knodeId}/leaves")
+    List<KnodeDTO> leaves(@PathVariable Long knodeId);
+    @GetMapping("/core/knode/{knodeId}/createBy")
+    Long checkKnodeCreateBy(@PathVariable Long knodeId);
 
 }

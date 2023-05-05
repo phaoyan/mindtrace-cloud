@@ -1,13 +1,17 @@
 package pers.juumii.data;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
+import pers.juumii.dto.ResourceDTO;
 import pers.juumii.utils.Constants;
+import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Resource是综合性的资源对象，其不只由一个文件组成
@@ -29,23 +33,28 @@ public class Resource {
     private LocalDateTime createTime;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long createBy;
-    private String privacy;
 
-    public static Resource prototype(Resource meta) {
+    public static Resource prototype(ResourceDTO dto){
         Resource res = new Resource();
         res.setId(IdUtil.getSnowflakeNextId());
-        res.setTitle(meta.getTitle());
-        res.setCreateBy(meta.getCreateBy());
+        res.setTitle(dto.getTitle());
+        res.setCreateBy(Convert.toLong(dto.getCreateBy()));
         res.setCreateTime(LocalDateTime.now());
-        res.setType(meta.getType());
-        res.setPrivacy(Constants.PRIVACY_PRIVATE);
+        res.setType(dto.getType());
         return res;
     }
 
-    public static Resource prototype(String type, Long createBy){
-        Resource resource = new Resource();
-        resource.setType(type);
-        resource.setCreateBy(createBy);
-        return prototype(resource);
+    public static ResourceDTO transfer(Resource resource){
+        ResourceDTO res = new ResourceDTO();
+        res.setId(resource.getId().toString());
+        res.setCreateBy(resource.getCreateBy().toString());
+        res.setCreateTime(TimeUtils.format(resource.getCreateTime()));
+        res.setTitle(resource.getTitle());
+        res.setType(resource.getType());
+        return res;
+    }
+
+    public static List<ResourceDTO> transfer(List<Resource> resources){
+        return resources.stream().map(Resource::transfer).toList();
     }
 }

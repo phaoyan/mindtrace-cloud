@@ -1,5 +1,6 @@
 package pers.juumii.data;
 
+import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
@@ -23,4 +24,16 @@ public class ResourceShare {
     private List<Comment> comments;
     @TableLogic
     private Boolean deleted;
+
+    public static ResourceShare prototype(Long userId, Long resourceId){
+        ResourceShare res = new ResourceShare();
+        res.setId(IdUtil.getSnowflakeNextId());
+        res.setResourceId(resourceId);
+        res.setUserId(userId);
+        res.setVisits(0L);
+        res.setLikes(0L);
+        res.setFavorites(0L);
+        res.setDeleted(false);
+        return res;
+    }
 }

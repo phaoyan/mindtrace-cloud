@@ -10,6 +10,7 @@ import pers.juumii.data.Label;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.impl.v2.utils.Cypher;
 import pers.juumii.service.impl.v2.utils.Neo4jUtils;
+import pers.juumii.utils.AuthUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.function.Function;
 public class KnodeQueryServiceImplV2 implements KnodeQueryService {
 
     private final Neo4jUtils neo4j;
+    private final AuthUtils authUtils;
 
     public static Cypher shallowLink(){
         return Cypher.cypher("""
@@ -63,8 +65,9 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
     };
 
     @Autowired
-    public KnodeQueryServiceImplV2(Neo4jUtils neo4j) {
+    public KnodeQueryServiceImplV2(Neo4jUtils neo4j, AuthUtils authUtils) {
         this.neo4j = neo4j;
+        this.authUtils = authUtils;
     }
 
     @Override
@@ -74,8 +77,8 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                 .append(shallowLink())
                 .append(basicReturn());
         List<Knode> res = neo4j.session(cypher, knodeResolver);
-        if(res.isEmpty())
-            throw new RuntimeException("Knode check failed: Knode not found " + knodeId);
+        if(res.isEmpty()) return null;
+        authUtils.auth(res.get(0).getCreateBy());
         return res.get(0);
     }
 
@@ -102,7 +105,9 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                         """, Map.of("knodeId", knodeId))
                 .append(shallowLink())
                 .append(basicReturn());
-        return neo4j.session(cypher, knodeResolver);
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(!res.isEmpty()) authUtils.auth(res.get(0).getCreateBy());
+        return res;
     }
 
     @Override
@@ -115,7 +120,9 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                         """, Map.of("knodeId", knodeId))
                 .append(shallowLink())
                 .append(basicReturn());
-        return neo4j.session(cypher, knodeResolver);
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(!res.isEmpty()) authUtils.auth(res.get(0).getCreateBy());
+        return res;
     }
 
     @Override
@@ -124,12 +131,14 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                 .cypher("""
                         MATCH (n:Knode {id: $knodeId})
                         CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
-                        WITH nodes, [node IN nodes WHERE NOT (node)-[:BRANCH_TO]->()] AS leafNodes
+                        WITH nodes, [node IN nodes WHERE node.createBy=n.createBy AND NOT (node)-[:BRANCH_TO]->()] AS leafNodes
                         UNWIND leafNodes AS knode
                         """, Map.of("knodeId", knodeId))
                 .append(shallowLink())
                 .append(basicReturn());
-        return neo4j.session(cypher, knodeResolver);
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(!res.isEmpty()) authUtils.auth(res.get(0).getCreateBy());
+        return res;
     }
 
     @Override
@@ -145,7 +154,9 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                         """, Map.of("knodeId", knodeId))
                 .append(shallowLink())
                 .append(basicReturn());
-        return neo4j.session(cypher, knodeResolver);
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(!res.isEmpty()) authUtils.auth(res.get(0).getCreateBy());
+        return res;
     }
 
     @Override
@@ -156,7 +167,9 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                         """, Map.of("knodeId", knodeId))
                 .append(shallowLink())
                 .append(basicReturn());
-        return neo4j.session(cypher, knodeResolver);
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(!res.isEmpty()) authUtils.auth(res.get(0).getCreateBy());
+        return res;
     }
 
     @Override
@@ -170,6 +183,7 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
         List<Knode> res = neo4j.session(cypher, knodeResolver);
         if(res.isEmpty())
             throw new RuntimeException("Root finding failed: Knode not found " + knodeId);
+        authUtils.auth(res.get(0).getCreateBy());
         return res.get(0);
     }
 
@@ -189,6 +203,13 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                         """, Map.of("userId", userId))
                 .append(shallowLink())
                 .append(basicReturn());
-        return neo4j.session(cypher, knodeResolver);
+        List<Knode> res = neo4j.session(cypher, knodeResolver);
+        if(!res.isEmpty()) authUtils.auth(res.get(0).getCreateBy());
+        return res;
+    }
+
+    @Override
+    public List<Knode> similar(Long knodeId) {
+        return null;
     }
 }

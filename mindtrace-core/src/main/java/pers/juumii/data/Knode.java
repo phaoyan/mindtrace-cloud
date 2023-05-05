@@ -88,14 +88,15 @@ public class Knode{
     }
 
     public static KnodeDTO transfer(Knode knode) {
+        if(knode == null) return null;
         KnodeDTO res = new KnodeDTO();
         res.setId(knode.getId().toString());
         res.setTitle(knode.getTitle());
-        res.setLabels(knode.getLabels());
+        res.setLabels(knode.getLabels().stream().map(Label::getName).toList());
         res.setCreateBy(knode.getCreateBy().toString());
         res.setCreateTime(knode.getCreateTime());
         res.setIsLeaf(knode.getIsLeaf());
-        res.setIndex(knode.index);
+        res.setIndex(knode.getIndex());
         Opt.ifPresent(knode.getStem(), stem->res.setStemId(stem.getId().toString()));
         res.setBranchIds(knode.getBranches()
                 .stream().map(_knode->_knode.getId().toString())

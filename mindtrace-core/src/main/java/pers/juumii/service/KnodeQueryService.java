@@ -35,4 +35,6 @@ public interface KnodeQueryService {
 
     List<Knode> checkAll(Long userId);
 
+    List<Knode> similar(Long knodeId);
+
 }

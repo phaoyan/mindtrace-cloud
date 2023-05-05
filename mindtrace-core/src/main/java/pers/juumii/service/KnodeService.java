@@ -13,7 +13,7 @@ public interface KnodeService {
 
     Knode createRoot(Long userId);
 
-    Knode branch(Long userId, Long knodeId, String title);
+    Knode branch(Long knodeId, String title);
 
     SaResult delete(Long knodeId);
 
@@ -23,11 +23,11 @@ public interface KnodeService {
 
     SaResult removeLabelFromKnode(Long knodeId, String label);
 
-    List<Knode> shift(Long stemId, Long branchId, Long userId);
+    List<Knode> shift(Long stemId, Long branchId);
 
     SaResult connect(Long sourceId, Long targetId);
 
     List<Knode> initIndex(Long userId);
 
-    void swapIndex(Long userId, Long stemId, Integer index1, Integer index2);
+    void swapIndex(Long stemId, Integer index1, Integer index2);
 }

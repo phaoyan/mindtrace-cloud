@@ -3,6 +3,7 @@ package pers.juumii.service;
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Resource;
+import pers.juumii.dto.ResourceDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ public interface ResourceService {
     // 将Resource中ID为dataId的资源以json的形式返回
     Object getDataFromResource(Long resourceId, String dataName);
 
-    Resource addResourceToUser(Long userId, Resource meta, Map<String, Object> data);
+    Resource addResourceToUser(Long userId, ResourceDTO meta, Map<String, Object> data);
 
     SaResult addDataToResource(Long resourceId, Map<String, Object> data);
 
@@ -29,11 +30,11 @@ public interface ResourceService {
     Map<String, Boolean> release(Long resourceId, List<String> data);
 
     // 删除resource
-    void removeResourceFromUser(Long resourceId);
+    void removeResource(Long resourceId);
 
     void removeAllResourcesFromEnhancer(Long enhancerId);
 
-    Resource addResourceToEnhancer(Long enhancerId, Resource meta, Map<String, Object> data);
+    Resource addResourceToEnhancer(Long enhancerId, ResourceDTO meta, Map<String, Object> data);
 
     List<Resource> getResourcesFromEnhancer(Long enhancerId);
 

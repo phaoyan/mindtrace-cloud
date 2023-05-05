@@ -17,6 +17,8 @@ public class SaTokenConfigure implements WebFluxConfigurer {
     /**
      * 注册 [Sa-Token全局过滤器]
      */
+    public static final String ADMIN_PASS = "ADMIN_PASS";
+
     @Bean
     public SaReactorFilter getSaReactorFilter() {
         return new SaReactorFilter()
@@ -30,7 +32,11 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                     .match("/**")
                     .notMatch("/user/login")
                     .notMatch("/user/register")
-                    .check(StpUtil::checkLogin))
+                    .check(()->{
+                        String adminPass = SaHolder.getRequest().getHeader("admin-pass");
+                        if(adminPass == null || !adminPass.equals(ADMIN_PASS))
+                            StpUtil.checkLogin();
+                    }))
                 // 指定[异常处理函数]：每次[认证函数]发生异常时执行此函数
                 .setError(e -> {
                     // 处理预检请求
@@ -43,7 +49,7 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                         return SaResult.ok();
                     }
 
-                    System.out.println("---------- sa global error ");
+                    System.out.println("---------- sa global error -----------");
                     e.printStackTrace();
                     return SaResult.error(e.getMessage());
                 });

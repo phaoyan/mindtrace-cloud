@@ -1,17 +1,22 @@
 package pers.juumii.service.impl.v2;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
+import pers.juumii.mq.KnodeExchange;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.KnodeService;
 import pers.juumii.service.impl.v2.utils.Cypher;
 import pers.juumii.service.impl.v2.utils.Neo4jUtils;
 import pers.juumii.thread.ThreadUtils;
+import pers.juumii.utils.AuthUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +27,7 @@ public class KnodeServiceImplV2 implements KnodeService {
     private final Neo4jUtils neo4j;
     private final ThreadUtils threadUtils;
     private final KnodeQueryService knodeQuery;
+    private final RabbitTemplate rabbit;
 
     public static Cypher createBasic(Knode knode){
         return Cypher.cypher("""
@@ -79,41 +85,66 @@ public class KnodeServiceImplV2 implements KnodeService {
     public KnodeServiceImplV2(
             Neo4jUtils neo4j,
             ThreadUtils threadUtils,
-            KnodeQueryService knodeQuery) {
+            KnodeQueryService knodeQuery,
+            RabbitTemplate rabbit) {
         this.neo4j = neo4j;
         this.threadUtils = threadUtils;
         this.knodeQuery = knodeQuery;
+        this.rabbit = rabbit;
     }
 
     @Override
     public Knode createRoot(Long userId) {
+        if(!userId.equals(StpUtil.getLoginIdAsLong()))
+            throw new RuntimeException("Authentication failed: can not create knode for other users");
         Knode root = Knode.prototype("ROOT", null, userId);
         root.setIndex(0);
         threadUtils.getUserBlockingQueue().add(()->{
             neo4j.transaction(List.of(createBasic(root)));
+
+            rabbit.convertAndSend(
+                    KnodeExchange.KNODE_EVENT_EXCHANGE,
+                    KnodeExchange.ROUTING_KEY_ADD_KNODE,
+                    JSONUtil.toJsonStr(Knode.transfer(root)));
         });
         return root;
     }
 
     @Override
-    public Knode branch(Long userId, Long knodeId, String title) {
+    public Knode branch(Long knodeId, String title) {
+        // check里面有authentication所以不用重复了
         Knode stem = knodeQuery.check(knodeId);
-        Knode branch = Knode.sudoPrototype(title, knodeId, userId);
+        if(stem == null)
+            throw new RuntimeException("Knode Not Found: " + knodeId);
+        Knode branch = Knode.sudoPrototype(title, knodeId, stem.getCreateBy());
         branch.setIndex(stem.getBranches().size() - 1);
         threadUtils.getUserBlockingQueue().add(()->{
             neo4j.transaction(List.of(
                     createBasic(branch),
                     relateToStem(knodeId,branch.getId())));
+
+            rabbit.convertAndSend(
+                    KnodeExchange.KNODE_EVENT_EXCHANGE,
+                    KnodeExchange.ROUTING_KEY_ADD_KNODE,
+                    JSONUtil.toJsonStr(Knode.transfer(branch)));
         });
         return branch;
     }
 
     @Override
     public SaResult delete(Long knodeId) {
+        // check里面有authentication所以不用重复了
         Knode target = knodeQuery.check(knodeId);
+        if(target == null)
+            throw new RuntimeException("Knode Not Found: " + knodeId);
         if(target.getBranches().isEmpty())
             threadUtils.getUserBlockingQueue().add(()->{
                 neo4j.transaction(List.of(deleteBasic(knodeId)));
+
+                rabbit.convertAndSend(
+                        KnodeExchange.KNODE_EVENT_EXCHANGE,
+                        KnodeExchange.ROUTING_KEY_REMOVE_KNODE,
+                        JSONUtil.toJsonStr(Knode.transfer(target)));
             });
         else throw new RuntimeException("Deleting knode failed: branches still exist.");
         return SaResult.ok();
@@ -121,14 +152,24 @@ public class KnodeServiceImplV2 implements KnodeService {
 
     @Override
     public SaResult update(Long knodeId, KnodeDTO dto) {
+        // check里面有authentication所以不用重复了
+        // check放在外面的原因是里面的鉴权操作需要Web Context，如果放在同步队列里面就获取不到Request从而拿不到loginId
+        Knode knode = knodeQuery.check(knodeId);
         threadUtils.getUserBlockingQueue().add(()->{
-            Knode knode = knodeQuery.check(knodeId);
+            if(knode == null)
+                throw new RuntimeException("Knode Not Found: " + knodeId);
+
             Opt.ifPresent(dto.getCreateBy(), createBy->knode.setCreateBy(Convert.toLong(createBy)));
             Opt.ifPresent(dto.getCreateTime(), knode::setCreateTime);
             Opt.ifPresent(dto.getTitle(), knode::setTitle);
             Opt.ifPresent(dto.getIndex(), knode::setIndex);
             Opt.ifPresent(dto.getIsLeaf(), knode::setIsLeaf);
             neo4j.transaction(List.of(updateBasic(knode)));
+
+            rabbit.convertAndSend(
+                    KnodeExchange.KNODE_EVENT_EXCHANGE,
+                    KnodeExchange.ROUTING_KEY_UPDATE_KNODE,
+                    JSONUtil.toJsonStr(Knode.transfer(knode)));
         });
         return SaResult.ok();
     }
@@ -144,21 +185,24 @@ public class KnodeServiceImplV2 implements KnodeService {
     }
 
     @Override
-    public List<Knode> shift(Long stemId, Long branchId, Long userId) {
+    public List<Knode> shift(Long stemId, Long branchId) {
+        // userId用于鉴权
         Cypher cypher = Cypher.cypher("""
                 MATCH
-                        (stem: Knode {id:$stemId}),
-                        (branch: Knode {id:$branchId}),
+                        (stem: Knode {id:$stemId, createBy:$userId}),
+                        (branch: Knode {id:$branchId, createBy:$userId}),
                         (branch)-[st:STEM_FROM]->(ori),
                         (ori)-[br:BRANCH_TO]->(branch)
                 DELETE st, br
                 CREATE (branch)-[_st:STEM_FROM]->(stem)
                 CREATE (stem)-[_br:BRANCH_TO]->(branch)
                 
-                """, Map.of("stemId", stemId, "branchId", branchId));
-
+                """, Map.of(
+                "stemId", stemId,
+                "branchId", branchId,
+                "userId", StpUtil.getLoginIdAsLong()));
         neo4j.transaction(List.of(cypher));
-        return knodeQuery.checkAll(userId);
+        return knodeQuery.checkAll(StpUtil.getLoginIdAsLong());
     }
 
     @Override
@@ -172,13 +216,18 @@ public class KnodeServiceImplV2 implements KnodeService {
     }
 
     @Override
-    public void swapIndex(Long userId, Long stemId, Integer index1, Integer index2) {
+    public void swapIndex(Long stemId, Integer index1, Integer index2) {
+        // userId用于鉴权
         Cypher cypher = Cypher.cypher("""
-                MATCH (stem: Knode {id:$stemId})-[:BRANCH_TO]->(branch1) WHERE branch1.index = $index1
-                MATCH (stem: Knode {id:$stemId})-[:BRANCH_TO]->(branch2) WHERE branch2.index = $index2
+                MATCH (stem: Knode {id:$stemId, createBy:$userId})-[:BRANCH_TO]->(branch1) WHERE branch1.index = $index1
+                MATCH (stem: Knode {id:$stemId, createBy:$userId})-[:BRANCH_TO]->(branch2) WHERE branch2.index = $index2
                 SET branch1.index = $index2,
                     branch2.index = $index1
-                """, Map.of("stemId", stemId, "index1", index1, "index2", index2));
+                """, Map.of(
+                "stemId", stemId,
+                "userId", StpUtil.getLoginIdAsLong(),
+                "index1", index1,
+                "index2", index2));
         threadUtils.getUserBlockingQueue().add(()->{
             neo4j.transaction(List.of(cypher));
         });

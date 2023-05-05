@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import pers.juumii.data.LearnMindTraceRelationship;
 import pers.juumii.data.LearningTrace;
 import pers.juumii.data.Mindtrace;
+import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.LearningTraceDTO;
 import pers.juumii.dto.MindtraceDTO;
 import pers.juumii.dto.TraceInfo;
@@ -106,7 +107,9 @@ public class LearningTraceServiceImpl implements LearningTraceService {
     @Override
     public LearningTrace checkNow(Long userId) {
         LearningTrace latest = checkLatest(userId);
-        return latest.getFinishTime() == null ? latest : null;
+        return
+                latest == null ? null :
+                latest.getFinishTime() == null ? latest : null;
     }
 
     @Override
@@ -125,13 +128,12 @@ public class LearningTraceServiceImpl implements LearningTraceService {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<LearningTrace>  checkKnodeRelatedLearningTraces(Long userId, Long knodeId) {
         // 找这个Knode 的 leaves对应的 mindtrace
         LambdaQueryWrapper<Mindtrace> wrapper = new LambdaQueryWrapper<>();
         List<Long> subKnodeIds = new ArrayList<>();
-        for(Object data: Convert.toList(coreClient.getKnodeLeaves(userId, knodeId).getData()))
-            subKnodeIds.add(Convert.toLong(((Map<String, Object>)data).get("id")));
+        for(KnodeDTO data: coreClient.leaves(knodeId))
+            subKnodeIds.add(Convert.toLong(data.getId()));
         // 如果没有收集到任何leaf，说明这个knode本身是leaf，将其加入
         if(subKnodeIds.isEmpty())
             subKnodeIds.add(knodeId);
@@ -140,7 +142,9 @@ public class LearningTraceServiceImpl implements LearningTraceService {
 
         // 然后通过这些mindtrace找到learning trace
         LambdaQueryWrapper<LearnMindTraceRelationship> relWrapper = new LambdaQueryWrapper<>();
-        relWrapper.in(LearnMindTraceRelationship::getMindtraceId, mindtraces.stream().map(Mindtrace::getId).toList());
+        List<Long> traceIds = mindtraces.stream().map(Mindtrace::getId).toList();
+        if(!traceIds.isEmpty())
+            relWrapper.in(LearnMindTraceRelationship::getMindtraceId, traceIds);
         List<LearnMindTraceRelationship> rels = relationshipMapper.selectList(relWrapper);
 
         // 去重

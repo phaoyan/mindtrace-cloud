@@ -1,37 +1,33 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.controller.aop.ControllerAspect;
 import pers.juumii.service.UserService;
 
 @RestController
-@RequestMapping("/user/{userId}")
 public class UserController {
 
-    private final ControllerAspect aspect;
     private final UserService userService;
 
     @Autowired
-    public UserController(ControllerAspect aspect, UserService userService) {
-        this.aspect = aspect;
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    @PostMapping
-    public Object register(@PathVariable Long userId){
+    @PostMapping("/user/{userId}")
+    public SaResult register(@PathVariable Long userId){
         return userService.register(userId);
     }
 
-    @DeleteMapping
-    public Object unregister(@PathVariable Long userId){
-        aspect.checkUserExistence(userId);
+    @DeleteMapping("/user/{userId}")
+    public SaResult unregister(@PathVariable Long userId){
         return userService.unregister(userId);
     }
 
-    @GetMapping("/root")
-    public Object rootId(@PathVariable Long userId){
-        aspect.checkUserExistence(userId);
+    @GetMapping("/user/{userId}/root")
+    public Long rootId(@PathVariable Long userId){
         return userService.checkRootId(userId);
     }
 

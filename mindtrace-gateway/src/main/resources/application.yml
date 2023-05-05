@@ -21,13 +21,6 @@ spring:
     # spring cloud gateway
     gateway:
       routes:
-        - id: dynamic-route
-          uri: lb://{header.x-service-name}
-          predicates:
-            - Header=x-service-name, \w+
-          filters:
-            - RemoveRequestHeader=x-service-name
-            - StripPrefix=1
         - id: core
           uri: lb://mindtrace-core
           predicates:
@@ -50,6 +43,12 @@ spring:
           uri: lb://mindtrace-mastery
           predicates:
             - Path=/mastery/**
+          filters:
+            - StripPrefix=1
+        - id: share
+          uri: lb://mindtrace-share
+          predicates:
+            - Path=/share/**
           filters:
             - StripPrefix=1
         - id: path-optimizer
