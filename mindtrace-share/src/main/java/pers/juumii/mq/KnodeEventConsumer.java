@@ -17,6 +17,8 @@ import pers.juumii.mapper.KnodeShareMapper;
 import pers.juumii.mapper.ResourceShareMapper;
 import pers.juumii.mapper.UserShareMapper;
 
+import java.util.List;
+
 @Component
 public class KnodeEventConsumer {
 
@@ -24,17 +26,20 @@ public class KnodeEventConsumer {
     private final KnodeShareMapper knodeShareMapper;
     private final EnhancerShareMapper enhancerShareMapper;
     private final ResourceShareMapper resourceShareMapper;
+    private final EnhancerClient enhancerClient;
 
     @Autowired
     public KnodeEventConsumer(
             UserShareMapper userShareMapper,
             KnodeShareMapper knodeShareMapper,
             EnhancerShareMapper enhancerShareMapper,
-            ResourceShareMapper resourceShareMapper) {
+            ResourceShareMapper resourceShareMapper,
+            EnhancerClient enhancerClient) {
         this.userShareMapper = userShareMapper;
         this.knodeShareMapper = knodeShareMapper;
         this.enhancerShareMapper = enhancerShareMapper;
         this.resourceShareMapper = resourceShareMapper;
+        this.enhancerClient = enhancerClient;
     }
 
     @RabbitListener(queues = KnodeExchange.ADD_KNODE_EVENT_MQ)
@@ -66,18 +71,21 @@ public class KnodeEventConsumer {
 
     @RabbitListener(queues = KnodeExchange.REMOVE_KNODE_EVENT_MQ)
     public void handleRemoveKnode(String knodeString){
-//        List<EnhancerDTO> enhancers = enhancerClient.getEnhancersOfKnode(Convert.toLong(knodeId));
-//        for(EnhancerDTO enhancer: enhancers)
-//            handleRemoveEnhancer(enhancer.getId());
         KnodeDTO knode = JSONUtil.toBean(knodeString, KnodeDTO.class);
+        List<EnhancerDTO> enhancers =
+            enhancerClient.getEnhancersOfKnode(Convert.toLong(knode.getId()));
+        for(EnhancerDTO enhancer: enhancers)
+            handleRemoveEnhancer(enhancer.getId());
         knodeShareMapper.deleteByKnodeId(Convert.toLong(knode.getId()));
     }
 
     @RabbitListener(queues = KnodeExchange.REMOVE_ENHANCER_EVENT_MQ)
-    public void handleRemoveEnhancer(String enhancerId){
-//        List<ResourceDTO> resources = enhancerClient.getResourcesOfEnhancer(Convert.toLong(enhancerId));
-//        for(ResourceDTO resource: resources)
-//            handleRemoveResource(resource.getId());
+    public void handleRemoveEnhancer(String idString){
+        Long enhancerId = Convert.toLong(idString);
+        List<ResourceDTO> resources =
+            enhancerClient.getResourcesOfEnhancer(enhancerId);
+        for(ResourceDTO resource: resources)
+            handleRemoveResource(resource.getId());
         enhancerShareMapper.deleteByEnhancerId(Convert.toLong(enhancerId));
     }
 

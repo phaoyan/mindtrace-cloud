@@ -9,5 +9,5 @@ import java.util.List;
 
 @Mapper
 public interface ResourceMapper extends BaseMapper<Resource> {
-    List<Resource> queryByEnhancerId(Long enhancerId);
+
 }

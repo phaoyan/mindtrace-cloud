@@ -9,5 +9,4 @@ import java.util.List;
 @Mapper
 public interface LabelMapper extends BaseMapper<Label> {
 
-    List<Label> queryByEnhancerId(Long enhancerId);
 }

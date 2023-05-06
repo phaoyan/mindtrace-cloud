@@ -104,6 +104,11 @@ public class EnhancerServiceImpl implements EnhancerService {
         Opt.ifPresent(updated.getResourceIds(), resourceIds->
             enhancer.setResources(resourceIds.stream().map(resourceMapper::selectById).toList()));
         enhancerMapper.updateById(enhancer);
+
+        rabbit.convertAndSend(
+                KnodeExchange.KNODE_EVENT_EXCHANGE,
+                KnodeExchange.ROUTING_KEY_UPDATE_ENHANCER,
+                JSONUtil.toJsonStr(Enhancer.transfer(enhancer)));
         return SaResult.ok("Enhancer updated:" + enhancerId);
     }
 
@@ -121,7 +126,7 @@ public class EnhancerServiceImpl implements EnhancerService {
         rabbit.convertAndSend(
                 KnodeExchange.KNODE_EVENT_EXCHANGE,
                 KnodeExchange.ROUTING_KEY_REMOVE_ENHANCER,
-                target.getId().toString());
+                enhancerId.toString());
     }
 
     @Override

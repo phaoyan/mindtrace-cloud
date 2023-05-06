@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.controller.aop.ControllerAspect;
 import pers.juumii.dto.LearningTraceDTO;
+import pers.juumii.dto.MindtraceDTO;
 import pers.juumii.dto.TraceInfo;
 import pers.juumii.mapper.LearningTraceMapper;
 import pers.juumii.mapper.MindtraceMapper;
@@ -64,11 +65,11 @@ public class TracingController {
             @PathVariable Long userId,
             @RequestBody TraceInfo traceInfo){
         return switch (traceInfo.getType()){
-            case TraceInfo.START_LEARNING -> learningTraceService.startLearning(userId, traceInfo);
+            case TraceInfo.START_LEARNING -> LearningTraceDTO.transfer(learningTraceService.startLearning(userId, traceInfo));
             case TraceInfo.FINISH_LEARNING -> learningTraceService.finishLearning(userId, traceInfo);
             case TraceInfo.PAUSE_LEARNING -> LearningTraceDTO.transfer(learningTraceService.pauseLearning(userId, traceInfo));
             case TraceInfo.CONTINUE_LEARNING -> LearningTraceDTO.transfer(learningTraceService.continueLearning(userId, traceInfo));
-            case TraceInfo.SETTLE_LEARNING -> learningTraceService.settleLearning(userId, traceInfo);
+            case TraceInfo.SETTLE_LEARNING -> MindtraceDTO.transfer(learningTraceService.settleLearning(userId, traceInfo));
             case TraceInfo.DROP_LEARNING -> learningTraceService.dropLearning(userId, traceInfo);
             default -> SaResult.error("Wrong Trace Info Type: " + traceInfo.getType());
         };

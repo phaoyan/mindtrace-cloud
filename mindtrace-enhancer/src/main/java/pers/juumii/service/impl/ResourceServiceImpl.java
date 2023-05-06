@@ -19,6 +19,7 @@ import pers.juumii.service.impl.router.ResourceRouter;
 import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.DataUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +122,7 @@ public class ResourceServiceImpl implements ResourceService {
         authUtils.same(userId);
         repository.releaseAll(userId, resourceId);
         resourceMapper.deleteById(resourceId);
+        errMapper.deleteByResourceId(resourceId);
 
         rabbit.convertAndSend(
                 KnodeExchange.KNODE_EVENT_EXCHANGE,
@@ -149,8 +151,12 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     public List<Resource> getResourcesFromEnhancer(Long enhancerId) {
-        List<Resource> resources = DataUtils.deNull(resourceMapper.queryByEnhancerId(enhancerMapper.selectById(enhancerId).getId()));
-        if(resources.isEmpty()) return resources;
+        List<Long> resourceIds =
+                errMapper.selectByEnhancerId(enhancerId).stream()
+                .map(EnhancerResourceRelationship::getResourceId).toList();
+        if(resourceIds.isEmpty()) return new ArrayList<>();
+        List<Resource> resources = resourceMapper.selectBatchIds(resourceIds);
+        if(resources.isEmpty()) return new ArrayList<>();
         authUtils.auth(resources.get(0).getCreateBy());
         return resources;
     }

@@ -39,11 +39,22 @@ public class UserServiceImplV2 implements UserService {
 
     @Override
     public SaResult unregister(Long userId) {
+        Cypher.cypher("""
+                MATCH (user: User {id:$userId})
+                MATCH (user)-[:POSSESS]->(root: Knode)
+                CALL apoc.path.subgraphAll(root, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                UNWIND nodes AS knode
+                DETACH DELETE knode
+                """, Map.of("userId", userId));
         return null;
     }
 
     @Override
     public Long checkRootId(Long userId) {
-        return null;
+        Cypher cypher = Cypher.cypher("""
+                MATCH (user: User {id:$userId})-[:POSSESS]->(knode: Knode)
+                RETURN knode.id as id
+                """, Map.of("userId", userId));
+        return neo4j.session(cypher, (record)->record.get("id").asLong()).get(0);
     }
 }

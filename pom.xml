@@ -15,6 +15,7 @@
       <module>mindtrace-recommend</module>
       <module>mindtrace-share</module>
       <module>mindtrace-hub</module>
+      <module>mindtrace-local</module>
   </modules>
 
   <parent>

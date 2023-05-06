@@ -45,10 +45,10 @@ public class LearningTraceServiceImpl implements LearningTraceService {
     }
 
     @Override
-    public SaResult startLearning(Long userId, TraceInfo traceInfo) {
+    public LearningTrace startLearning(Long userId, TraceInfo traceInfo) {
         LearningTrace trace = LearningTrace.prototype(userId, Convert.toLong(traceInfo.getData().get("enhancerId")));
         learningTraceMapper.insert(trace);
-        return SaResult.data(LearningTraceDTO.transfer(trace));
+        return trace;
     }
 
     @Override

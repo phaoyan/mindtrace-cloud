@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface LearningTraceService {
 
-    SaResult startLearning(Long userId, TraceInfo traceInfo);
+    LearningTrace startLearning(Long userId, TraceInfo traceInfo);
 
     SaResult finishLearning(Long userId, TraceInfo traceInfo);
 
