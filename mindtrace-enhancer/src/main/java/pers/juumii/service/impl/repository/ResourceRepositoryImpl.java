@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
+//@Service
 public class ResourceRepositoryImpl implements ResourceRepository {
 
     @Getter
@@ -75,8 +75,4 @@ public class ResourceRepositoryImpl implements ResourceRepository {
         return FileUtil.del(path(userId, resourceId));
     }
 
-    @Override
-    public File[] peek(Long userId, Long resourceId) {
-        return FileUtil.ls(path(userId, resourceId));
-    }
 }

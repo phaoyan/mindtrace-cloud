@@ -12,6 +12,8 @@ import pers.juumii.service.impl.v2.utils.Cypher;
 import pers.juumii.service.impl.v2.utils.Neo4jUtils;
 import pers.juumii.utils.AuthUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -150,7 +152,7 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
     public List<Knode> ancestors(Long knodeId) {
         Cypher cypher = Cypher
                 .cypher("""
-                        MATCH (target: Knode {id:$knodeId})-[:STEM_FROM*]->(knode: Knode)
+                        MATCH (target: Knode {id:$knodeId})-[:STEM_FROM*0..]->(knode: Knode)
                         """, Map.of("knodeId", knodeId))
                 .append(shallowLink())
                 .append(basicReturn());
@@ -192,13 +194,46 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
         return knodeChain(knodeId).stream().map(Knode::getTitle).toList();
     }
 
+    /**
+     * 返回值的键是string knode id
+     */
+    @Override
+    public Map<String, List<String>> chainStyleTitleBeneath(Long knodeId) {
+        check(knodeId);
+        HashMap<String, List<String>> res = new HashMap<>();
+        Function<Record, List<String>> resolver = (record)->{
+            long id = record.get("knodeId").asLong();
+            List<String> chainStyleTitle = record.get("chainStyleTitle").asList(Value::asString);
+            List<String> _res = new ArrayList<>();
+            _res.add(Long.toString(id));
+            _res.addAll(chainStyleTitle);
+            return _res;
+        };
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (n:Knode {id: $knodeId})
+                        CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                        UNWIND nodes AS knode
+                        CALL {
+                            WITH knode
+                            MATCH (knode)-[:STEM_FROM*0..]->(anc: Knode)
+                            RETURN collect(anc.title) AS chainStyleTitle
+                        }
+                        RETURN knode.id AS knodeId, chainStyleTitle
+                        """, Map.of("knodeId", knodeId));
+        List<List<String>> results = neo4j.session(cypher, resolver);
+        for(List<String> result: results)
+            res.put(result.get(0), result.subList(1, result.size()));
+        return res;
+    }
+
     @Override
     public List<Knode> checkAll(Long userId) {
         Cypher cypher = Cypher
                 .cypher("""
                         MATCH (u: User {id:$userId})-[:POSSESS]->(root: Knode)
                         CALL apoc.path.subgraphAll(root, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
-                        WITH nodes + root as all
+                        WITH nodes as all
                         UNWIND all AS knode
                         """, Map.of("userId", userId))
                 .append(shallowLink())
@@ -212,4 +247,6 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
     public List<Knode> similar(Long knodeId) {
         return null;
     }
+
+
 }

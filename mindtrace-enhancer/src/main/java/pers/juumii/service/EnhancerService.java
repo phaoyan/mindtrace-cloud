@@ -25,8 +25,9 @@ public interface EnhancerService {
 
     void removeEnhancer(Long enhancerId);
 
-    SaResult connectEnhancerToKnode(Long knodeId, Long enhancerId);
+    void connectEnhancerToKnode(Long knodeId, Long enhancerId);
 
-    SaResult disconnectEnhancerFromKnode(Long knodeId, Long enhancerId);
+    void disconnectEnhancerFromKnode(Long knodeId, Long enhancerId);
 
+    List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId);
 }

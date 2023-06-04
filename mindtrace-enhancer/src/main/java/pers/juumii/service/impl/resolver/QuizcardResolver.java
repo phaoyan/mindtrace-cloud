@@ -1,17 +1,15 @@
 package pers.juumii.service.impl.resolver;
 
-import cn.hutool.core.codec.Base64;
 import cn.hutool.core.convert.Convert;
-import cn.hutool.core.io.IoUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
+import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceResolver;
 
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -24,47 +22,25 @@ import java.util.Map;
  * - base64包括了data:image/png;base64,格式前缀
  */
 @Service
-@ResourceType(ResourceType.QUIZCARD)
+@ResourceType(ResourceTypes.QUIZCARD)
 public class QuizcardResolver implements ResourceResolver {
 
-    private final ResourceRepository repository;
+    private final ResolverUtils resolverUtils;
 
     @Autowired
-    public QuizcardResolver(ResourceRepository repository) {
-        this.repository = repository;
+    public QuizcardResolver(ResolverUtils resolverUtils) {
+        this.resolverUtils = resolverUtils;
     }
 
     @Override
     public Object resolve(Resource resource, String name) {
-        InputStream data = repository.load(resource, name);
-        Map<String, Object> resolve = resolve(Map.of(name, data));
-        resolve.putAll(Convert.toMap(String.class, String.class, resolve.get("imgs")));
-        return resolve.get(name);
+        return null;
     }
 
 
     @Override
-    public Map<String, Object> resolve(Map<String, InputStream> dataList){
-        Map<String, Object> res = new HashMap<>();
-        HashMap<Object, Object> imgs = new HashMap<>();
-        res.put("imgs", imgs);
-
-        for(Map.Entry<String, InputStream> data: dataList.entrySet())
-            if(data.getKey().equals("front.md"))
-                res.put("front", IoUtil.readUtf8(data.getValue()));
-            else if(data.getKey().equals("back.md"))
-                res.put("back", IoUtil.readUtf8(data.getValue()));
-                // 除了front和back，剩下的就认为是图片
-            else
-                // 重新编码为base64以便传输
-                imgs.put(data.getKey(), base64(data.getValue(), data.getKey()));
-
-        return res;
+    public Map<String, Object> resolve(Map<String, InputStream> dataList) {
+        return resolverUtils.resolveJson(dataList);
     }
 
-    // 在前面添加data:image/xxx;base64,
-    private String base64(InputStream in, String fileName) {
-        String[] split = fileName.split("\\.");
-        return "data:image/"+split[split.length-1]+";base64,"+Base64.encode(in);
-    }
 }

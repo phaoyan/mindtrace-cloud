@@ -59,9 +59,13 @@ public class ResourceController {
     }
 
     @GetMapping("/enhancer/{enhancerId}/resource")
-    public List<ResourceDTO> getResourcesFromEnhancer(
-            @PathVariable Long enhancerId){
-        return Resource.transfer(resourceService.getResourcesFromEnhancer(enhancerId));
+    public List<ResourceDTO> getResourcesOfEnhancer(@PathVariable Long enhancerId){
+        return Resource.transfer(resourceService.getResourcesOfEnhancer(enhancerId));
+    }
+
+    @GetMapping("/knode/{knodeId}/resource")
+    public List<ResourceDTO> getResourcesOfKnode(@PathVariable Long knodeId){
+        return Resource.transfer(resourceService.getResourcesOfKnode(knodeId));
     }
 
 }

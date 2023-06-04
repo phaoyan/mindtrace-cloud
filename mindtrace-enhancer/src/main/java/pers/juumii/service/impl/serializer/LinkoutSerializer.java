@@ -7,6 +7,7 @@ import cn.hutool.json.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
+import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceSerializer;
@@ -24,7 +25,7 @@ import java.util.Map;
  * 不过在serializer这里数据的格式都是一样的，不一样的在于resolver对type的解析
  */
 @Service
-@ResourceType(ResourceType.LINKOUT)
+@ResourceType(ResourceTypes.LINKOUT)
 public class LinkoutSerializer implements ResourceSerializer {
 
     private final ResourceRepository repository;

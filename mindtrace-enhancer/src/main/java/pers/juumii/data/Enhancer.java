@@ -18,7 +18,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Data
 public class Enhancer {
@@ -63,7 +62,7 @@ public class Enhancer {
         Opt.ifPresent(enhancer.getLength(), length->res.setLength(length.getSeconds()));
         res.setResourceIds(
             SpringUtils.getBean(ResourceService.class)
-            .getResourcesFromEnhancer(enhancer.getId()).stream()
+            .getResourcesOfEnhancer(enhancer.getId()).stream()
             .map(resource->resource.getId().toString()).toList());
         return res;
     }

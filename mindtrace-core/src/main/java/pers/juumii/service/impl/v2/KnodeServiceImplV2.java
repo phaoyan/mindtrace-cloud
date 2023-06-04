@@ -69,15 +69,13 @@ public class KnodeServiceImplV2 implements KnodeService {
                 SET knode.createBy = $createBy,
                     knode.createTime = $createTime,
                     knode.title = $title,
-                    knode.index = $index,
-                    knode.isLeaf = $isLeaf
+                    knode.index = $index
                 """, Map.of(
                             "knodeId", knode.getId(),
                             "createBy", knode.getCreateBy(),
                             "createTime", knode.getCreateTime(),
                             "title", knode.getTitle(),
-                            "index", knode.getIndex(),
-                            "isLeaf", knode.getIsLeaf()
+                            "index", knode.getIndex()
                 ));
     }
 
@@ -117,7 +115,7 @@ public class KnodeServiceImplV2 implements KnodeService {
         if(stem == null)
             throw new RuntimeException("Knode Not Found: " + knodeId);
         Knode branch = Knode.sudoPrototype(title, knodeId, stem.getCreateBy());
-        branch.setIndex(stem.getBranches().size() - 1);
+        branch.setIndex(stem.getBranches().size());
         threadUtils.getUserBlockingQueue().add(()->{
             neo4j.transaction(List.of(
                     createBasic(branch),
@@ -217,6 +215,18 @@ public class KnodeServiceImplV2 implements KnodeService {
 
     @Override
     public void swapIndex(Long stemId, Integer index1, Integer index2) {
+        // 检测index是否合法
+        List<Knode> branches = knodeQuery.check(stemId).getBranches();
+        for(int i = 0; i < branches.size(); i ++)
+            if(!branches.stream().map(Knode::getIndex).toList().contains(i)){
+                for(int j = 0; j < branches.size(); j ++){
+                    KnodeDTO dto = new KnodeDTO();
+                    dto.setIndex(j);
+                    update(branches.get(j).getId(), dto);
+                }
+                return;
+            }
+
         // userId用于鉴权
         Cypher cypher = Cypher.cypher("""
                 MATCH (stem: Knode {id:$stemId, createBy:$userId})-[:BRANCH_TO]->(branch1) WHERE branch1.index = $index1

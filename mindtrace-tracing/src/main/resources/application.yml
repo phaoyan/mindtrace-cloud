@@ -1,33 +1,4 @@
-server:
-  port: 36622
-spring:
-  application:
-    name: mindtrace-tracing
-  cloud:
-    nacos:
-      server-addr: localhost:8848
-#      server-addr: 39.108.71.232:8848
-      discovery:
-        service: mindtrace-tracing
+nacos:
+  config:
+    server-addr: ${SERVER_HOST}
 
-  # mysql
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mindtrace_tracing?serverTimezone=GMT%2B8&characterEncoding=utf-8&useSSL=false
-    username: root
-    password: 2004131phy123
-
-  # redis
-  redis:
-    database: 0
-    host: 127.0.0.1
-    port: 6379
-    # 连接超时时间
-    timeout: 10s
-    lettuce:
-      pool:
-        max-active: 200
-        max-wait: -1ms
-        max-idle: 10
-        min-idle: 0

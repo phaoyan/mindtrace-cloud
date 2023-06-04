@@ -8,6 +8,7 @@ import cn.hutool.json.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
+import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceSerializer;
@@ -31,7 +32,7 @@ import java.util.regex.Pattern;
  * 由于milkdown默认以base64将图片等资源直接保存，所以暂不做图片资源的单独处理
  */
 @Service
-@ResourceType(ResourceType.CLOZE)
+@ResourceType(ResourceTypes.CLOZE)
 public class ClozeSerializer implements ResourceSerializer {
 
 

@@ -1,13 +1,11 @@
 package pers.juumii.service;
 
-import java.util.Map;
-
 public interface ClientCacheService {
 
-    void updateCache(Long userId, Map<String, Object> cache);
+    void updateCache(Long userId, String key, String data);
 
-    Map<String, Object> getCache(Long userId);
+    String getCache(Long userId, String key);
 
-    void clearCache(Long userId);
+    void clearCache(Long userId, String key);
 
 }

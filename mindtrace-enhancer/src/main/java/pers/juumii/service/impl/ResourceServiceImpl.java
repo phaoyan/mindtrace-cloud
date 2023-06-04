@@ -5,19 +5,26 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.EnhancerResourceRelationship;
 import pers.juumii.data.Resource;
+import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
+import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.GatewayClient;
+import pers.juumii.feign.HubClient;
 import pers.juumii.mapper.EnhancerMapper;
 import pers.juumii.mapper.EnhancerResourceRelationshipMapper;
 import pers.juumii.mapper.ResourceMapper;
 import pers.juumii.mq.KnodeExchange;
+import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceService;
 import pers.juumii.service.impl.router.ResourceRouter;
 import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.DataUtils;
+import pers.juumii.utils.SerialTimer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +42,15 @@ public class ResourceServiceImpl implements ResourceService {
     private final EnhancerMapper enhancerMapper;
     private final EnhancerResourceRelationshipMapper errMapper;
     private final RabbitTemplate rabbit;
+    private final CoreClient coreClient;
+    private final HubClient hubClient;
+    private EnhancerService enhancerService;
+
+    @Lazy
+    @Autowired
+    public void setEnhancerService(EnhancerService enhancerService) {
+        this.enhancerService = enhancerService;
+    }
 
     @Autowired
     public ResourceServiceImpl(
@@ -44,7 +60,9 @@ public class ResourceServiceImpl implements ResourceService {
             ResourceRepository repository,
             EnhancerMapper enhancerMapper,
             EnhancerResourceRelationshipMapper errMapper,
-            RabbitTemplate rabbit) {
+            RabbitTemplate rabbit,
+            CoreClient coreClient,
+            HubClient hubClient) {
         this.authUtils = authUtils;
         this.router = router;
         this.resourceMapper = resourceMapper;
@@ -52,6 +70,8 @@ public class ResourceServiceImpl implements ResourceService {
         this.enhancerMapper = enhancerMapper;
         this.errMapper = errMapper;
         this.rabbit = rabbit;
+        this.coreClient = coreClient;
+        this.hubClient = hubClient;
     }
 
 
@@ -65,6 +85,7 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public Resource getResourceMetadata(Long resourceId) {
         Resource res = resourceMapper.selectById(resourceId);
+        if(res == null) return null;
         authUtils.auth(res.getCreateBy());
         return res;
     }
@@ -132,7 +153,7 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     public void removeAllResourcesFromEnhancer(Long enhancerId) {
-        for(Resource resource: getResourcesFromEnhancer(enhancerId))
+        for(Resource resource: getResourcesOfEnhancer(enhancerId))
             // removeResource中已有鉴权
             removeResource(resource.getId());
     }
@@ -150,7 +171,7 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public List<Resource> getResourcesFromEnhancer(Long enhancerId) {
+    public List<Resource> getResourcesOfEnhancer(Long enhancerId) {
         List<Long> resourceIds =
                 errMapper.selectByEnhancerId(enhancerId).stream()
                 .map(EnhancerResourceRelationship::getResourceId).toList();
@@ -176,6 +197,16 @@ public class ResourceServiceImpl implements ResourceService {
                 .eq(EnhancerResourceRelationship::getResourceId, resourceId)
                 .eq(EnhancerResourceRelationship::getEnhancerId, enhancerId);
         errMapper.delete(wrapper);
+    }
+
+    @Override
+    public List<Resource> getResourcesOfKnode(Long knodeId) {
+        KnodeDTO knode = coreClient.check(knodeId);
+        if(knode == null) return new ArrayList<>();
+        return DataUtils.join(
+            enhancerService.getEnhancersFromKnode(knodeId)
+            .stream().map(enhancer -> getResourcesOfEnhancer(enhancer.getId()))
+            .toList());
     }
 
 

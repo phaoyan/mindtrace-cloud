@@ -47,7 +47,7 @@ public class KnodeShareServiceImpl implements KnodeShareService {
                     knodeShareMapper.selectList(wrapper);
             res = knodeShares.stream()
                     .filter(share->coreClient.check(share.getKnodeId()) != null)
-                    .filter(share->!share.getUserId().equals(userId))
+//                    .filter(share->!share.getUserId().equals(userId))
                     .toList();
         }
         return DataUtils.subList(res, 0, count.intValue());

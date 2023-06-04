@@ -7,6 +7,7 @@ import pers.juumii.dto.KnodeDTO;
 import pers.juumii.service.KnodeQueryService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping
@@ -36,7 +37,7 @@ public class KnodeQueryController {
         return Knode.transfer(knodeQuery.branches(knodeId));
     }
 
-    // 返回一个knode的所有后代
+    // 返回一个knode的所有后代，包括自身
     @GetMapping("/knode/{knodeId}/offsprings")
     public List<KnodeDTO> offsprings(@PathVariable Long knodeId){
         return Knode.transfer(knodeQuery.offsprings(knodeId));
@@ -53,7 +54,7 @@ public class KnodeQueryController {
         return Knode.transfer(knodeQuery.stem(knodeId));
     }
 
-    @GetMapping("/knode/{knodeId}/ancestors")
+    @GetMapping("/knode/{knodeId}/ancestor")
     public List<KnodeDTO> ancestors(@PathVariable Long knodeId){
         return Knode.transfer(knodeQuery.ancestors(knodeId));
     }
@@ -61,6 +62,11 @@ public class KnodeQueryController {
     @GetMapping("/knode/{knodeId}/chainStyleTitle")
     public List<String> getChainStyleTitle(@PathVariable Long knodeId){
         return knodeQuery.chainStyleTitle(knodeId);
+    }
+
+    @GetMapping("/knode/{knodeId}/chainStyleTitleBeneath")
+    public Map<String, List<String>> getChainStyleTitlesBeneath(@PathVariable Long knodeId){
+        return knodeQuery.chainStyleTitleBeneath(knodeId);
     }
 
 }

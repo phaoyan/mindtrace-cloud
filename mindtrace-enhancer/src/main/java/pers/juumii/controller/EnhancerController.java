@@ -49,23 +49,28 @@ public class EnhancerController {
         return Enhancer.transfer(enhancerService.getEnhancersFromKnode(knodeId));
     }
 
+    @GetMapping("/knode/{knodeId}/enahncer/beneath")
+    public List<EnhancerDTO> getEnhancersFromKnodeIncludingBeneath(@PathVariable Long knodeId){
+        return Enhancer.transfer(enhancerService.getEnhancersFromKnodeIncludingBeneath(knodeId));
+    }
+
     @PutMapping("knode/{knodeId}/enhancer")
     public EnhancerDTO addEnhancerToKnode(@PathVariable Long knodeId){
         return Enhancer.transfer(enhancerService.addEnhancerToKnode(knodeId));
     }
 
     @PostMapping("knode/{knodeId}/enhancer/{enhancerId}")
-    public SaResult connectEnhancerToKnode(
+    public void connectEnhancerToKnode(
             @PathVariable Long knodeId,
             @PathVariable Long enhancerId){
-        return enhancerService.connectEnhancerToKnode(knodeId, enhancerId);
+        enhancerService.connectEnhancerToKnode(knodeId, enhancerId);
     }
 
     @DeleteMapping("knode/{knodeId}/enhancer/{enhancerId}")
-    public SaResult disconnectEnhancerToKnode(
+    public void disconnectEnhancerToKnode(
             @PathVariable Long enhancerId,
             @PathVariable Long knodeId){
-        return enhancerService.disconnectEnhancerFromKnode(knodeId,enhancerId);
+        enhancerService.disconnectEnhancerFromKnode(knodeId,enhancerId);
     }
 
 }

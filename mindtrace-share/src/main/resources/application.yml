@@ -1,17 +1,4 @@
-server:
-  port: 39541
-spring:
-  application:
-    name: mindtrace-share
-  cloud:
-    nacos:
-      server-addr: localhost:8848
-#      server-addr: 39.108.71.232:8848
-      discovery:
-        service: mindtrace-share
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mindtrace_share?serverTimezone=GMT%2B8&characterEncoding=utf-8&useSSL=false
-    username: root
-    password: 2004131phy123
+nacos:
+  config:
+    server-addr: ${SERVER_HOST}
+

@@ -4,6 +4,7 @@ import pers.juumii.data.Knode;
 import pers.juumii.data.Label;
 
 import java.util.List;
+import java.util.Map;
 
 public interface KnodeQueryService {
 
@@ -36,5 +37,7 @@ public interface KnodeQueryService {
     List<Knode> checkAll(Long userId);
 
     List<Knode> similar(Long knodeId);
+
+    Map<String, List<String>> chainStyleTitleBeneath(Long knodeId);
 
 }

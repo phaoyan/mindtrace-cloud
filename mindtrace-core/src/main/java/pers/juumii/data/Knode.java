@@ -11,9 +11,7 @@ import org.springframework.data.neo4j.core.schema.*;
 import pers.juumii.dto.KnodeDTO;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Node
@@ -98,13 +96,22 @@ public class Knode{
         res.setIsLeaf(knode.getIsLeaf());
         res.setIndex(knode.getIndex());
         Opt.ifPresent(knode.getStem(), stem->res.setStemId(stem.getId().toString()));
-        res.setBranchIds(knode.getBranches()
-                .stream().map(_knode->_knode.getId().toString())
+        knode.setBranches(new ArrayList<>(knode.getBranches()));
+        correctIndex(knode.getBranches());
+        res.setBranchIds(knode.getBranches().stream()
+                .sorted(Comparator.comparingInt(Knode::getIndex))
+                .map(_knode->_knode.getId().toString())
                 .collect(Collectors.toList()));
         res.setConnectionIds(knode.getConnections()
                 .stream().map(_knode->_knode.getId().toString())
                 .collect(Collectors.toList()));
         return res;
+    }
+
+    private static void correctIndex(List<Knode> branches) {
+        branches.sort(Comparator.comparingInt(Knode::getIndex));
+        for(int i = 0; i < branches.size(); i ++)
+            branches.get(i).setIndex(i);
     }
 
     public static List<KnodeDTO> transfer(List<Knode> knodeList){

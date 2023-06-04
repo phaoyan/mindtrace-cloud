@@ -19,7 +19,7 @@ public class SaTokenConfigure implements WebMvcConfigurer {
     public SaServletFilter getSaServletFilter() {
         return new SaServletFilter()
                 .addInclude("/**")
-                .setAuth(obj -> SaSameUtil.checkCurrentRequestToken())
+//                .setAuth(obj -> SaSameUtil.checkCurrentRequestToken())
                 .setError(e -> SaResult.error(e.getMessage()));
     }
 

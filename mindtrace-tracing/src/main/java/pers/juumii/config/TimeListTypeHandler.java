@@ -1,6 +1,5 @@
 package pers.juumii.config;
 
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONUtil;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;

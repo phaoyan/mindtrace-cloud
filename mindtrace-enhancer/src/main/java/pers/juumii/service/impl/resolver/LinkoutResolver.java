@@ -5,6 +5,7 @@ import cn.hutool.json.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
+import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.WebsiteDTO;
 import pers.juumii.feign.SpiderClient;
@@ -19,7 +20,7 @@ import java.util.Map;
  * url: 实际的url
  */
 @Service
-@ResourceType(ResourceType.LINKOUT)
+@ResourceType(ResourceTypes.LINKOUT)
 public class LinkoutResolver implements ResourceResolver {
 
     private final SpiderClient client;

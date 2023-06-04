@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import pers.juumii.dto.ResourceDTO;
-import pers.juumii.utils.Constants;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
@@ -45,6 +44,8 @@ public class Resource {
     }
 
     public static ResourceDTO transfer(Resource resource){
+        if(resource == null) return null;
+
         ResourceDTO res = new ResourceDTO();
         res.setId(resource.getId().toString());
         res.setCreateBy(resource.getCreateBy().toString());

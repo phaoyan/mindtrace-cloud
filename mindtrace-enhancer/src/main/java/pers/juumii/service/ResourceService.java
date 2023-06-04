@@ -36,7 +36,7 @@ public interface ResourceService {
 
     Resource addResourceToEnhancer(Long enhancerId, ResourceDTO meta, Map<String, Object> data);
 
-    List<Resource> getResourcesFromEnhancer(Long enhancerId);
+    List<Resource> getResourcesOfEnhancer(Long enhancerId);
 
     // 为enhancer挂载resource
     void connectResourceToEnhancer(Long enhancerId, Long resourceId);
@@ -44,4 +44,5 @@ public interface ResourceService {
     // 将enhancer与resource解绑
     void disconnectResourceFromEnhancer(Long enhancerId, Long resourceId);
 
+    List<Resource> getResourcesOfKnode(Long knodeId);
 }

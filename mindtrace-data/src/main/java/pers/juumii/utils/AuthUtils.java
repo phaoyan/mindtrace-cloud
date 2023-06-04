@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 @Component
 public class AuthUtils {
 
-    public static final String ADMIN_PASS = "ADMIN_PASS";
+    public static final String ADMIN_PASS = System.getenv("MINDTRACE_SECRET");
 
     private final ShareClient shareClient;
 

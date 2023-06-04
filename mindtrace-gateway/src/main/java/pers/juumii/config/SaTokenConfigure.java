@@ -2,6 +2,7 @@ package pers.juumii.config;
 
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.reactor.filter.SaReactorFilter;
+import cn.dev33.satoken.router.SaHttpMethod;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
@@ -17,8 +18,6 @@ public class SaTokenConfigure implements WebFluxConfigurer {
     /**
      * 注册 [Sa-Token全局过滤器]
      */
-    public static final String ADMIN_PASS = "ADMIN_PASS";
-
     @Bean
     public SaReactorFilter getSaReactorFilter() {
         return new SaReactorFilter()
@@ -27,16 +26,24 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                 // 指定 [放行路由]
                 .addExclude("/favicon.ico")
                 // 指定[认证函数]: 每次请求执行
-                .setAuth(obj ->
-                    SaRouter
-                    .match("/**")
-                    .notMatch("/user/login")
-                    .notMatch("/user/register")
-                    .check(()->{
-                        String adminPass = SaHolder.getRequest().getHeader("admin-pass");
-                        if(adminPass == null || !adminPass.equals(ADMIN_PASS))
-                            StpUtil.checkLogin();
-                    }))
+                .setAuth(obj ->{
+                    SaRouter.match("/**")
+                            .notMatch("/user/login")
+                            .notMatch("/user/register")
+                            .notMatch("/hub/resource/**")
+                            .check(()->{
+                                String adminPass = SaHolder.getRequest().getHeader("admin-pass");
+                                if(adminPass == null || !adminPass.equals(System.getenv("MINDTRACE_SECRET")))
+                                    StpUtil.checkLogin();
+                            });
+                    SaRouter.match("/hub/resource/**")
+                            .notMatchMethod(String.valueOf(SaHttpMethod.GET))
+                            .check(()->{
+                                String adminPass = SaHolder.getRequest().getHeader("admin-pass");
+                                if(adminPass == null || !adminPass.equals(System.getenv("MINDTRACE_SECRET")))
+                                    StpUtil.checkLogin();
+                            });
+                    })
                 // 指定[异常处理函数]：每次[认证函数]发生异常时执行此函数
                 .setError(e -> {
                     // 处理预检请求
@@ -45,7 +52,7 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                                 .addHeader("Access-Control-Allow-Credentials","true")
                                 .addHeader("Access-Control-Allow-Origin","http://localhost:3000")
                                 .addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                                .addHeader("Access-Control-Allow-Headers","Content-Type,Authorization");
+                                .addHeader("Access-Control-Allow-Headers","Content-Type,Authorization,x-requested-with");
                         return SaResult.ok();
                     }
 
@@ -54,8 +61,4 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                     return SaResult.error(e.getMessage());
                 });
     }
-
-
-
-
 }

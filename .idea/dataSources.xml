@@ -36,5 +36,12 @@
       <jdbc-url>jdbc:mysql://localhost:3306/mindtrace_hub</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="mindtrace_mastery@localhost" uuid="5b336c7b-546c-4960-9296-3752d709b7ea">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://localhost:3306/mindtrace_mastery</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

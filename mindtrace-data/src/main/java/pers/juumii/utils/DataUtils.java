@@ -1,5 +1,9 @@
 package pers.juumii.utils;
 
+import cn.hutool.core.convert.Convert;
+import pers.juumii.dto.EnhancerDTO;
+
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -217,5 +221,21 @@ public class DataUtils {
     public static <T> List<T> subList(List<T> list, int start, int end) {
         if(list.isEmpty()) return list;
         return list.subList(Math.min(start, list.size()), Math.min(end, list.size()));
+    }
+
+    public static <T> T randomPick(List<T> list) {
+        if(list.isEmpty()) throw new RuntimeException("List Empty !");
+        return list.get(new Random(LocalDateTime.now().getNano()).nextInt(0,list.size()));
+    }
+
+    public static <T> List<T> randomPick(List<T> list, int count){
+        if(list.isEmpty() || count == 0) return new ArrayList<>();
+        T selected = randomPick(list);
+        List<T> rest = list.stream().filter(item->item != selected).toList();
+        return DataUtils.join(selected, randomPick(rest, count - 1));
+    }
+
+    public static List<Long> strToLong(List<String> strs) {
+        return new ArrayList<>(strs.stream().map(Convert::toLong).toList());
     }
 }

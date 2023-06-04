@@ -8,6 +8,7 @@ import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
+import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceSerializer;
@@ -24,7 +25,7 @@ import java.util.Map;
  * 因为milkdown默认图片直接存在文档里，所以暂不写图片存储的逻辑
  */
 @Service
-@ResourceType(ResourceType.MARKDOWN)
+@ResourceType(ResourceTypes.MARKDOWN)
 public class MarkdownSerializer implements ResourceSerializer {
 
     private final ResourceRepository repository;
