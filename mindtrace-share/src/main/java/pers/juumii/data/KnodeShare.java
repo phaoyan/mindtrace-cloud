@@ -40,6 +40,7 @@ public class KnodeShare {
     }
 
     public static KnodeShareDTO transfer(KnodeShare knodeShare){
+        if(knodeShare == null) return null;
         KnodeShareDTO res = new KnodeShareDTO();
         res.setId(knodeShare.getId().toString());
         res.setKnodeId(knodeShare.getKnodeId().toString());

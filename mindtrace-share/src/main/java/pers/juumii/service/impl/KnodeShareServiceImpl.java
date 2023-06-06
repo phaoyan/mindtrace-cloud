@@ -35,7 +35,6 @@ public class KnodeShareServiceImpl implements KnodeShareService {
 
     @Override
     public List<KnodeShare> getRelatedKnodeShare(Long knodeId, Long count) {
-        Long userId = StpUtil.getLoginIdAsLong();
         List<KnodeShare> res = new ArrayList<>();
         for(Long i = count; res.size() < count && i < 64 * count ; i *= 2){
             List<Long> nearestNeighbors = knodeSimilarityClient.getNearestNeighbors(knodeId, i);

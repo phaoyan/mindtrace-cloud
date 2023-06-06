@@ -49,6 +49,13 @@ public class ExamSession {
         return JSONUtil.parseObj(ExamStrategyData.data(this).getConfig());
     }
 
+    public void setConfig(String key, Object value){
+        ExamStrategyData data = ExamStrategyData.data(this);
+        data.getConfig().put(key, value);
+        getExam().setExamStrategy(JSONUtil.toJsonStr(data));
+    }
+
+
     public JSONObject cache(){return cache == null ? null : JSONUtil.parseObj(cache);}
 
     public <T> ExamSession updateCache(String key, Class<T> cl, Function<T, T> lambda){
@@ -56,6 +63,13 @@ public class ExamSession {
         T ori = cache.get(key, cl);
         T updated = lambda.apply(ori);
         cache.set(key, updated);
+        setCache(cache.toString());
+        return this;
+    }
+
+    public ExamSession updateCache(String key, Object data){
+        JSONObject cache = cache();
+        cache.set(key, data);
         setCache(cache.toString());
         return this;
     }

@@ -2,6 +2,7 @@ package pers.juumii.data.persistent;
 
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
@@ -11,6 +12,7 @@ import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Function;
 
 @Data
 public class ExamInteract {
@@ -28,6 +30,15 @@ public class ExamInteract {
 
     public String type(){
         return JSONUtil.parseObj(message).getStr("type");
+    }
+    public JSONObject message(){ return JSONUtil.parseObj(message); }
+    public <T> ExamInteract updateMessage(String key, Class<T> cl, Function<T, T> lambda){
+        JSONObject message = message();
+        T ori = message.get(key, cl);
+        T updated = lambda.apply(ori);
+        message.set(key, updated);
+        setMessage(message.toString());
+        return this;
     }
 
     public static ExamInteractDTO transfer(ExamInteract interact) {

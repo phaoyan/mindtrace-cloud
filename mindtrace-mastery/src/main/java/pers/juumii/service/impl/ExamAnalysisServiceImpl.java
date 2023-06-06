@@ -32,7 +32,6 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
     private final ExamResultExamInteractMapper ereiMapper;
     private final ExamInteractMapper examInteractMapper;
     private final CoreClient coreClient;
-    private final AuthUtils authUtils;
 
 
     @Autowired
@@ -40,13 +39,11 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
             ExamResultMapper examResultMapper,
             ExamResultExamInteractMapper ereiMapper,
             ExamInteractMapper examInteractMapper,
-            CoreClient coreClient,
-            AuthUtils authUtils) {
+            CoreClient coreClient) {
         this.examResultMapper = examResultMapper;
         this.ereiMapper = ereiMapper;
         this.examInteractMapper = examInteractMapper;
         this.coreClient = coreClient;
-        this.authUtils = authUtils;
     }
 
     /**

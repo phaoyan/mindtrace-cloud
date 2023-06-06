@@ -8,7 +8,7 @@ import pers.juumii.data.temp.QuizResult;
 import java.util.List;
 
 public interface ExamStrategyService {
-    ExamInteract response(ExamSession session);
+    ExamInteract response(ExamSession session, ExamInteract req);
     List<QuizResult> extract(ExamSession session);
     Boolean canHandle(ExamSession session);
 

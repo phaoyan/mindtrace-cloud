@@ -70,13 +70,12 @@ public class SessionServiceImpl implements SessionService {
             sessionId = req.getSessionId();
         if(req.getId() == null)
             req.setId(IdUtil.getSnowflakeNextId());
-
         ExamSession session = getSession(sessionId);
-        session.getInteracts().add(req);
         ExamInteract resp = DesignPatternUtils.route(
                 ExamStrategyService.class,
                 _strategy->_strategy.canHandle(session))
-                .response(session);
+                .response(session, req);
+        session.getInteracts().add(req);
         session.getInteracts().add(resp);
         updateSession(session);
         return resp;
@@ -144,6 +143,8 @@ public class SessionServiceImpl implements SessionService {
     public void insertCompletely(ExamResult examResult) {
         examResultMapper.insert(examResult);
         for(ExamInteract interact: examResult.getInteracts()){
+            if(interact.getMessage().length() > 1024)
+                interact.setMessage("TO LONG");
             examInteractMapper.insert(interact);
             ereiMapper.insert(ExamResultExamInteract.prototype(examResult.getId(), interact.getId()));
         }

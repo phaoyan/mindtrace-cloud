@@ -24,6 +24,7 @@ public class ExamResult {
     @TableField(exist = false)
     private List<ExamInteract> interacts;
     private String examStrategy;
+    private String cache;
     @TableLogic
     private Boolean deleted;
 
@@ -55,6 +56,7 @@ public class ExamResult {
         exam.setUserId(examResult.getUserId());
         exam.setExamStrategy(examResult.getExamStrategy());
         res.setExam(exam);
+        res.setCache(examResult.getCache());
         return res;
     }
 }

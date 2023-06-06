@@ -2,8 +2,8 @@ package pers.juumii.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import pers.juumii.data.LearningTrace;
-
+import pers.juumii.data.StudyTrace;
 
 @Mapper
-public interface LearningTraceMapper extends BaseMapper<LearningTrace> { }
+public interface StudyTraceMapper extends BaseMapper<StudyTrace> {
+}
