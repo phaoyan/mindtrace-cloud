@@ -4,8 +4,8 @@ import cn.dev33.satoken.stp.StpInterface;
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.entity.Permission;
-import pers.juumii.entity.Role;
+import pers.juumii.data.Permission;
+import pers.juumii.data.Role;
 import pers.juumii.mapper.UserMapper;
 
 import java.util.List;

@@ -17,7 +17,6 @@ public class KnodeDTO {
     private String stemId;
     private List<String> branchIds;
     private List<String> connectionIds;
-    private Boolean isLeaf;
 
 
 

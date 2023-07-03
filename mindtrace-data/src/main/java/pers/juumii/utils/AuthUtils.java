@@ -39,4 +39,11 @@ public class AuthUtils {
         if(!loginId.equals(userId))
             throw new RuntimeException("Authentication failed: not allowed to visit user " + userId);
     }
+
+    public void admin() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        String adminPass = request.getHeader("admin-pass");
+        if(adminPass != null &&  adminPass.equals(ADMIN_PASS)) return;
+        throw new RuntimeException("Authentication failed: This API is only for admin");
+    }
 }

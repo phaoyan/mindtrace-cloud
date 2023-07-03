@@ -2,9 +2,9 @@ package pers.juumii.mapper;
 
 import com.github.yulichang.base.MPJBaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import pers.juumii.entity.Permission;
-import pers.juumii.entity.Role;
-import pers.juumii.entity.User;
+import pers.juumii.data.Permission;
+import pers.juumii.data.Role;
+import pers.juumii.data.User;
 
 import java.util.List;
 

@@ -16,7 +16,6 @@ import pers.juumii.service.KnodeService;
 import pers.juumii.service.impl.v2.utils.Cypher;
 import pers.juumii.service.impl.v2.utils.Neo4jUtils;
 import pers.juumii.thread.ThreadUtils;
-import pers.juumii.utils.AuthUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -161,7 +160,6 @@ public class KnodeServiceImplV2 implements KnodeService {
             Opt.ifPresent(dto.getCreateTime(), knode::setCreateTime);
             Opt.ifPresent(dto.getTitle(), knode::setTitle);
             Opt.ifPresent(dto.getIndex(), knode::setIndex);
-            Opt.ifPresent(dto.getIsLeaf(), knode::setIsLeaf);
             neo4j.transaction(List.of(updateBasic(knode)));
 
             rabbit.convertAndSend(

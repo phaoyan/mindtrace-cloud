@@ -2,7 +2,7 @@ package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pers.juumii.data.StudyTrace;
+import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.StudyTraceDTO;
 import pers.juumii.service.StudyTraceService;
 
@@ -24,13 +24,9 @@ public class StudyTraceController {
     }
 
     @GetMapping("/study/trace")
-    public List<StudyTraceDTO> getUserStudyTraces(@RequestParam("userId") Long userId){
+    public List<StudyTraceDTO> getUserStudyTraces(
+            @RequestParam(value = "userId", required = false) Long userId){
         return StudyTrace.transfer(studyTraceService.getUserStudyTraces(userId));
-    }
-
-    @GetMapping("/study/template/{templateId}/trace")
-    public List<StudyTraceDTO> getTemplateStudyTraces(@PathVariable Long templateId){
-        return StudyTrace.transfer(studyTraceService.getTemplateStudyTraces(templateId));
     }
 
     @GetMapping("/study/trace/{traceId}")
@@ -38,17 +34,17 @@ public class StudyTraceController {
         return StudyTrace.transfer(studyTraceService.getStudyTrace(traceId));
     }
 
-    @DeleteMapping("/study/trace{traceId}")
+    @DeleteMapping("/study/trace/{traceId}")
     public void removeStudyTrace(@PathVariable Long traceId){
         studyTraceService.removeStudyTrace(traceId);
     }
 
-    @PostMapping("/study/trace/{traceId}/knode/{knodeId}")
+    @PostMapping("/study/trace/{traceId}/coverage/{knodeId}")
     public void postTraceCoverage(@PathVariable Long traceId, @PathVariable Long knodeId){
         studyTraceService.postTraceCoverage(traceId, knodeId);
     }
 
-    @GetMapping("/study/trace/{traceId}/knode")
+    @GetMapping("/study/trace/{traceId}/coverage")
     public List<String> getTraceCoverages(@PathVariable Long traceId){
         return studyTraceService.getTraceCoverages(traceId).stream().map(Object::toString).toList();
     }
@@ -66,5 +62,10 @@ public class StudyTraceController {
     @DeleteMapping("study/trace/{traceId}/knode/{knodeId}")
     public void removeTraceCoverage(@PathVariable Long traceId, @PathVariable Long knodeId){
         studyTraceService.removeTraceCoverage(traceId, knodeId);
+    }
+
+    @GetMapping("/study/knode/{knodeId}/trace")
+    public List<StudyTraceDTO> getStudyTracesOfKnode(@PathVariable Long knodeId){
+        return StudyTrace.transfer(studyTraceService.getStudyTracesOfKnode(knodeId));
     }
 }

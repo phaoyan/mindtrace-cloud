@@ -1,4 +1,4 @@
-package pers.juumii.entity;
+package pers.juumii.data;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;

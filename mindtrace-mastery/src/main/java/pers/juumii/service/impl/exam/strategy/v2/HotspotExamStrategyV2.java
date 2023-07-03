@@ -5,7 +5,7 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.data.persistent.ExamInteract;
+import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
 import pers.juumii.feign.CoreClient;

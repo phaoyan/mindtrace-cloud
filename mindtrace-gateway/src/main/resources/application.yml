@@ -2,3 +2,15 @@ nacos:
   config:
     server-addr: ${SERVER_HOST}
 
+spring:
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: 1521324702@qq.com
+    password: keesdkevvpzoibje
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

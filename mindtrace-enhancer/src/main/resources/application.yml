@@ -1,7 +1,3 @@
-local:
-  static:
-    path: D:/mindtrace/static/
-
 nacos:
   config:
     server-addr: ${SERVER_HOST}

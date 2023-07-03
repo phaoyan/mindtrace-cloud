@@ -15,7 +15,7 @@ public class NullQuizStrategy implements QuizStrategyService {
             {
                 "type":"offline type priority",
                 "config":{
-                    "priority":["quiz card", "cloze", "markdown"],
+                    "priority":["quizcard", "cloze", "markdown"],
                     "quizSize":1,
                     backwardDepth:3
                 }

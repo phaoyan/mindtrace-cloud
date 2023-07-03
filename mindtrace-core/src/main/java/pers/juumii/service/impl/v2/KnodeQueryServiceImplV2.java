@@ -244,6 +244,17 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
     }
 
     @Override
+    public List<Knode> checkAll() {
+        authUtils.admin();
+        Cypher cypher = Cypher.cypher("""
+                        MATCH (knode: Knode)
+                        """, Map.of())
+                .append(shallowLink())
+                .append(basicReturn());
+        return neo4j.session(cypher, knodeResolver);
+    }
+
+    @Override
     public List<Knode> similar(Long knodeId) {
         return null;
     }

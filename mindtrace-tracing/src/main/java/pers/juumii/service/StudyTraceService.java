@@ -1,7 +1,7 @@
 package pers.juumii.service;
 
 
-import pers.juumii.data.StudyTrace;
+import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.StudyTraceDTO;
 
 import java.util.List;
@@ -9,9 +9,11 @@ import java.util.List;
 public interface StudyTraceService {
     StudyTrace postStudyTrace(StudyTraceDTO data);
 
-    List<StudyTrace> getUserStudyTraces(Long userId);
+    StudyTrace insertStudyTrace(StudyTraceDTO data);
 
-    List<StudyTrace> getTemplateStudyTraces(Long templateId);
+    StudyTrace updateStudyTrace(StudyTraceDTO data);
+
+    List<StudyTrace> getUserStudyTraces(Long userId);
 
     StudyTrace getStudyTrace(Long traceId);
 
@@ -26,4 +28,7 @@ public interface StudyTraceService {
     List<Long> getKnodeCoveringTraces(Long knodeId);
 
     void removeTraceCoverage(Long traceId, Long knodeId);
+
+    List<StudyTrace> getStudyTracesOfKnode(Long knodeId);
+
 }

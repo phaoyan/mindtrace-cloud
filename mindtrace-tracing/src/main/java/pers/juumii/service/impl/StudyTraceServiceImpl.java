@@ -1,15 +1,21 @@
 package pers.juumii.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pers.juumii.data.StudyTrace;
-import pers.juumii.data.TraceCoverage;
+import pers.juumii.data.persistent.StudyTrace;
+import pers.juumii.data.persistent.TraceCoverage;
+import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.StudyTraceDTO;
+import pers.juumii.feign.CoreClient;
 import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceCoverageMapper;
 import pers.juumii.service.StudyTraceService;
+import pers.juumii.utils.DataUtils;
 
 import java.util.List;
 
@@ -18,13 +24,16 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     private final StudyTraceMapper studyTraceMapper;
     private final TraceCoverageMapper traceCoverageMapper;
+    private final CoreClient coreClient;
 
     @Autowired
     public StudyTraceServiceImpl(
             StudyTraceMapper studyTraceMapper,
-            TraceCoverageMapper traceCoverageMapper) {
+            TraceCoverageMapper traceCoverageMapper,
+            CoreClient coreClient) {
         this.studyTraceMapper = studyTraceMapper;
         this.traceCoverageMapper = traceCoverageMapper;
+        this.coreClient = coreClient;
     }
 
     @Override
@@ -33,28 +42,27 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         return data.getId() != null ? updateStudyTrace(data) : insertStudyTrace(data);
     }
 
-    private StudyTrace insertStudyTrace(StudyTraceDTO data) {
-        StudyTrace trace = StudyTrace.prototype(data);
+    @Override
+    @Transactional
+    public StudyTrace insertStudyTrace(StudyTraceDTO data) {
+        StudyTrace trace = StudyTrace.transfer(data);
         studyTraceMapper.insert(trace);
         return trace;
     }
 
-    private StudyTrace updateStudyTrace(StudyTraceDTO data) {
-        studyTraceMapper.updateById(StudyTrace.prototype(data));
-        return null;
+    @Override
+    @Transactional
+    public StudyTrace updateStudyTrace(StudyTraceDTO data) {
+        studyTraceMapper.updateById(StudyTrace.transfer(data));
+        return studyTraceMapper.selectById(data.getId());
     }
 
     @Override
     public List<StudyTrace> getUserStudyTraces(Long userId) {
+        if(userId == null)
+            userId = StpUtil.getLoginIdAsLong();
         LambdaQueryWrapper<StudyTrace> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StudyTrace::getUserId, userId);
-        return studyTraceMapper.selectList(wrapper);
-    }
-
-    @Override
-    public List<StudyTrace> getTemplateStudyTraces(Long templateId) {
-        LambdaQueryWrapper<StudyTrace> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StudyTrace::getTemplateId, templateId);
         return studyTraceMapper.selectList(wrapper);
     }
 
@@ -67,6 +75,9 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Transactional
     public void removeStudyTrace(Long traceId) {
         studyTraceMapper.deleteById(traceId);
+        LambdaUpdateWrapper<TraceCoverage> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(TraceCoverage::getTraceId, traceId);
+        traceCoverageMapper.delete(wrapper);
     }
 
     @Override
@@ -109,5 +120,18 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         TraceCoverage coverage = traceCoverageMapper.selectOne(wrapper);
         if(coverage != null)
             traceCoverageMapper.deleteById(coverage);
+    }
+
+    @Override
+    public List<StudyTrace> getStudyTracesOfKnode(Long knodeId) {
+        List<StudyTrace> traces = getUserStudyTraces(null);
+        List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
+        return traces.stream().filter(trace->
+            !DataUtils.intersection(
+                getTraceCoverages(trace.getId()),
+                offsprings.stream().map(offspring->
+                    Convert.toLong(offspring.getId()))
+                    .toList()).isEmpty())
+            .toList();
     }
 }

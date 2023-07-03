@@ -25,10 +25,6 @@ public class Knode{
     private Integer index;
     @Property("title")
     private String title;
-    // 此处的isLeaf并不一定是说它为叶子节点，而是说其承载了具体的知识
-    // 只有非叶子节点这个属性才可能生效
-    @Property("isLeaf")
-    private Boolean isLeaf;
     @Property("createBy")
     private Long createBy;
     @Property("createTime")
@@ -55,7 +51,6 @@ public class Knode{
         res.setTitle(title);
         res.setLabels(new ArrayList<>());
         res.setCreateTime(LocalDateTime.now());
-        res.setIsLeaf(false);
         res.setBranches(new ArrayList<>());
         res.setConnections(new ArrayList<>());
         return res;
@@ -81,19 +76,17 @@ public class Knode{
         res.setTitle(Convert.toStr(entity.get("title")));
         res.setCreateBy(Convert.toLong(entity.get("createBy")));
         res.setCreateTime(Convert.convert(LocalDateTime.class, entity.get("createTime")));
-        res.setIsLeaf(Convert.toBool(entity.get("isLeaf")));
         return res;
     }
 
     public static KnodeDTO transfer(Knode knode) {
-        if(knode == null) return null;
+        if(knode == null || knode.getId() == null) return null;
         KnodeDTO res = new KnodeDTO();
         res.setId(knode.getId().toString());
         res.setTitle(knode.getTitle());
         res.setLabels(knode.getLabels().stream().map(Label::getName).toList());
         res.setCreateBy(knode.getCreateBy().toString());
         res.setCreateTime(knode.getCreateTime());
-        res.setIsLeaf(knode.getIsLeaf());
         res.setIndex(knode.getIndex());
         Opt.ifPresent(knode.getStem(), stem->res.setStemId(stem.getId().toString()));
         knode.setBranches(new ArrayList<>(knode.getBranches()));

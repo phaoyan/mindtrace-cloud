@@ -19,6 +19,11 @@ public class TimeUtils {
     }
 
     public static LocalDateTime parse(String moment) {
+        if(moment == null) return null;
         return LocalDateTime.parse(moment, DEFAULT_DATE_TIME_FORMATTER);
+    }
+
+    public static boolean ordered(LocalDateTime A, LocalDateTime B, LocalDateTime C) {
+        return A.isBefore(B) && B.isBefore(C);
     }
 }

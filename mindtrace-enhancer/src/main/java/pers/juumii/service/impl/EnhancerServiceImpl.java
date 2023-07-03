@@ -5,9 +5,11 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.Enhancer;
@@ -23,10 +25,13 @@ import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
 import pers.juumii.thread.ThreadUtils;
 import pers.juumii.utils.AuthUtils;
+import pers.juumii.utils.SerialTimer;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class EnhancerServiceImpl implements EnhancerService {
@@ -76,6 +81,23 @@ public class EnhancerServiceImpl implements EnhancerService {
         if(res.isEmpty()) return res;
         authUtils.auth(res.get(0).getCreateBy());
         return res;
+    }
+
+    public List<Enhancer> getEnhancersFromKnodeBatch(List<Long> knodeIds){
+        if(knodeIds.isEmpty()) return new ArrayList<>();
+        LambdaQueryWrapper<EnhancerKnodeRelationship> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(EnhancerKnodeRelationship::getKnodeId, knodeIds);
+        List<EnhancerKnodeRelationship> rel = ekrMapper.selectList(wrapper);
+        List<Long> enhancerIds = rel.stream().map(EnhancerKnodeRelationship::getEnhancerId).toList();
+        if(enhancerIds.isEmpty()) return new ArrayList<>();
+        return enhancerMapper.selectBatchIds(enhancerIds);
+    }
+
+    public Long getEnhancerCountFromKnodeBatch(List<Long> knodeIds){
+        if(knodeIds == null || knodeIds.isEmpty()) return 0L;
+        LambdaQueryWrapper<EnhancerKnodeRelationship> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(EnhancerKnodeRelationship::getKnodeId, knodeIds);
+        return ekrMapper.selectCount(wrapper);
     }
 
     @Override
@@ -133,6 +155,7 @@ public class EnhancerServiceImpl implements EnhancerService {
     @Transactional
     public void removeEnhancer(Long enhancerId) {
         Enhancer target = enhancerMapper.selectById(enhancerId);
+        if(target == null) return;
         authUtils.same(target.getCreateBy());
         resourceService.removeAllResourcesFromEnhancer(enhancerId);
         enhancerMapper.deleteById(enhancerId);
@@ -170,13 +193,18 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     public List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId) {
-        HashSet<Enhancer> res = new HashSet<>();
+        SerialTimer timer = SerialTimer.timer();
         List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        for(KnodeDTO knode: offsprings){
-            List<Enhancer> enhancers = getEnhancersFromKnode(Convert.toLong(knode.getId()));
-            res.addAll(enhancers);
-        }
-        return ListUtil.toList(res);
+        timer.logAndRestart();
+        List<Enhancer> res = getEnhancersFromKnodeBatch(offsprings.stream().map(knode -> Convert.toLong(knode.getId())).toList());
+        timer.logAndRestart();
+        return res;
+    }
+
+    @Override
+    public Long getEnhancerCount(Long knodeId){
+        List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
+        return getEnhancerCountFromKnodeBatch(offsprings.stream().map(knode->Convert.toLong(knode.getId())).toList());
     }
 
 }

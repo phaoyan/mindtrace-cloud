@@ -2,6 +2,7 @@ package pers.juumii.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.EnhancerShare;
@@ -83,7 +84,7 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
 
     @Override
     public EnhancerDTO forkEnhancerShare(Long shareId, Long targetId) {
-        Long userId = StpUtil.getLoginIdAsLong();
+        long userId = StpUtil.getLoginIdAsLong();
         // 提取数据
         EnhancerShare share = enhancerShareMapper.selectById(shareId);
         EnhancerDTO enhancer = enhancerClient.getEnhancerById(share.getEnhancerId());
@@ -95,7 +96,7 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
         for(ResourceDTO resource: resources){
             ResourceWithData resourceWithData = new ResourceWithData();
             ResourceDTO meta = new ResourceDTO();
-            meta.setCreateBy(userId.toString());
+            meta.setCreateBy(Long.toString(userId));
             meta.setTitle(resource.getTitle());
             meta.setType(resource.getType());
             Map<String, Object> data = enhancerClient.getDataFromResource(Convert.toLong(resource.getId()));
@@ -106,12 +107,17 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
         }
 
         _enhancer.setTitle(enhancer.getTitle());
-        _enhancer.setCreateBy(userId.toString());
+        _enhancer.setCreateBy(Long.toString(userId));
         _enhancer.setLabels(enhancer.getLabels());
         _enhancer.setIntroduction(enhancer.getIntroduction());
         _enhancer.setResourceIds(_resources.stream().map(ResourceDTO::getId).toList());
         enhancerClient.updateEnhancer(Convert.toLong(_enhancer.getId()), _enhancer);
 
         return _enhancer;
+    }
+
+    @Override
+    public EnhancerShare getEnhancerShare(Long enhancerId) {
+        return enhancerShareMapper.selectByEnhancerId(enhancerId);
     }
 }

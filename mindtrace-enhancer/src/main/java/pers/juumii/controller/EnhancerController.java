@@ -49,7 +49,7 @@ public class EnhancerController {
         return Enhancer.transfer(enhancerService.getEnhancersFromKnode(knodeId));
     }
 
-    @GetMapping("/knode/{knodeId}/enahncer/beneath")
+    @GetMapping("/knode/{knodeId}/offspring/enhancer")
     public List<EnhancerDTO> getEnhancersFromKnodeIncludingBeneath(@PathVariable Long knodeId){
         return Enhancer.transfer(enhancerService.getEnhancersFromKnodeIncludingBeneath(knodeId));
     }
@@ -71,6 +71,11 @@ public class EnhancerController {
             @PathVariable Long enhancerId,
             @PathVariable Long knodeId){
         enhancerService.disconnectEnhancerFromKnode(knodeId,enhancerId);
+    }
+
+    @GetMapping("/knode/{knodeId}/enhancer/count")
+    public Long getEnhancerCount(@PathVariable Long knodeId){
+        return enhancerService.getEnhancerCount(knodeId);
     }
 
 }

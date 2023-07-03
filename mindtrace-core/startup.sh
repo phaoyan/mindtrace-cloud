@@ -1,0 +1,1 @@
+java -jar mindtrace-core-1.0-SNAPSHOT.jar

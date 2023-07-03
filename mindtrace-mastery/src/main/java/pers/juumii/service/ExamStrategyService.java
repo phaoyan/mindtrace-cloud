@@ -1,7 +1,7 @@
 package pers.juumii.service;
 
 
-import pers.juumii.data.persistent.ExamInteract;
+import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
 

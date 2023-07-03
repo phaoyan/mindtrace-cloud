@@ -18,6 +18,11 @@ public class EnhancerShareController {
         this.enhancerShareService = enhancerShareService;
     }
 
+    @GetMapping("/enhancer/{enhancerId}")
+    public EnhancerShareDTO getEnhancerShare(@PathVariable Long enhancerId){
+        return EnhancerShare.transfer(enhancerShareService.getEnhancerShare(enhancerId));
+    }
+
     @GetMapping("/knode/{knodeId}/enhancer")
     public List<EnhancerShareDTO> getOwnedEnhancerShare(@PathVariable Long knodeId){
         return EnhancerShare.transfer(enhancerShareService.getOwnedEnhancerShare(knodeId));

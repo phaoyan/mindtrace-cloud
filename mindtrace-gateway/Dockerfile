@@ -7,4 +7,4 @@ COPY target/mindtrace-gateway-1.0-SNAPSHOT.jar /app
 # 暴露端口，根据实际项目情况设置
 EXPOSE 34443
 # 设置容器的默认启动命令
-CMD ["java", "-jar", "mindtrace-gateway-1.0-SNAPSHOT.jar"]
+CMD ["java", "-jar", "mindtrace-gateway-1.0-SNAPSHOT.jar", "-XX:NativeMemoryTracking=detail"]

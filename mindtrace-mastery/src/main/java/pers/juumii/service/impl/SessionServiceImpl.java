@@ -2,24 +2,25 @@ package pers.juumii.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.model.ObjectMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpServerErrorException;
+import pers.juumii.config.COSConfig;
 import pers.juumii.data.persistent.ExamResult;
-import pers.juumii.data.persistent.relation.ExamResultExamInteract;
 import pers.juumii.data.temp.Exam;
-import pers.juumii.data.persistent.ExamInteract;
+import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.dto.mastery.ExamAnalysis;
-import pers.juumii.mapper.ExamInteractMapper;
 import pers.juumii.mapper.ExamResultMapper;
-import pers.juumii.mapper.relation.ExamResultExamInteractMapper;
 import pers.juumii.service.ExamAnalysisService;
 import pers.juumii.service.ExamStrategyService;
 import pers.juumii.service.SessionService;
@@ -27,6 +28,7 @@ import pers.juumii.service.impl.exam.analysis.AnalyzerNames;
 import pers.juumii.utils.DesignPatternUtils;
 import pers.juumii.utils.TimeUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 
@@ -40,21 +42,21 @@ public class SessionServiceImpl implements SessionService {
     private final StringRedisTemplate redis;
     private final ExamAnalysisService analysisService;
     private final ExamResultMapper examResultMapper;
-    private final ExamInteractMapper examInteractMapper;
-    private final ExamResultExamInteractMapper ereiMapper;
+    private final COSClient cosClient;
+    private final COSConfig cosConfig;
 
     @Autowired
     public SessionServiceImpl(
             StringRedisTemplate redis,
             ExamAnalysisService analysisService,
             ExamResultMapper examResultMapper,
-            ExamInteractMapper examInteractMapper,
-            ExamResultExamInteractMapper ereiMapper) {
+            COSClient cosClient,
+            COSConfig cosConfig) {
         this.redis = redis;
         this.analysisService = analysisService;
         this.examResultMapper = examResultMapper;
-        this.examInteractMapper = examInteractMapper;
-        this.ereiMapper = ereiMapper;
+        this.cosClient = cosClient;
+        this.cosConfig = cosConfig;
     }
 
     private void updateSession(ExamSession session){
@@ -119,6 +121,7 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
+    @Transactional
     public ExamAnalysis finish(Long sessionId) {
 
         ExamSession session = getSession(sessionId);
@@ -127,7 +130,11 @@ public class SessionServiceImpl implements SessionService {
         redis.opsForValue().getAndDelete(SESSION_PREFIX + sessionId);
         redis.opsForValue().getAndDelete(USER_MAPPING_PREFIX + session.getExam().getUserId());
         // 结算mysql数据
-        insertCompletely(res);
+        examResultMapper.insert(res);
+        // cache存入COS
+        String bucket = cosConfig.getBUCKET_NAME();
+        String key = "exam/result/cache/" + res.getId();
+        cosClient.putObject(bucket, key, IoUtil.toStream(session.getCache(), StandardCharsets.UTF_8), new ObjectMetadata());
         return new ExamAnalysis(ExamResult.transfer(res), analysisService.analyze(session, AnalyzerNames.STATISTICS_ANALYSIS));
     }
 
@@ -139,15 +146,6 @@ public class SessionServiceImpl implements SessionService {
         redis.opsForValue().getAndDelete(USER_MAPPING_PREFIX + session.getExam().getUserId());
     }
 
-    @Transactional
-    public void insertCompletely(ExamResult examResult) {
-        examResultMapper.insert(examResult);
-        for(ExamInteract interact: examResult.getInteracts()){
-            if(interact.getMessage().length() > 1024)
-                interact.setMessage("TO LONG");
-            examInteractMapper.insert(interact);
-            ereiMapper.insert(ExamResultExamInteract.prototype(examResult.getId(), interact.getId()));
-        }
-    }
+
 
 }

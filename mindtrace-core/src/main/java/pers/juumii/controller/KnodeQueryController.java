@@ -8,6 +8,7 @@ import pers.juumii.service.KnodeQueryService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping
@@ -20,6 +21,10 @@ public class KnodeQueryController {
         this.knodeQuery = knodeQuery;
     }
 
+    @GetMapping("/knode")
+    public List<KnodeDTO> checkAll(){
+        return Knode.transfer(knodeQuery.checkAll()).stream().filter(Objects::nonNull).toList();
+    }
 
     @GetMapping("/user/{userId}/knode")
     public List<KnodeDTO> checkAll(@PathVariable Long userId){
@@ -46,6 +51,11 @@ public class KnodeQueryController {
     @GetMapping("/knode/{knodeId}/leaves")
     public List<KnodeDTO> leaves(@PathVariable Long knodeId){
         return Knode.transfer(knodeQuery.leaves(knodeId));
+    }
+
+    @GetMapping("/knode/{knodeId}/leave/count")
+    public Integer leaveCount(@PathVariable Long knodeId){
+        return knodeQuery.leaves(knodeId).size();
     }
 
     // 返回一个knode的直系亲代

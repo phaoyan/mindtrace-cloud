@@ -1,7 +1,6 @@
 package pers.juumii.utils;
 
 import cn.hutool.core.convert.Convert;
-import pers.juumii.dto.EnhancerDTO;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -85,7 +84,7 @@ public class DataUtils {
         return res;
     }
 
-    public static <T> List<T> join(List<T> first, List<T> second) {
+    public static <T> List<T> joinList(List<T> first, List<T> second) {
         List<T> res = new ArrayList<>();
         res.addAll(first);
         res.addAll(second);

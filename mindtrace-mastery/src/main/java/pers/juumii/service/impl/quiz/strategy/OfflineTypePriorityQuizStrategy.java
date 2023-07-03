@@ -30,6 +30,7 @@ public class OfflineTypePriorityQuizStrategy implements QuizStrategyService {
 
     @Override
     public List<Long> getQuiz(QuizStrategy strategy) {
+        if(strategy.getKnodeId() == null) return new ArrayList<>();
         // 提取参数
         QuizStrategyData data = QuizStrategyData.data(strategy.getQuizStrategy());
         List<String> priority = Convert.toList(String.class,

@@ -14,4 +14,6 @@ public interface EnhancerShareService {
     Map<String, List<EnhancerShareDTO>> getRelatedEnhancerShareWithMapping(Long knodeId, Long knodeCount);
 
     EnhancerDTO forkEnhancerShare(Long shareId, Long targetId);
+
+    EnhancerShare getEnhancerShare(Long enhancerId);
 }

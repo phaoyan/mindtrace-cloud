@@ -1,6 +1,5 @@
 package pers.juumii.service.impl;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,15 +36,17 @@ public class KnodeShareServiceImpl implements KnodeShareService {
     public List<KnodeShare> getRelatedKnodeShare(Long knodeId, Long count) {
         List<KnodeShare> res = new ArrayList<>();
         for(Long i = count; res.size() < count && i < 64 * count ; i *= 2){
-            List<Long> nearestNeighbors = knodeSimilarityClient.getNearestNeighbors(knodeId, i);
-            LambdaQueryWrapper<KnodeShare> wrapper = new LambdaQueryWrapper<>();
-            wrapper.in(KnodeShare::getKnodeId, nearestNeighbors);
-            List<KnodeShare> knodeShares =
-                    nearestNeighbors.isEmpty() ?
-                    new ArrayList<>() :
-                    knodeShareMapper.selectList(wrapper);
+            List<List<Object>> nnData = knodeSimilarityClient.getNearestNeighbors(knodeId, i);
+            List<Long> nearestNeighbors = nnData.stream().map(data->(Long)data.get(0)).toList();
+            List<KnodeShare> knodeShares = nearestNeighbors.stream().map((neighbor)->{
+                LambdaQueryWrapper<KnodeShare> wrapper = new LambdaQueryWrapper<>();
+                wrapper.eq(KnodeShare::getKnodeId, neighbor);
+                return knodeShareMapper.selectOne(wrapper);
+            }).toList();
             res = knodeShares.stream()
-                    .filter(share->coreClient.check(share.getKnodeId()) != null)
+                    .filter(share->
+                        share != null &&
+                        coreClient.check(share.getKnodeId()) != null)
 //                    .filter(share->!share.getUserId().equals(userId))
                     .toList();
         }

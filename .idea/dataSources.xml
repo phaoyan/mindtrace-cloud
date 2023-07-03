@@ -43,5 +43,47 @@
       <jdbc-url>jdbc:mysql://localhost:3306/mindtrace_mastery</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="mindtrace_enhancer@111.230.211.24" uuid="82567c98-e137-4455-ba2f-274fb91992fb">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://111.230.211.24:3306/mindtrace_enhancer</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="mindtrace_security@111.230.211.24" uuid="49949981-61b1-4668-b328-bbc4c51cdb15">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://111.230.211.24:3306/mindtrace_security</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="mindtrace_share@111.230.211.24" uuid="334dc85b-db84-477c-a6ef-c5cda8410b82">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://111.230.211.24:3306/mindtrace_share</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="mindtrace_mastery@111.230.211.24" uuid="76099a5f-bc9b-4106-aad8-9568e91941e9">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://111.230.211.24:3306/mindtrace_mastery</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="mindtrace_hub@111.230.211.24" uuid="ee8c1c04-6efd-4131-9aec-8c09ba4d23eb">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://111.230.211.24:3306/mindtrace_hub</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="mindtrace_tracing@111.230.211.24" uuid="59a61226-0fc1-4a80-ad31-6ad1ceb0ce7d">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://111.230.211.24:3306/mindtrace_tracing</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

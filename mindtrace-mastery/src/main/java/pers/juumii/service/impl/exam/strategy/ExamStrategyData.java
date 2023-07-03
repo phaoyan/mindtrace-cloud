@@ -13,6 +13,7 @@ public class ExamStrategyData {
     public static final String FULL_CHECK = "full check";
     public static final String HOTSPOT = "hotspot";
     public static final String HEURISTIC = "heuristic";
+    public static final String RECENT_KNODE = "recent knode";
 
 
     private String type;

@@ -35,6 +35,7 @@ public interface KnodeQueryService {
     List<String> chainStyleTitle(Long knodeId);
 
     List<Knode> checkAll(Long userId);
+    List<Knode> checkAll();
 
     List<Knode> similar(Long knodeId);
 

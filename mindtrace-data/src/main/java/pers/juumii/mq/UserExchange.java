@@ -9,9 +9,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class UserExchange {
-    public static final String ROUTING_KEY_REGISTER = "register";
     public static final String USER_EVENT_EXCHANGE = "user_event_exchange";
     public static final String REGISTER_EVENT_MQ = "register_event_mq";
+    public static final String ROUTING_KEY_REGISTER = "register";
 
     @Bean
     public DirectExchange userEventExchange(){return new DirectExchange(USER_EVENT_EXCHANGE);}

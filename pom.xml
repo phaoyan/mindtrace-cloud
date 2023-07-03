@@ -10,12 +10,12 @@
     <module>mindtrace-tracing</module>
     <module>mindtrace-enhancer</module>
     <module>mindtrace-data</module>
-      <module>mindtrace-mastery</module>
-      <module>mindtrace-path-optimizer</module>
-      <module>mindtrace-recommend</module>
-      <module>mindtrace-share</module>
-      <module>mindtrace-hub</module>
-      <module>mindtrace-local</module>
+    <module>mindtrace-mastery</module>
+    <module>mindtrace-path-optimizer</module>
+    <module>mindtrace-recommend</module>
+    <module>mindtrace-share</module>
+    <module>mindtrace-hub</module>
+    <module>mindtrace-local</module>
   </modules>
 
   <parent>

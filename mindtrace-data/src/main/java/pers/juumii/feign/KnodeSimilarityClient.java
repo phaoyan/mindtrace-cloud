@@ -11,5 +11,5 @@ import java.util.List;
 public interface KnodeSimilarityClient {
 
     @GetMapping("/knode/{knodeId}/similar")
-    List<Long> getNearestNeighbors(@PathVariable Long knodeId, @RequestParam("count") Long count);
+    List<List<Object>> getNearestNeighbors(@PathVariable Long knodeId, @RequestParam("count") Long count);
 }

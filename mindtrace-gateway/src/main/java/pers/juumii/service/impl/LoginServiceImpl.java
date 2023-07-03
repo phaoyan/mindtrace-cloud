@@ -3,9 +3,10 @@ package pers.juumii.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.entity.User;
+import pers.juumii.data.User;
 import pers.juumii.mapper.UserMapper;
 import pers.juumii.service.LoginService;
 
@@ -31,7 +32,7 @@ public class LoginServiceImpl implements LoginService {
         if(Objects.isNull(_user))
             return SaResult.error("登陆失败: 用户不存在");
         // 若用户存在，继续验证密码
-        if(!user.getPassword().equals(_user.getPassword()))
+        if(!BCrypt.checkpw(user.getPassword(), _user.getPassword()))
             return SaResult.error("登陆失败：密码错误");
         // 用户存在且密码正确，则登陆成功
         StpUtil.login(_user.getId());

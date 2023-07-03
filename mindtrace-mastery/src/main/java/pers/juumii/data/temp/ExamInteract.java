@@ -1,4 +1,4 @@
-package pers.juumii.data.persistent;
+package pers.juumii.data.temp;
 
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;

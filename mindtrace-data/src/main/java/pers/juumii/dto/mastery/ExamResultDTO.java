@@ -12,7 +12,6 @@ public class ExamResultDTO {
     private String userId;
     private String startTime;
     private String endTime;
-    private List<ExamInteractDTO> interacts;
     private String examStrategy;
 
 }

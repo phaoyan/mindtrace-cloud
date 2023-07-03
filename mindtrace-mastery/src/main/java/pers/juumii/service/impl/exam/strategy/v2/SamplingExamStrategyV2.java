@@ -6,7 +6,7 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.data.persistent.ExamInteract;
+import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
 import pers.juumii.dto.KnodeDTO;
@@ -39,9 +39,9 @@ public class SamplingExamStrategyV2 implements ExamStrategyService {
      * }
      * cache:{
      *     selected: string[] // 采样选中的knode id
-     *     corrects: number[] // 正确的knode的index
-     *     mistakes: number[] // 错误的knode的index
-     *     index: number // 当前knode的索引
+     *     corrects: string[] // 正确的knode的id
+     *     mistakes: string[] // 错误的knode的id
+     *     current: string // 当前knode的id，若为-1则表示已经完成了所有knode
      * }
      * types: ["main", "statistics"]
      */
@@ -63,7 +63,7 @@ public class SamplingExamStrategyV2 implements ExamStrategyService {
      * }
      * response: 所有cache数据
      */
-    private ExamInteract statistics(ExamSession session) {
+    public ExamInteract statistics(ExamSession session) {
         return ExamInteract.prototype(session.getId(), ExamInteract.SYSTEM, session.cache().toString());
     }
 
@@ -71,67 +71,75 @@ public class SamplingExamStrategyV2 implements ExamStrategyService {
      * request:
      * {
      *     type: "main"
-     *     index: number
+     *     knodeId: string
      *     completion: boolean
      * }
      * response:
      * {
      *     type: "main",
-     *     index: number,
      *     knodeId: string,
      *     quizIds: string[]
      * }
      */
-    private ExamInteract main(ExamSession session, ExamInteract req) {
+    public ExamInteract main(ExamSession session, ExamInteract req) {
         updateVisited(session, req);
         return mainResp(session);
     }
 
     private ExamInteract mainResp(ExamSession session) {
         JSONObject cache = session.cache();
-        Integer index = cache.getInt("index");
-        List<Long> selected = cache.getJSONArray("selected").toList(String.class).stream().map(Convert::toLong).toList();
-        Long knodeId = selected.get(index);
+        Long knodeId = Convert.toLong(cache.getStr("current"));
         List<Long> quizIds = quizGenerationService.getQuiz(knodeId);
         return ExamInteract.prototype(
                 session.getId(),
                 ExamInteract.SYSTEM,
                 JSONUtil.createObj()
                 .set("type", "main")
-                .set("index", index)
                 .set("knodeId", knodeId.toString())
-                .set("quizIds", quizIds.stream().map(Object::toString))
+                .set("quizIds", quizIds.stream().map(Object::toString).toList())
                 .toString());
     }
 
     private void updateVisited(ExamSession session, ExamInteract req) {
         JSONObject message = req.message();
-        Integer index = message.getInt("index");
+        Long knodeId = Convert.toLong(message.getStr("knodeId"));
         Boolean completion = message.getBool("completion");
-        if(index == null || completion == null) return;
-        if(completion){
+        if(knodeId == null || completion == null) return;
+        if(completion)
             session.updateCache(
             "corrects", JSONArray.class,
             (corrects)->{
-                corrects.add(index);
+                corrects.add(knodeId);
                 return corrects;
             });
-        }else
+        else
             session.updateCache(
             "mistakes", JSONArray.class,
             (mistakes)->{
-                mistakes.add(index);
+                mistakes.add(knodeId);
                 return mistakes;
             });
-        session.updateCache("index", Integer.class, i->i+1);
+        JSONObject cache = session.cache();
+        List<String> selected = cache.getJSONArray("selected").toList(String.class);
+        List<String> corrects = cache.getJSONArray("corrects").toList(String.class);
+        List<String> mistakes = cache.getJSONArray("mistakes").toList(String.class);
+        List<String> visited = DataUtils.joinList(corrects, mistakes);
+        List<String> unvisited = DataUtils.getAllIf(selected, id -> !visited.contains(id));
+        if(unvisited.isEmpty())
+            session.updateCache("current", String.class, (id)->"-1");
+        else
+            session.updateCache("current", String.class, (id)->unvisited.get(0));
     }
 
     private void initCache(ExamSession session) {
+        List<String> selected = select(session);
+        if(selected.isEmpty())
+            throw new RuntimeException("SamplingExamStrategy: selected knodes are empty.");
         session.setCache(JSONUtil.createObj()
-                .set("selected", select(session))
+                .set("selected", selected)
                 .set("corrects", new ArrayList<>())
                 .set("mistakes", new ArrayList<>())
-                .set("index", 0)
+                .set("current", selected.get(0))
                 .toString());
     }
 

@@ -1,21 +1,25 @@
 package pers.juumii.controller;
 
 import cn.dev33.satoken.annotation.SaIgnore;
-import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
-import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.dto.UserDTO;
-import pers.juumii.entity.User;
+import pers.juumii.data.User;
 import pers.juumii.service.LoginService;
 import pers.juumii.service.UserService;
 
-import java.net.http.HttpRequest;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
 @RestController
-@RequestMapping("/user")
 public class UserController {
 
     private final LoginService loginService;
@@ -29,39 +33,81 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
-    public SaResult register(@RequestBody User user){
-        return userService.register(user.getUsername(), user.getPassword());
+    @PostMapping("/user/register/validate")
+    public SaResult sendValidateCode(@RequestParam String email){
+        return userService.sendValidateCode(email);
     }
 
-    @PostMapping("/login")
+    @PostMapping("/user/register/confirm")
+    public SaResult confirmRegister(@RequestParam Integer validate, @RequestBody User userdata){
+        return userService.validate(userdata, validate);
+    }
+
+    @PostMapping("/user/login")
     public SaResult login(@RequestBody User user) {
         return loginService.login(user);
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/user/logout")
     public SaResult logout(){
         StpUtil.logout();
         return SaResult.ok();
     }
 
-    @GetMapping("/login")
+    @GetMapping("/user/login")
     public SaResult isLogin() {
         return SaResult.ok("是否登录：" + StpUtil.isLogin());
     }
 
     @SaIgnore
-    @GetMapping(value = "/{id}")
+    @GetMapping("/user/{id}/exists")
     public SaResult exists(@PathVariable Long id){
         return SaResult.data(userService.exists(id));
     }
 
-    @GetMapping
-    public SaResult userInfo(){
-        Long loginId = Convert.toLong(StpUtil.getLoginId());
-        if(Convert.toBool(exists(loginId).getData()))
-            return SaResult.data(UserDTO.transfer(userService.check(loginId)));
-        else return SaResult.error("用户未登录");
+    @GetMapping("/user/{userId}/public")
+    public UserDTO getUserPublicInfo(@PathVariable Long userId){
+        return User.transfer(userService.getUserPublicInfo(userId));
     }
 
+    @GetMapping("/user/{userId}")
+    public UserDTO getUserInfo(
+            @PathVariable Long userId,
+            @RequestParam(value = "password", required = false) String password){
+        return User.transfer(userService.getUserInfo(userId, password));
+    }
+
+    @GetMapping("/user")
+    public UserDTO getUserInfo(
+            @RequestParam(value = "username", required = false) String username,
+            @RequestParam(value = "password", required = false) String password){
+        return User.transfer(userService.getUserInfo(username, password));
+    }
+
+    @PostMapping("/user/{userId}/password")
+    public SaResult changePassword(
+            @PathVariable Long userId,
+            @RequestParam String oriPassword,
+            @RequestParam String newPassword){
+        return userService.changePassword(userId, oriPassword, newPassword);
+    }
+
+    @PostMapping(value = "/user/{userId}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public void updateAvatar(
+            @PathVariable Long userId,
+            @RequestPart("file") FilePart file) throws NullPointerException {
+        try {
+            List<DataBuffer> buffers = file.content().collectList().block();
+            if(buffers == null) return;
+            DataBuffer buffer = buffers.stream().reduce(DataBuffer::write).get();
+            userService.updateAvatar(buffer.asInputStream(), userId);
+        }catch (NullPointerException e){
+            e.printStackTrace();
+        }
+    }
+
+    @GetMapping("/user/{userId}/avatar")
+    public ResponseEntity<byte[]> getAvatar(@PathVariable Long userId){
+        return userService.getAvatar(userId);
+    }
 }

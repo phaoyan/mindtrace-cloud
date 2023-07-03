@@ -3,7 +3,7 @@ package pers.juumii.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.temp.Exam;
-import pers.juumii.data.persistent.ExamInteract;
+import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.dto.mastery.ExamAnalysis;
 import pers.juumii.dto.mastery.ExamInteractDTO;

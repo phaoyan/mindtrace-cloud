@@ -10,7 +10,7 @@ import pers.juumii.feign.interceptor.FeignSecurityInterceptor;
 @FeignClient(name = "mindtrace-gateway", configuration = FeignSecurityInterceptor.class)
 public interface GatewayClient {
 
-    @GetMapping("/user/{id}")
+    @GetMapping("/user/{id}/exists")
     SaResult userExists(@PathVariable Long id);
 
 }

@@ -6,7 +6,7 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.data.persistent.ExamInteract;
+import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
 import pers.juumii.dto.KnodeDTO;
@@ -122,7 +122,7 @@ public class HeuristicExamStrategyV2 implements ExamStrategyService {
         Long layerId = Convert.toLong(session.cache().getStr("layerId"));
         List<Long> corrects = cache.getJSONArray("corrects").stream().map(Convert::toLong).toList();
         List<Long> mistakes = cache.getJSONArray("mistakes").stream().map(Convert::toLong).toList();
-        List<Long> visited = DataUtils.join(corrects, mistakes);
+        List<Long> visited = DataUtils.joinList(corrects, mistakes);
         List<KnodeDTO> toPick = coreClient.leaves(layerId).stream().filter(leaf -> !visited.contains(Convert.toLong(leaf.getId()))).toList();
         if(toPick.isEmpty()) return null;
         return DataUtils.randomPick(toPick).getId();
@@ -166,7 +166,7 @@ public class HeuristicExamStrategyV2 implements ExamStrategyService {
         if(next == null) return;
         session.updateCache("layerId",String.class,
             (layerId)->switch (next){
-                case "top" -> top(layerId);
+                case "top" -> Convert.toLong(layerId).equals(session.getExam().getRootId()) ? layerId: top(layerId);
                 case "bottom" -> bottom(layerId);
                 case "right" -> right(layerId);
                 default -> layerId;
@@ -186,6 +186,7 @@ public class HeuristicExamStrategyV2 implements ExamStrategyService {
     }
 
     public String top(String layerId) {
+
         return coreClient.check(Convert.toLong(layerId)).getStemId();
     }
 

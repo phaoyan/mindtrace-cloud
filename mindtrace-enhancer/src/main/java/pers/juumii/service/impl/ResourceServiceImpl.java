@@ -12,7 +12,6 @@ import pers.juumii.data.Resource;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.feign.CoreClient;
-import pers.juumii.feign.GatewayClient;
 import pers.juumii.feign.HubClient;
 import pers.juumii.mapper.EnhancerMapper;
 import pers.juumii.mapper.EnhancerResourceRelationshipMapper;
@@ -24,7 +23,6 @@ import pers.juumii.service.ResourceService;
 import pers.juumii.service.impl.router.ResourceRouter;
 import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.DataUtils;
-import pers.juumii.utils.SerialTimer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,7 +41,6 @@ public class ResourceServiceImpl implements ResourceService {
     private final EnhancerResourceRelationshipMapper errMapper;
     private final RabbitTemplate rabbit;
     private final CoreClient coreClient;
-    private final HubClient hubClient;
     private EnhancerService enhancerService;
 
     @Lazy
@@ -61,8 +58,7 @@ public class ResourceServiceImpl implements ResourceService {
             EnhancerMapper enhancerMapper,
             EnhancerResourceRelationshipMapper errMapper,
             RabbitTemplate rabbit,
-            CoreClient coreClient,
-            HubClient hubClient) {
+            CoreClient coreClient) {
         this.authUtils = authUtils;
         this.router = router;
         this.resourceMapper = resourceMapper;
@@ -71,7 +67,6 @@ public class ResourceServiceImpl implements ResourceService {
         this.errMapper = errMapper;
         this.rabbit = rabbit;
         this.coreClient = coreClient;
-        this.hubClient = hubClient;
     }
 
 

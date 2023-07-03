@@ -3,7 +3,7 @@
 <mapper namespace="pers.juumii.mapper.UserMapper">
 
 
-    <select id="getPermissions" resultType="pers.juumii.entity.Permission">
+    <select id="getPermissions" resultType="pers.juumii.data.Permission">
         SELECT
             permission.*
         FROM
@@ -15,7 +15,7 @@
         WHERE
             user.id = #{id}
     </select>
-    <select id="getRoles" resultType="pers.juumii.entity.Role">
+    <select id="getRoles" resultType="pers.juumii.data.Role">
         SELECT
             role.*
         FROM

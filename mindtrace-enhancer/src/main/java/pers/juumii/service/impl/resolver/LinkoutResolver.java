@@ -12,6 +12,7 @@ import pers.juumii.feign.SpiderClient;
 import pers.juumii.service.ResourceResolver;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -24,6 +25,7 @@ import java.util.Map;
 public class LinkoutResolver implements ResourceResolver {
 
     private final SpiderClient client;
+
 
     @Autowired
     public LinkoutResolver(SpiderClient client) {
@@ -39,9 +41,11 @@ public class LinkoutResolver implements ResourceResolver {
     public Map<String, Object> resolve(Map<String, InputStream> dataList) {
         String json = IoUtil.readUtf8(dataList.get("data.json"));
         WebsiteDTO data = JSONUtil.toBean(json, WebsiteDTO.class);
-        Map<String, Object> res = client.getWebsiteInfo(data);
+        Map<String, Object> res = new HashMap<>();
+        res.put("data", client.getWebsiteInfo(data));
         res.put("url", data.getUrl());
         res.put("type", data.getType());
+        res.put("remark", data.getRemark());
         return res;
     }
 }

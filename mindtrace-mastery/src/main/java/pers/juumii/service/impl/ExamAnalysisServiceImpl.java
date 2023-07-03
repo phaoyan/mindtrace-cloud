@@ -2,23 +2,20 @@ package pers.juumii.service.impl;
 
 import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.qcloud.cos.COSClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pers.juumii.data.persistent.ExamInteract;
+import pers.juumii.config.COSConfig;
 import pers.juumii.data.persistent.ExamResult;
-import pers.juumii.data.persistent.relation.ExamResultExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.mastery.ExamAnalysis;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.mapper.ExamInteractMapper;
 import pers.juumii.mapper.ExamResultMapper;
-import pers.juumii.mapper.relation.ExamResultExamInteractMapper;
 import pers.juumii.service.ExamAnalysisService;
 import pers.juumii.service.ExamAnalyzer;
-import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.DesignPatternUtils;
 
@@ -29,21 +26,24 @@ import java.util.Map;
 public class ExamAnalysisServiceImpl implements ExamAnalysisService {
 
     private final ExamResultMapper examResultMapper;
-    private final ExamResultExamInteractMapper ereiMapper;
     private final ExamInteractMapper examInteractMapper;
     private final CoreClient coreClient;
+    private final COSClient cosClient;
+    private final COSConfig cosConfig;
 
 
     @Autowired
     public ExamAnalysisServiceImpl(
             ExamResultMapper examResultMapper,
-            ExamResultExamInteractMapper ereiMapper,
             ExamInteractMapper examInteractMapper,
-            CoreClient coreClient) {
+            CoreClient coreClient,
+            COSClient cosClient,
+            COSConfig cosConfig) {
         this.examResultMapper = examResultMapper;
-        this.ereiMapper = ereiMapper;
         this.examInteractMapper = examInteractMapper;
         this.coreClient = coreClient;
+        this.cosClient = cosClient;
+        this.cosConfig = cosConfig;
     }
 
     /**
@@ -66,40 +66,21 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
     }
 
 
-    public void initExamResult(ExamResult examResult){
-        // 初始化 examInteracts
-        LambdaQueryWrapper<ExamResultExamInteract> ereiWrapper = new LambdaQueryWrapper<>();
-        ereiWrapper.eq(ExamResultExamInteract::getExamResultId, examResult.getId());
-        examResult.setInteracts(
-                ereiMapper.selectList(ereiWrapper).stream()
-                        .map(erei->examInteractMapper.selectById(erei.getExamInteractId()))
-                        .toList());
-    }
-
     public List<ExamResult> getExamResults(Long userId){
         LambdaQueryWrapper<ExamResult> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ExamResult::getUserId, userId);
-        List<ExamResult> examResults = examResultMapper.selectList(wrapper);
-        for (ExamResult examResult: examResults)
-            initExamResult(examResult);
-        return examResults;
+        return examResultMapper.selectList(wrapper);
     }
 
     @Override
     public ExamResult getExamResult(Long resultId){
-        ExamResult res = examResultMapper.selectById(resultId);
-        if(res == null) return null;
-        initExamResult(res);
-        return res;
+        return examResultMapper.selectById(resultId);
     }
 
     public List<ExamResult> getExamResultsOfKnode(Long knodeId){
         LambdaQueryWrapper<ExamResult> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ExamResult::getRootId, knodeId);
-        List<ExamResult> examResults = examResultMapper.selectList(wrapper);
-        for(ExamResult examResult: examResults)
-            initExamResult(examResult);
-        return examResults;
+        return examResultMapper.selectList(wrapper);
     }
 
     @Override
@@ -115,17 +96,9 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
     @Transactional
     public void removeExamResult(Long resultId) {
         examResultMapper.deleteById(resultId);
-        LambdaQueryWrapper<ExamResultExamInteract> ereiWrapper = new LambdaQueryWrapper<>();
-        ereiWrapper.eq(ExamResultExamInteract::getExamResultId, resultId);
-        List<ExamResultExamInteract> relationships = ereiMapper.selectList(ereiWrapper);
-        if(relationships.isEmpty()) return;
-
-        LambdaUpdateWrapper<ExamInteract> interactWrapper = new LambdaUpdateWrapper<>();
-        interactWrapper.in(ExamInteract::getId, relationships.stream().map(ExamResultExamInteract::getExamInteractId).toList());
-        examInteractMapper.delete(interactWrapper);
-        LambdaUpdateWrapper<ExamResultExamInteract> relationWrapper = new LambdaUpdateWrapper<>();
-        relationWrapper.eq(ExamResultExamInteract::getExamResultId, resultId);
-        ereiMapper.delete(relationWrapper);
+        String bucket = cosConfig.getBUCKET_NAME();
+        String key = "exam/result/cache/" + resultId;
+        cosClient.deleteObject(bucket, key);
     }
 
     @Override
@@ -133,7 +106,7 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
         return getExamResults(userId).stream().map(
             result-> new ExamAnalysis(
                 ExamResult.transfer(result),
-                analyze(ExamResult.toSession(result), analyzerName))).toList();
+                analyze(result.toSession(), analyzerName))).toList();
     }
 
     @Override
@@ -142,15 +115,15 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
         return examResult == null ? null :
                 new ExamAnalysis(
                 ExamResult.transfer(examResult),
-                analyze(ExamResult.toSession(examResult), analyzerName));
+                analyze(examResult.toSession(), analyzerName));
     }
 
     @Override
     public List<ExamAnalysis> getExamAnalysesOfKnode(Long knodeId, String analyzerName) {
         return getExamResultsOfKnode(knodeId).stream()
                 .map(r-> new ExamAnalysis(
-                        ExamResult.transfer(r),
-                        analyze(ExamResult.toSession(r), analyzerName)))
+                    ExamResult.transfer(r),
+                    analyze(r.toSession(), analyzerName)))
                 .toList();
     }
 

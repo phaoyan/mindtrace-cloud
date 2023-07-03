@@ -51,18 +51,6 @@ public class QuizGenerationServiceImpl implements QuizGenerationService {
             QuizStrategy prototype = QuizStrategy.prototype(knodeId, null);
             quizList = SpringUtils.getBean(NullQuizStrategy.class).getQuiz(prototype);
         }
-        // 对于markdown，其作为quiz应当默认在背面。所以在这里统一处理一下
-        try{
-            for(Long quizId: quizList)
-                if(enhancerClient.getResourceMetadata(quizId).getType().equals(ResourceTypes.MARKDOWN)){
-                    try {
-                        Map<String, Object> data = enhancerClient.getDataFromResource(quizId);
-                        Map<String, Object> config = JSONUtil.parseObj(Convert.toStr(data.get("config")));
-                        config.put("hide", true);
-                        enhancerClient.addDataToResource(quizId, Map.of("config", config));
-                    } catch (Exception ignored){}
-                }
-        }catch (FeignException ignored){}
         return quizList;
     }
 

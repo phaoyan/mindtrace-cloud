@@ -30,4 +30,6 @@ public interface EnhancerService {
     void disconnectEnhancerFromKnode(Long knodeId, Long enhancerId);
 
     List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId);
+
+    Long getEnhancerCount(Long knodeId);
 }

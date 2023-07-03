@@ -1,14 +1,22 @@
 package pers.juumii.data.persistent;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.model.COSObjectInputStream;
 import lombok.Data;
+import pers.juumii.config.COSConfig;
 import pers.juumii.data.temp.Exam;
+import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.dto.mastery.ExamResultDTO;
+import pers.juumii.utils.SpringUtils;
 import pers.juumii.utils.TimeUtils;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,12 +29,34 @@ public class ExamResult {
     private Long userId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    @TableField(exist = false)
-    private List<ExamInteract> interacts;
     private String examStrategy;
-    private String cache;
     @TableLogic
     private Boolean deleted;
+
+    public ExamSession toSession(){
+        ExamSession res = new ExamSession();
+        res.setId(getId());
+        res.setStartTime(getStartTime());
+        res.setEndTime(getEndTime());
+        Exam exam = new Exam();
+        exam.setId(getId());
+        exam.setRootId(getRootId());
+        exam.setUserId(getUserId());
+        exam.setExamStrategy(getExamStrategy());
+        res.setExam(exam);
+        try{
+            COSClient cosClient = SpringUtils.getBean(COSClient.class);
+            COSConfig cosConfig = SpringUtils.getBean(COSConfig.class);
+            String bucket = cosConfig.getBUCKET_NAME();
+            String key = "exam/result/cache/" + id.toString();
+            COSObjectInputStream stream = cosClient.getObject(bucket, key).getObjectContent();
+            String str = StrUtil.str(stream.readAllBytes(), StandardCharsets.UTF_8);
+            res.setCache(str);
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
 
     public static ExamResultDTO transfer(ExamResult result) {
         ExamResultDTO res = new ExamResultDTO();
@@ -36,27 +66,10 @@ public class ExamResult {
         res.setStartTime(TimeUtils.format(result.getStartTime()));
         res.setEndTime(TimeUtils.format(result.getEndTime()));
         res.setExamStrategy(result.getExamStrategy());
-        res.setInteracts(ExamInteract.transfer(result.getInteracts()));
         return res;
     }
 
     public static List<ExamResultDTO> transfer(List<ExamResult> examResults){
         return examResults.stream().map(ExamResult::transfer).toList();
-    }
-
-    public static ExamSession toSession(ExamResult examResult) {
-        ExamSession res = new ExamSession();
-        res.setId(examResult.getId());
-        res.setStartTime(examResult.getStartTime());
-        res.setEndTime(examResult.getEndTime());
-        res.setInteracts(examResult.getInteracts());
-        Exam exam = new Exam();
-        exam.setId(examResult.getId());
-        exam.setRootId(examResult.getRootId());
-        exam.setUserId(examResult.getUserId());
-        exam.setExamStrategy(examResult.getExamStrategy());
-        res.setExam(exam);
-        res.setCache(examResult.getCache());
-        return res;
     }
 }

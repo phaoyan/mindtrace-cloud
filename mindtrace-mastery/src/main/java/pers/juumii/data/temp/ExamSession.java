@@ -4,7 +4,6 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import lombok.Data;
-import pers.juumii.data.persistent.ExamInteract;
 import pers.juumii.data.persistent.ExamResult;
 import pers.juumii.dto.mastery.ExamSessionDTO;
 import pers.juumii.service.impl.exam.strategy.ExamStrategyData;
@@ -12,8 +11,8 @@ import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -49,10 +48,13 @@ public class ExamSession {
         return JSONUtil.parseObj(ExamStrategyData.data(this).getConfig());
     }
 
-    public void setConfig(String key, Object value){
+    public ExamSession setConfig(String key, Object value){
         ExamStrategyData data = ExamStrategyData.data(this);
+        if(data.getConfig() == null)
+            data.setConfig(new HashMap<>());
         data.getConfig().put(key, value);
         getExam().setExamStrategy(JSONUtil.toJsonStr(data));
+        return this;
     }
 
 
@@ -103,7 +105,6 @@ public class ExamSession {
         res.setId(IdUtil.getSnowflakeNextId());
         res.setRootId(session.getExam().getRootId());
         res.setUserId(session.getExam().getUserId());
-        res.setInteracts(session.getInteracts());
         res.setStartTime(session.getStartTime());
         res.setEndTime(LocalDateTime.now());
         res.setExamStrategy(session.getExam().getExamStrategy());

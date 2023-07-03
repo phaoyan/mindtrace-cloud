@@ -6,4 +6,5 @@ import lombok.Data;
 public class WebsiteDTO {
     private String type;
     private String url;
+    private String remark;
 }
