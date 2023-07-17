@@ -9,7 +9,9 @@ import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.WebsiteDTO;
 import pers.juumii.feign.SpiderClient;
+import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceResolver;
+import pers.juumii.utils.SpringUtils;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -30,6 +32,11 @@ public class LinkoutResolver implements ResourceResolver {
     @Autowired
     public LinkoutResolver(SpiderClient client) {
         this.client = client;
+    }
+
+    @Override
+    public Map<String, Object> resolve(Resource resource) {
+        return resolve(SpringUtils.getBean(ResourceRepository.class).load(resource));
     }
 
     @Override

@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface KnodeShareService {
     List<KnodeShare> getRelatedKnodeShare(Long knodeId, Long count);
+    List<KnodeShare> getRelatedKnodeShare(Long knodeId, Double threshold);
 
     KnodeShare getKnodeShare(Long knodeId);
 

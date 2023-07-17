@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class TraceCoverage {
+public class TraceKnodeRel {
     @TableId
     private Long id;
     private Long traceId;
@@ -19,28 +19,28 @@ public class TraceCoverage {
     @TableLogic
     private Boolean deleted;
 
-    public static TraceCoverage prototype(Long traceId, Long knodeId) {
-        TraceCoverage res = new TraceCoverage();
+    public static TraceKnodeRel prototype(Long traceId, Long knodeId) {
+        TraceKnodeRel res = new TraceKnodeRel();
         res.setId(IdUtil.getSnowflakeNextId());
         res.setTraceId(traceId);
         res.setKnodeId(knodeId);
         return res;
     }
 
-    public static TraceCoverage transfer(TraceCoverageDTO dto){
-        TraceCoverage res = new TraceCoverage();
+    public static TraceKnodeRel transfer(TraceCoverageDTO dto){
+        TraceKnodeRel res = new TraceKnodeRel();
         res.setId(Convert.toLong(dto.getId()));
         res.setKnodeId(Convert.toLong(dto.getKnodeId()));
         res.setTraceId(Convert.toLong(dto.getTraceId()));
         return res;
     }
 
-    public static List<TraceCoverage> transfer(List<TraceCoverageDTO> dto, Boolean flag){
+    public static List<TraceKnodeRel> transfer(List<TraceCoverageDTO> dto, Boolean flag){
         if(dto == null) return null;
-        return new ArrayList<>(dto.stream().map(TraceCoverage::transfer).toList());
+        return new ArrayList<>(dto.stream().map(TraceKnodeRel::transfer).toList());
     }
 
-    public static TraceCoverageDTO transfer(TraceCoverage coverage){
+    public static TraceCoverageDTO transfer(TraceKnodeRel coverage){
         TraceCoverageDTO res = new TraceCoverageDTO();
         res.setId(coverage.getId().toString());
         res.setTraceId(coverage.getTraceId().toString());
@@ -48,8 +48,8 @@ public class TraceCoverage {
         return res;
     }
 
-    public static List<TraceCoverageDTO> transfer(List<TraceCoverage> coverages) {
+    public static List<TraceCoverageDTO> transfer(List<TraceKnodeRel> coverages) {
         if(coverages == null) return null;
-        return new ArrayList<>(coverages.stream().map(TraceCoverage::transfer).toList());
+        return new ArrayList<>(coverages.stream().map(TraceKnodeRel::transfer).toList());
     }
 }

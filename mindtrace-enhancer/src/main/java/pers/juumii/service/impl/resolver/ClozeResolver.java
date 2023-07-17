@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
 import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
+import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceResolver;
+import pers.juumii.utils.SpringUtils;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,6 +35,11 @@ public class ClozeResolver implements ResourceResolver {
 
     public static final String CLOZE_TEXT_REGEX = "\\{\\{CLOZE::(.+?)\\}\\}";
 
+
+    @Override
+    public Map<String, Object> resolve(Resource resource) {
+        return resolve(SpringUtils.getBean(ResourceRepository.class).load(resource));
+    }
 
     @Override
     public Object resolve(Resource resource, String name) {

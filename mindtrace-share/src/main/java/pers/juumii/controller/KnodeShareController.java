@@ -3,7 +3,6 @@ package pers.juumii.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.KnodeShare;
-import pers.juumii.dto.share.EnhancerShareDTO;
 import pers.juumii.dto.share.KnodeShareDTO;
 import pers.juumii.service.KnodeShareService;
 
@@ -32,8 +31,8 @@ public class KnodeShareController {
     @GetMapping("/knode/{knodeId}/similar")
     public List<KnodeShareDTO> getRelatedKnodeShare(
             @PathVariable Long knodeId,
-            @RequestParam Long count){
-        return KnodeShare.transfer(knodeShareService.getRelatedKnodeShare(knodeId, count));
+            @RequestParam(required = false) Double threshold){
+        return KnodeShare.transfer(knodeShareService.getRelatedKnodeShare(knodeId, threshold));
     }
 
     @PostMapping("/knodeShare/{shareId}/to/{targetId}")

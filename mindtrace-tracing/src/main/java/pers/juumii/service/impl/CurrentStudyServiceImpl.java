@@ -8,12 +8,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.data.persistent.TraceCoverage;
 import pers.juumii.data.temp.CurrentStudy;
 import pers.juumii.dto.CurrentStudyDTO;
 import pers.juumii.mq.StudyTraceExchange;
 import pers.juumii.service.CurrentStudyService;
 import pers.juumii.service.StudyTraceService;
+import pers.juumii.service.TraceEnhancerRelService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,18 +22,20 @@ import java.util.List;
 public class CurrentStudyServiceImpl implements CurrentStudyService {
 
     private final StringRedisTemplate redis;
-    private final StudyTraceService studyTraceService;
     private final RabbitTemplate rabbit;
-
+    private final StudyTraceService studyTraceService;
+    private final TraceEnhancerRelService traceEnhancerRelService;
 
     @Autowired
     public CurrentStudyServiceImpl(
             StringRedisTemplate redis,
             StudyTraceService studyTraceService,
-            RabbitTemplate rabbit) {
+            RabbitTemplate rabbit,
+            TraceEnhancerRelService traceEnhancerRelService) {
         this.redis = redis;
         this.studyTraceService = studyTraceService;
         this.rabbit = rabbit;
+        this.traceEnhancerRelService = traceEnhancerRelService;
     }
 
     private String key(){
@@ -70,8 +72,10 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         CurrentStudy currentStudy = getCurrentStudy();
         currentStudy.getTrace().setEndTime(LocalDateTime.now());
         studyTraceService.insertStudyTrace(StudyTrace.transfer(currentStudy.getTrace()));
-        for(TraceCoverage coverage: currentStudy.getCoverages())
-            studyTraceService.postTraceCoverage(coverage.getTraceId(), coverage.getKnodeId());
+        for(Long knodeId: currentStudy.getKnodeIds())
+            studyTraceService.postTraceCoverage(currentStudy.getTrace().getId(), knodeId);
+        for(Long enhancerId: currentStudy.getEnhancerIds())
+            traceEnhancerRelService.postEnhancerTraceRel(currentStudy.getTrace().getId(), enhancerId);
         rabbit.convertAndSend(
                 StudyTraceExchange.STUDY_TRACE_EVENT_EXCHANGE,
                 StudyTraceExchange.ROUTING_KEY_SETTLE,
@@ -106,21 +110,32 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     }
 
     @Override
-    public List<TraceCoverage> addTraceCoverage(List<Long> knodeIds) {
+    public List<Long> addKnodeId(Long knodeId) {
         CurrentStudy currentStudy = getCurrentStudy();
-        currentStudy.getCoverages().addAll(knodeIds.stream()
-            .map(knodeId->TraceCoverage.prototype(
-                currentStudy.getTrace().getId(),
-                knodeId))
-            .toList());
+        currentStudy.getKnodeIds().add(knodeId);
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
-        return currentStudy.getCoverages();
+        return currentStudy.getKnodeIds();
     }
 
     @Override
-    public void removeTraceCoverage(Long knodeId) {
+    public void removeKnodeId(Long knodeId) {
         CurrentStudy currentStudy = getCurrentStudy();
-        currentStudy.getCoverages().removeIf(coverage->coverage.getKnodeId().equals(knodeId));
+        currentStudy.getKnodeIds().removeIf(_knodeId->_knodeId.equals(knodeId));
+        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
+    }
+
+    @Override
+    public List<Long> addTraceEnhancerRel(Long enhancerId) {
+        CurrentStudy currentStudy = getCurrentStudy();
+        currentStudy.getEnhancerIds().add(enhancerId);
+        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
+        return currentStudy.getEnhancerIds();
+    }
+
+    @Override
+    public void removeTraceEnhancerRel(Long enhancerId) {
+        CurrentStudy currentStudy = getCurrentStudy();
+        currentStudy.getEnhancerIds().removeIf(id->id.equals(enhancerId));
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
     }
 }

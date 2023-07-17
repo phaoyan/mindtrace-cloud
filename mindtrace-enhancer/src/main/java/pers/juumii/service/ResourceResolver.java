@@ -8,9 +8,7 @@ import java.util.Map;
 
 public interface ResourceResolver {
     // 通过Resource拿到相应资源文件并进行适当解析，将数据以json的格式返回给前端
-    default Map<String, Object> resolve(Resource resource){
-        return resolve(SpringUtils.getBean(ResourceRepository.class).load(resource));
-    }
+    Map<String, Object> resolve(Resource resource);
 
     // 返回具体单个文件的数据
     Object resolve(Resource resource, String name);

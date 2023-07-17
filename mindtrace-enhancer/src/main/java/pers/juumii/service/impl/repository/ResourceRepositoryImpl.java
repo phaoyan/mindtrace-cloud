@@ -52,6 +52,16 @@ public class ResourceRepositoryImpl implements ResourceRepository {
     }
 
     @Override
+    public void setMeta(Long userId, Long resourceId, String name, Map<String, String> meta) {
+
+    }
+
+    @Override
+    public Map<String, String> getMeta(Long userId, Long resourceId, String name) {
+        return null;
+    }
+
+    @Override
     public Map<String, InputStream> load(Long userId, Long resourceId) {
         HashMap<String, InputStream> res = new HashMap<>();
         File[] dataList = new File(path(userId, resourceId)).listFiles();

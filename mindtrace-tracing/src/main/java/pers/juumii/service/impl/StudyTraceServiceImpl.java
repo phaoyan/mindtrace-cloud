@@ -8,12 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.data.persistent.TraceCoverage;
+import pers.juumii.data.persistent.TraceEnhancerRel;
+import pers.juumii.data.persistent.TraceKnodeRel;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.StudyTraceDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.mapper.StudyTraceMapper;
-import pers.juumii.mapper.TraceCoverageMapper;
+import pers.juumii.mapper.TraceEnhancerRelMapper;
+import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.DataUtils;
 
@@ -23,16 +25,19 @@ import java.util.List;
 public class StudyTraceServiceImpl implements StudyTraceService {
 
     private final StudyTraceMapper studyTraceMapper;
-    private final TraceCoverageMapper traceCoverageMapper;
+    private final TraceKnodeRelMapper traceKnodeRelMapper;
+    private final TraceEnhancerRelMapper traceEnhancerRelMapper;
     private final CoreClient coreClient;
 
     @Autowired
     public StudyTraceServiceImpl(
             StudyTraceMapper studyTraceMapper,
-            TraceCoverageMapper traceCoverageMapper,
+            TraceKnodeRelMapper traceKnodeRelMapper,
+            TraceEnhancerRelMapper traceEnhancerRelMapper,
             CoreClient coreClient) {
         this.studyTraceMapper = studyTraceMapper;
-        this.traceCoverageMapper = traceCoverageMapper;
+        this.traceKnodeRelMapper = traceKnodeRelMapper;
+        this.traceEnhancerRelMapper = traceEnhancerRelMapper;
         this.coreClient = coreClient;
     }
 
@@ -75,51 +80,60 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Transactional
     public void removeStudyTrace(Long traceId) {
         studyTraceMapper.deleteById(traceId);
-        LambdaUpdateWrapper<TraceCoverage> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(TraceCoverage::getTraceId, traceId);
-        traceCoverageMapper.delete(wrapper);
+        LambdaUpdateWrapper<TraceKnodeRel> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(TraceKnodeRel::getTraceId, traceId);
+        traceKnodeRelMapper.delete(wrapper);
     }
 
     @Override
     @Transactional
     public void postTraceCoverage(Long traceId, Long knodeId) {
-        if(!checkTraceCoverage(traceId, knodeId))
-            traceCoverageMapper.insert(TraceCoverage.prototype(traceId, knodeId));
+        if(!checkTraceKnodeRel(traceId, knodeId))
+            traceKnodeRelMapper.insert(TraceKnodeRel.prototype(traceId, knodeId));
     }
 
     @Override
-    public List<Long> getTraceCoverages(Long traceId) {
-        LambdaQueryWrapper<TraceCoverage> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceCoverage::getTraceId, traceId);
-        return traceCoverageMapper.selectList(wrapper)
-                .stream().map(TraceCoverage::getKnodeId)
+    public List<Long> getTraceKnodeRels(Long traceId) {
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceKnodeRel::getTraceId, traceId);
+        return traceKnodeRelMapper.selectList(wrapper)
+                .stream().map(TraceKnodeRel::getKnodeId)
                 .toList();
     }
 
     @Override
-    public Boolean checkTraceCoverage(Long traceId, Long knodeId) {
-        LambdaQueryWrapper<TraceCoverage> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceCoverage::getTraceId, traceId).eq(TraceCoverage::getKnodeId, knodeId);
-        return traceCoverageMapper.exists(wrapper);
+    public List<Long> getTraceEnhancerRels(Long traceId) {
+        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceEnhancerRel::getTraceId, traceId);
+        return traceEnhancerRelMapper.selectList(wrapper)
+                .stream().map(TraceEnhancerRel::getEnhancerId)
+                .toList();
+    }
+
+    @Override
+    public Boolean checkTraceKnodeRel(Long traceId, Long knodeId) {
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceKnodeRel::getTraceId, traceId).eq(TraceKnodeRel::getKnodeId, knodeId);
+        return traceKnodeRelMapper.exists(wrapper);
     }
 
     @Override
     public List<Long> getKnodeCoveringTraces(Long knodeId) {
-        LambdaQueryWrapper<TraceCoverage> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceCoverage::getKnodeId, knodeId);
-        return traceCoverageMapper.selectList(wrapper)
-                .stream().map(TraceCoverage::getTraceId)
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceKnodeRel::getKnodeId, knodeId);
+        return traceKnodeRelMapper.selectList(wrapper)
+                .stream().map(TraceKnodeRel::getTraceId)
                 .toList();
     }
 
     @Override
     @Transactional
     public void removeTraceCoverage(Long traceId, Long knodeId) {
-        LambdaQueryWrapper<TraceCoverage> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceCoverage::getTraceId, traceId).eq(TraceCoverage::getKnodeId, knodeId);
-        TraceCoverage coverage = traceCoverageMapper.selectOne(wrapper);
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceKnodeRel::getTraceId, traceId).eq(TraceKnodeRel::getKnodeId, knodeId);
+        TraceKnodeRel coverage = traceKnodeRelMapper.selectOne(wrapper);
         if(coverage != null)
-            traceCoverageMapper.deleteById(coverage);
+            traceKnodeRelMapper.deleteById(coverage);
     }
 
     @Override
@@ -128,10 +142,22 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
         return traces.stream().filter(trace->
             !DataUtils.intersection(
-                getTraceCoverages(trace.getId()),
+                getTraceKnodeRels(trace.getId()),
                 offsprings.stream().map(offspring->
                     Convert.toLong(offspring.getId()))
                     .toList()).isEmpty())
             .toList();
     }
+
+    @Override
+    public List<StudyTrace> getStudyTracesOfEnhancer(Long enhancerId) {
+        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceEnhancerRel::getEnhancerId, enhancerId);
+        return traceEnhancerRelMapper.selectList(wrapper).stream()
+                .map(rel->getStudyTrace(rel.getTraceId()))
+                .filter(trace->trace.getUserId().equals(StpUtil.getLoginIdAsLong()))
+                .toList();
+    }
+
+
 }

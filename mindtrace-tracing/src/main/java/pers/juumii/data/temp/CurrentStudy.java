@@ -1,8 +1,8 @@
 package pers.juumii.data.temp;
 
+import cn.hutool.core.convert.Convert;
 import lombok.Data;
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.data.persistent.TraceCoverage;
 import pers.juumii.dto.CurrentStudyDTO;
 
 import java.util.ArrayList;
@@ -12,12 +12,14 @@ import java.util.List;
 public class CurrentStudy {
 
     private StudyTrace trace;
-    private List<TraceCoverage> coverages;
+    private List<Long> knodeIds;
+    private List<Long> enhancerIds;
 
     public static CurrentStudy prototype(StudyTrace trace) {
         CurrentStudy res = new CurrentStudy();
         res.setTrace(trace);
-        res.setCoverages(new ArrayList<>());
+        res.setKnodeIds(new ArrayList<>());
+        res.setEnhancerIds(new ArrayList<>());
         return res;
     }
 
@@ -25,7 +27,8 @@ public class CurrentStudy {
         if(current == null) return null;
         CurrentStudyDTO res = new CurrentStudyDTO();
         res.setTrace(StudyTrace.transfer(current.getTrace()));
-        res.setCoverages(TraceCoverage.transfer(current.getCoverages()));
+        res.setKnodeIds(new ArrayList<>(current.getKnodeIds().stream().map(Object::toString).toList()));
+        res.setEnhancerIds(new ArrayList<>(current.getEnhancerIds().stream().map(Object::toString).toList()));
         return res;
     }
 
@@ -33,7 +36,8 @@ public class CurrentStudy {
         if(dto == null) return null;
         CurrentStudy res = new CurrentStudy();
         res.setTrace(StudyTrace.transfer(dto.getTrace()));
-        res.setCoverages(TraceCoverage.transfer(dto.getCoverages(), true));
+        res.setKnodeIds(new ArrayList<>(dto.getKnodeIds().stream().map(Convert::toLong).toList()));
+        res.setEnhancerIds(new ArrayList<>(dto.getEnhancerIds().stream().map(Convert::toLong).toList()));
         return res;
     }
 }

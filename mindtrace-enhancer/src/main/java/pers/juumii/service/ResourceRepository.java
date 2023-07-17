@@ -19,6 +19,10 @@ public interface ResourceRepository {
 
     void save(Long userId, Long resourceId, String name, InputStream data);
 
+    void setMeta(Long userId, Long resourceId, String name, Map<String, String> meta);
+
+    Map<String, String> getMeta(Long userId, Long resourceId, String name);
+
     Map<String, InputStream> load(Long userId, Long resourceId);
 
     InputStream load(Long userId, Long resourceId, String name);

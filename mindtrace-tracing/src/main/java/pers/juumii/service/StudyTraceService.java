@@ -21,14 +21,19 @@ public interface StudyTraceService {
 
     void postTraceCoverage(Long traceId, Long knodeId);
 
-    List<Long> getTraceCoverages(Long traceId);
+    List<Long> getTraceKnodeRels(Long traceId);
 
-    Boolean checkTraceCoverage(Long traceId, Long knodeId);
+    List<Long> getTraceEnhancerRels(Long traceId);
+
+    Boolean checkTraceKnodeRel(Long traceId, Long knodeId);
 
     List<Long> getKnodeCoveringTraces(Long knodeId);
 
     void removeTraceCoverage(Long traceId, Long knodeId);
 
     List<StudyTrace> getStudyTracesOfKnode(Long knodeId);
+
+    List<StudyTrace> getStudyTracesOfEnhancer(Long enhancerId);
+
 
 }

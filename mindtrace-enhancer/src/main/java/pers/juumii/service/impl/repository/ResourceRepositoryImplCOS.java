@@ -42,6 +42,24 @@ public class ResourceRepositoryImplCOS implements ResourceRepository {
     }
 
     @Override
+    public void setMeta(Long userId, Long resourceId, String name, Map<String, String> meta) {
+        String objKey = userId + "/" + resourceId + "/" + name;
+        ObjectMetadata metadata = cosClient.getObjectMetadata(BUCKET_NAME, objKey);
+        metadata.setHeader("x-cos-metadata-directive", "Replaced");
+        for(Map.Entry<String, String> header: meta.entrySet())
+            metadata.setHeader(header.getKey(), header.getValue());
+        CopyObjectRequest request = new CopyObjectRequest(BUCKET_NAME, objKey, BUCKET_NAME, objKey);
+        request.setNewObjectMetadata(metadata);
+        cosClient.copyObject(request);
+    }
+
+    @Override
+    public Map<String, String> getMeta(Long userId, Long resourceId, String name) {
+        String objKey = userId + "/" + resourceId + "/" + name;
+        return cosClient.getObjectMetadata(BUCKET_NAME, objKey).getUserMetadata();
+    }
+
+    @Override
     public Map<String, InputStream> load(Long userId, Long resourceId) {
         HashMap<String, InputStream> res = new HashMap<>();
         String prefix = userId + "/" + resourceId + "/";

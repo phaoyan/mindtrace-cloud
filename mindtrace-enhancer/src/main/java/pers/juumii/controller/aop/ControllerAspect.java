@@ -1,6 +1,5 @@
 package pers.juumii.controller.aop;
 
-import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TimeInterval;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -24,14 +23,5 @@ public class ControllerAspect {
         System.out.println(joinPoint.getSignature() + " --- " + timer.interval());
         return res;
     }
-
-//    @Around("global()")
-//    public Object wrapResult(ProceedingJoinPoint joinPoint) throws Throwable{
-//        Object res = joinPoint.proceed();
-//        // 如果controller使用的service不返回SaResult，则将其包装为SaResult
-//        if(res instanceof SaResult) return res;
-//        else return SaResult.data(res);
-//
-//    }
 
 }

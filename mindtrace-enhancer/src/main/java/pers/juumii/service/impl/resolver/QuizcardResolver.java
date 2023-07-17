@@ -8,6 +8,7 @@ import pers.juumii.constants.enhancer.ResourceTypes;
 import pers.juumii.data.Resource;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceResolver;
+import pers.juumii.utils.SpringUtils;
 
 import java.io.InputStream;
 import java.util.Map;
@@ -30,6 +31,11 @@ public class QuizcardResolver implements ResourceResolver {
     @Autowired
     public QuizcardResolver(ResolverUtils resolverUtils) {
         this.resolverUtils = resolverUtils;
+    }
+
+    @Override
+    public Map<String, Object> resolve(Resource resource) {
+        return resolve(SpringUtils.getBean(ResourceRepository.class).load(resource));
     }
 
     @Override
