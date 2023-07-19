@@ -89,8 +89,7 @@ public class RecentKnodeExamStrategy implements ExamStrategyService {
 
     private void initCache(ExamSession session) {
         List<Long> selected = select(session);
-        if(selected == null || selected.isEmpty())
-            throw new RuntimeException("RecentKnodeExamStrategy: selected knodes are null or empty.");
+        if(selected == null || selected.isEmpty()) return;
         session.setCache(JSONUtil.createObj()
                 .set("selected", selected.stream().map(Object::toString).toList())
                 .set("corrects", new ArrayList<>())

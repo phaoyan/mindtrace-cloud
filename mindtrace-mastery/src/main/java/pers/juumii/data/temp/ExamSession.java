@@ -119,8 +119,4 @@ public class ExamSession {
         return interacts.get(index-1);
     }
 
-    public ExamInteract response(String message) {
-        return ExamInteract.prototype(getId(), ExamInteract.SYSTEM, message);
-    }
-
 }

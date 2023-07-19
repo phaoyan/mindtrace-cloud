@@ -64,7 +64,12 @@ public class SamplingExamStrategyV2 implements ExamStrategyService {
      * response: 所有cache数据
      */
     public ExamInteract statistics(ExamSession session) {
-        return ExamInteract.prototype(session.getId(), ExamInteract.SYSTEM, session.cache().toString());
+        return ExamInteract.prototype(
+                session.getId(),
+                ExamInteract.SYSTEM,
+                session.cache() != null ?
+                    session.cache().toString():
+                    "{\"type\":\"statistics\"}");
     }
 
     /**
@@ -88,6 +93,13 @@ public class SamplingExamStrategyV2 implements ExamStrategyService {
 
     private ExamInteract mainResp(ExamSession session) {
         JSONObject cache = session.cache();
+        if(cache == null || cache.getStr("current") == null)
+            return ExamInteract.prototype(
+                    session.getId(),
+                    ExamInteract.SYSTEM,
+                    JSONUtil.createObj()
+                    .set("type", "main")
+                    .toString());
         Long knodeId = Convert.toLong(cache.getStr("current"));
         List<Long> quizIds = quizGenerationService.getQuiz(knodeId);
         return ExamInteract.prototype(
