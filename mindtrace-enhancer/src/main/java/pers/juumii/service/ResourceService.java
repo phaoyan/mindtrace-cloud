@@ -1,10 +1,12 @@
 package pers.juumii.service;
 
 import cn.dev33.satoken.util.SaResult;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.ResourceDTO;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +28,8 @@ public interface ResourceService {
 
     SaResult addDataToResource(Long resourceId, Map<String, Object> data);
 
+    void addDataToResource(Long resourceId, String dataName, Object data);
+
     // 删除resource中特定的文件
     Map<String, Boolean> release(Long resourceId, List<String> data);
 
@@ -45,4 +49,8 @@ public interface ResourceService {
     void disconnectResourceFromEnhancer(Long enhancerId, Long resourceId);
 
     List<Resource> getResourcesOfKnode(Long knodeId);
+
+
+
+
 }

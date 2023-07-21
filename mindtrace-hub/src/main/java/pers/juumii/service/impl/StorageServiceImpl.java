@@ -4,6 +4,7 @@ import cn.hutool.core.util.IdUtil;
 import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.model.CopyObjectRequest;
 import com.qcloud.cos.model.ObjectMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
@@ -20,6 +21,7 @@ import pers.juumii.utils.HttpUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -89,6 +91,24 @@ public class StorageServiceImpl implements StorageService {
         if(metadata == null) return false;
         String objKey = metadata.getUserId() + "/" + metadata.getId() + "/" + metadata.getTitle();
         return cosClient.doesObjectExist(BUCKET_NAME, objKey);
+    }
+
+    @Override
+    public void setMeta(Long userId, Long resourceId, Map<String, Object> meta) {
+        String objKey = userId + "/" + resourceId;
+        ObjectMetadata metadata = cosClient.getObjectMetadata(BUCKET_NAME, objKey);
+        metadata.setHeader("x-cos-metadata-directive", "Replaced");
+        for(Map.Entry<String, Object> header: meta.entrySet())
+            metadata.setHeader(header.getKey(), header.getValue());
+        CopyObjectRequest request = new CopyObjectRequest(BUCKET_NAME, objKey, BUCKET_NAME, objKey);
+        request.setNewObjectMetadata(metadata);
+        cosClient.copyObject(request);
+    }
+
+    @Override
+    public Map<String, Object> getMeta(Long userId, Long resourceId) {
+        String objKey = userId + "/" + resourceId;
+        return cosClient.getObjectMetadata(BUCKET_NAME, objKey).getRawMetadata();
     }
 
     @Override

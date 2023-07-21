@@ -2,12 +2,15 @@ package pers.juumii.controller;
 
 import cn.dev33.satoken.util.SaResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.dto.ResourceWithData;
 import pers.juumii.service.ResourceService;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -34,15 +37,32 @@ public class ResourceController {
     @GetMapping("/resource/{resourceId}/data/{dataName}")
     public Object getDataFromResource(
             @PathVariable Long resourceId,
-            @PathVariable String dataName){
+            @PathVariable String dataName) throws InterruptedException {
+        Thread.sleep(1000);
         return resourceService.getDataFromResource( resourceId, dataName);
     }
 
     @PostMapping("/resource/{resourceId}/data")
-    public SaResult addDataToResource(
+    public void addDataToResource(
             @PathVariable Long resourceId,
             @RequestBody Map<String, Object> data){
-        return resourceService.addDataToResource(resourceId, data);
+        resourceService.addDataToResource(resourceId, data);
+    }
+
+    @PostMapping("/resource/{resourceId}/data/{dataName}/file")
+    public void addDataToResource(
+            @PathVariable Long resourceId,
+            @PathVariable String dataName,
+            @RequestParam MultipartFile file) throws IOException {
+        resourceService.addDataToResource(resourceId, dataName, file.getInputStream());
+    }
+
+    @PostMapping("/resource/{resourceId}/data/{dataName}/data")
+    public void addDataToResource(
+            @PathVariable Long resourceId,
+            @PathVariable String dataName,
+            @RequestBody Object data){
+        resourceService.addDataToResource(resourceId, dataName, data);
     }
 
     @DeleteMapping("/resource/{resourceId}")

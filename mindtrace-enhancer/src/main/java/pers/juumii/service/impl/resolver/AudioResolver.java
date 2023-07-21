@@ -1,5 +1,6 @@
 package pers.juumii.service.impl.resolver;
 
+import cn.hutool.core.io.IoUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.annotation.ResourceType;
@@ -12,6 +13,13 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * data格式：
+ * {
+ *     contentType: 音频格式字符串，如mp3等
+ * }
+ * 具体数据通过url请求直接获得
+ */
 @Service
 @ResourceType(ResourceTypes.AUDIO)
 public class AudioResolver implements ResourceResolver {
@@ -25,6 +33,8 @@ public class AudioResolver implements ResourceResolver {
 
     @Override
     public Object resolve(Resource resource, String name) {
+        if(name.equals("audio"))
+            return IoUtil.readBytes(repository.load(resource.getCreateBy(), resource.getId(), name));
         return null;
     }
 
@@ -35,12 +45,9 @@ public class AudioResolver implements ResourceResolver {
 
     @Override
     public Map<String, Object> resolve(Resource resource){
-        Map<String, InputStream> data = repository.load(resource.getCreateBy(), resource.getId());
-        InputStream audio = data.get("audio");
-        Map<String, String> meta = repository.getMeta(resource.getCreateBy(), resource.getId(), "audio");
-        String contentType = meta.get("Content-Type");
+        Map<String, Object> meta = repository.getMeta(resource.getCreateBy(), resource.getId(), "audio");
+        String contentType = (String) meta.get("Content-Type");
         HashMap<String, Object> res = new HashMap<>();
-        res.put("audio", audio);
         res.put("contentType", contentType);
         return res;
     }

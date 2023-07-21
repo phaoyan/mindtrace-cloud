@@ -57,7 +57,7 @@ public class ResourceRepositoryImpl implements ResourceRepository {
     }
 
     @Override
-    public Map<String, String> getMeta(Long userId, Long resourceId, String name) {
+    public Map<String, Object> getMeta(Long userId, Long resourceId, String name) {
         return null;
     }
 

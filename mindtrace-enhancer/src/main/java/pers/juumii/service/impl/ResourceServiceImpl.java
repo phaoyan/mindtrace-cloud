@@ -1,11 +1,13 @@
 package pers.juumii.service.impl;
 
 import cn.dev33.satoken.util.SaResult;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.EnhancerResourceRelationship;
 import pers.juumii.data.Resource;
@@ -24,6 +26,7 @@ import pers.juumii.service.impl.router.ResourceRouter;
 import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.DataUtils;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -122,6 +125,13 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
+    public void addDataToResource(Long resourceId, String dataName, Object data) {
+        Resource meta = getResourceMetadata(resourceId);
+        authUtils.same(meta.getCreateBy());
+        router.serializer(meta).serialize(meta, dataName, data);
+    }
+
+    @Override
     public Map<String, Boolean> release(Long resourceId, List<String> data) {
         Resource meta = getResourceMetadata(resourceId);
         authUtils.same(meta.getCreateBy());
@@ -203,6 +213,8 @@ public class ResourceServiceImpl implements ResourceService {
             .stream().map(enhancer -> getResourcesOfEnhancer(enhancer.getId()))
             .toList());
     }
+
+
 
 
 }

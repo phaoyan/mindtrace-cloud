@@ -10,6 +10,7 @@ import pers.juumii.service.StorageService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class StorageController {
@@ -28,6 +29,21 @@ public class StorageController {
             @RequestParam("contentType") String contentType,
             @RequestParam("file") MultipartFile file) throws IOException {
        return Metadata.transfer(storageService.push(userId, title, file.getInputStream(), contentType));
+    }
+
+    @PostMapping("/user/{userId}/resource/{resourceId}")
+    public void setMeta(
+            @PathVariable Long userId,
+            @PathVariable Long resourceId,
+            @RequestBody Map<String, Object> meta){
+        storageService.setMeta(userId, resourceId, meta);
+    }
+
+    @GetMapping("/user/{userId}/resource/{resourceId}")
+    public Map<String, Object> getMeta(
+            @PathVariable Long userId,
+            @PathVariable Long resourceId){
+        return storageService.getMeta(userId, resourceId);
     }
 
     @GetMapping("/resource/{resourceId}")

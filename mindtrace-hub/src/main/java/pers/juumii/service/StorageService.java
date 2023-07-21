@@ -5,6 +5,7 @@ import pers.juumii.data.Metadata;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 public interface StorageService {
 
@@ -17,4 +18,8 @@ public interface StorageService {
     void remove(Long resourceId);
 
     Boolean exists(Long resourceId);
+
+    void setMeta(Long userId, Long resourceId, Map<String, Object> meta);
+
+    Map<String, Object> getMeta(Long userId, Long resourceId);
 }
