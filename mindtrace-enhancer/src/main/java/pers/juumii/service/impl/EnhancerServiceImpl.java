@@ -102,13 +102,11 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     public Enhancer getEnhancerById(Long enhancerId) {
-        Enhancer res = enhancerMapper.selectById(enhancerId);
-        if(res == null) return null;
-        authUtils.auth(res.getCreateBy());
-        return res;
+        return enhancerMapper.selectById(enhancerId);
     }
 
     @Override
+    @Transactional
     public Enhancer addEnhancerToUser(Long userId) {
         authUtils.same(userId);
         Enhancer enhancer = Enhancer.prototype(userId);
@@ -124,30 +122,28 @@ public class EnhancerServiceImpl implements EnhancerService {
     }
 
     @Override
+    @Transactional
     public Enhancer addEnhancerToKnode(Long knodeId) {
         KnodeDTO knode = coreClient.check(knodeId);
-        authUtils.same(Convert.toLong(knode.getCreateBy()));
         Enhancer enhancer = addEnhancerToUser(Convert.toLong(knode.getCreateBy()));
         connectEnhancerToKnode(knodeId, enhancer.getId());
         return enhancer;
     }
 
     @Override
+    @Transactional
     public SaResult updateEnhancer(Long enhancerId, EnhancerDTO updated) {
         Enhancer enhancer = enhancerMapper.selectById(enhancerId);
-        authUtils.same(enhancer.getCreateBy());
         Opt.ifPresent(updated.getTitle(), enhancer::setTitle);
         Opt.ifPresent(updated.getIntroduction(), enhancer::setIntroduction);
         Opt.ifPresent(updated.getResourceIds(), resourceIds->
             enhancer.setResources(resourceIds.stream().map(resourceMapper::selectById).toList()));
         enhancerMapper.updateById(enhancer);
-
-        threadUtils.getUserBlockingQueue().add(()->{
+        threadUtils.getUserBlockingQueue(enhancer.getCreateBy()).add(()->
             rabbit.convertAndSend(
-                    KnodeExchange.KNODE_EVENT_EXCHANGE,
-                    KnodeExchange.ROUTING_KEY_UPDATE_ENHANCER,
-                    JSONUtil.toJsonStr(Enhancer.transfer(enhancer)));
-        });
+                KnodeExchange.KNODE_EVENT_EXCHANGE,
+                KnodeExchange.ROUTING_KEY_UPDATE_ENHANCER,
+                JSONUtil.toJsonStr(Enhancer.transfer(enhancer))));
         return SaResult.ok("Enhancer updated:" + enhancerId);
     }
 
@@ -156,27 +152,22 @@ public class EnhancerServiceImpl implements EnhancerService {
     public void removeEnhancer(Long enhancerId) {
         Enhancer target = enhancerMapper.selectById(enhancerId);
         if(target == null) return;
-        authUtils.same(target.getCreateBy());
         resourceService.removeAllResourcesFromEnhancer(enhancerId);
         enhancerMapper.deleteById(enhancerId);
         List<Long> knodeIds =
                 ekrMapper.getByEnhancerId(enhancerId).stream()
                 .map(EnhancerKnodeRelationship::getKnodeId).toList();
         knodeIds.forEach(knodeId->ekrMapper.deleteRelationship(enhancerId, knodeId));
-
-        threadUtils.getUserBlockingQueue().add(()->{
+        threadUtils.getUserBlockingQueue(target.getCreateBy()).add(()->
             rabbit.convertAndSend(
-                    KnodeExchange.KNODE_EVENT_EXCHANGE,
-                    KnodeExchange.ROUTING_KEY_REMOVE_ENHANCER,
-                    enhancerId.toString());
-        });
+                KnodeExchange.KNODE_EVENT_EXCHANGE,
+                KnodeExchange.ROUTING_KEY_REMOVE_ENHANCER,
+                enhancerId.toString()));
     }
 
     @Override
+    @Transactional
     public void connectEnhancerToKnode(Long knodeId, Long enhancerId) {
-        // 借用mindtrace-core完成鉴权
-        KnodeDTO knode = coreClient.check(knodeId);
-        authUtils.same(Convert.toLong(knode.getCreateBy()));
         EnhancerKnodeRelationship relationship = new EnhancerKnodeRelationship();
         relationship.setEnhancerId(enhancerId);
         relationship.setKnodeId(knodeId);
@@ -184,21 +175,17 @@ public class EnhancerServiceImpl implements EnhancerService {
     }
 
     @Override
+    @Transactional
     public void disconnectEnhancerFromKnode(Long knodeId, Long enhancerId){
-        // 借用mindtrace-core完成鉴权
-        KnodeDTO knode = coreClient.check(knodeId);
-        authUtils.same(Convert.toLong(knode.getCreateBy()));
         ekrMapper.deleteRelationship(enhancerId, knodeId);
+        if(ekrMapper.getByEnhancerId(enhancerId).size() == 0)
+            removeEnhancer(enhancerId);
     }
 
     @Override
     public List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId) {
-        SerialTimer timer = SerialTimer.timer();
         List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        timer.logAndRestart();
-        List<Enhancer> res = getEnhancersFromKnodeBatch(offsprings.stream().map(knode -> Convert.toLong(knode.getId())).toList());
-        timer.logAndRestart();
-        return res;
+        return getEnhancersFromKnodeBatch(offsprings.stream().map(knode -> Convert.toLong(knode.getId())).toList());
     }
 
     @Override

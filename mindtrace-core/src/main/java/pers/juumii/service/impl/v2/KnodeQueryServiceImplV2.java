@@ -80,7 +80,6 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                 .append(basicReturn());
         List<Knode> res = neo4j.session(cypher, knodeResolver);
         if(res.isEmpty()) return null;
-        authUtils.auth(res.get(0).getCreateBy());
         return res.get(0);
     }
 

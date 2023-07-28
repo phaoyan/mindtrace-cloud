@@ -121,6 +121,20 @@ public class KnodeExchange {
 
 
     @Bean
+    public Binding disconnectEnhancerFromKnodeEventBinding(
+            @Qualifier("knodeEventExchange") DirectExchange ex,
+            @Qualifier("disconnectEnhancerFromKnodeEventMQ") Queue mq){
+        return BindingBuilder.bind(mq).to(ex).with(ROUTING_KEY_DISCONNECT_ENHANCER_FROM_KNODE);
+    }
+    @Bean
+    public Queue disconnectEnhancerFromKnodeEventMQ(){
+        return new Queue(DISCONNECT_ENHANCER_FROM_KNODE_MQ);
+    }
+    public static final String ROUTING_KEY_DISCONNECT_ENHANCER_FROM_KNODE = "disconnect_enhancer_from_knode";
+    public static final String DISCONNECT_ENHANCER_FROM_KNODE_MQ = "disconnect_enhancer_from_knode_mq";
+
+
+    @Bean
     public Binding removeResourceEventBinding(
             @Qualifier("knodeEventExchange") DirectExchange ex,
             @Qualifier("removeResourceEventMQ") Queue mq){

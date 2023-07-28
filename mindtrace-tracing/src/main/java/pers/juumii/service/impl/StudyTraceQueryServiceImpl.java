@@ -1,12 +1,15 @@
 package pers.juumii.service.impl;
 
+import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
+import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.StudyTraceEnhancerInfo;
 import pers.juumii.dto.StudyTraceKnodeInfo;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.StudyTraceQueryService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.DataUtils;
@@ -17,43 +20,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
 
     private final StudyTraceService studyTraceService;
     private final CoreClient coreClient;
+    private final EnhancerClient enhancerClient;
 
     @Autowired
     public StudyTraceQueryServiceImpl(
             StudyTraceService studyTraceService,
-            CoreClient coreClient) {
+            CoreClient coreClient,
+            EnhancerClient enhancerClient) {
         this.studyTraceService = studyTraceService;
         this.coreClient = coreClient;
-    }
-
-    @Override
-    public Map<String, Long> getStudyTimeDistribution(Long knodeId) {
-        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnode(knodeId);
-        List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        HashMap<String, KnodeDTO> knodeIdMap = new HashMap<>();
-        Map<String, Long> map = new HashMap<>();
-        for(KnodeDTO offspring: offsprings){
-            knodeIdMap.put(offspring.getId(), offspring);
-            map.put(offspring.getId(), 0L);
-        }
-        for(StudyTrace trace: traces){
-            List<Long> coverages = studyTraceService.getTraceKnodeRels(trace.getId());
-            int size = coverages.size();
-            long duration = trace.duration().getSeconds();
-            long portion = duration / size;
-            for (Long coverId: coverages)
-                if(map.containsKey(coverId.toString()))
-                    for(String ancestorId: knodeAncestorIds(coverId, knodeIdMap))
-                        map.put(ancestorId, map.get(ancestorId) + portion);
-        }
-        return map;
+        this.enhancerClient = enhancerClient;
     }
 
     @Override
@@ -71,6 +54,11 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         res.setMoments(traces.stream()
                 .map(trace -> TimeUtils.format(trace.getStartTime()))
                 .toList());
+        res.setMomentsWithDuration(
+                traces.stream().collect(
+                Collectors.toMap(
+                    trace->TimeUtils.format(trace.getStartTime()),
+                    trace -> trace.duration().getSeconds())));
         return res;
     }
 
@@ -112,6 +100,15 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
             res.add(item);
         }
         return res;
+    }
+
+    @Override
+    public List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(Long knodeId) {
+        List<EnhancerDTO> enhancers = enhancerClient.getEnhancersOfKnodeIncludingBeneath(knodeId);
+        return enhancers.stream()
+                .map(enhancer-> getStudyTraceEnhancerInfo(Convert.toLong(enhancer.getId())))
+                .filter(info->info.getMoments() != null && info.getMoments().size() > 0)
+                .toList();
     }
 
     private List<String> knodeAncestorIds(Long coverId, Map<String, KnodeDTO> knodeIdMap) {

@@ -1,11 +1,15 @@
 package pers.juumii.controller;
 
 import cn.dev33.satoken.util.SaResult;
+import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.Enhancer;
 import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.KnodeDTO;
+import pers.juumii.feign.CoreClient;
 import pers.juumii.service.EnhancerService;
+import pers.juumii.utils.AuthUtils;
 
 import java.util.List;
 
@@ -13,10 +17,27 @@ import java.util.List;
 public class EnhancerController {
 
     private final EnhancerService enhancerService;
+    private final AuthUtils authUtils;
+    private final CoreClient coreClient;
 
     @Autowired
-    public EnhancerController(EnhancerService enhancerService) {
+    public EnhancerController(
+            EnhancerService enhancerService,
+            AuthUtils authUtils,
+            CoreClient coreClient) {
         this.enhancerService = enhancerService;
+        this.authUtils = authUtils;
+        this.coreClient = coreClient;
+    }
+
+    private void enhancerSameUser(Long enhancerId){
+        Enhancer enhancer = enhancerService.getEnhancerById(enhancerId);
+        authUtils.same(enhancer.getCreateBy());
+    }
+
+    private void knodeSameUser(Long knodeId){
+        KnodeDTO knode = coreClient.check(knodeId);
+        authUtils.same(Convert.toLong(knode.getCreateBy()));
     }
 
     @GetMapping("/user/{userId}/enhancer")
@@ -33,12 +54,14 @@ public class EnhancerController {
     public SaResult updateEnhancer(
             @PathVariable Long enhancerId,
             @RequestBody EnhancerDTO updated){
+        enhancerSameUser(enhancerId);
         return enhancerService.updateEnhancer(enhancerId, updated);
     }
 
     @DeleteMapping("/enhancer/{enhancerId}")
     public SaResult removeEnhancer(
             @PathVariable Long enhancerId){
+        enhancerSameUser(enhancerId);
         enhancerService.removeEnhancer(enhancerId);
         return SaResult.ok();
     }
@@ -56,6 +79,7 @@ public class EnhancerController {
 
     @PutMapping("knode/{knodeId}/enhancer")
     public EnhancerDTO addEnhancerToKnode(@PathVariable Long knodeId){
+        knodeSameUser(knodeId);
         return Enhancer.transfer(enhancerService.addEnhancerToKnode(knodeId));
     }
 
@@ -63,6 +87,8 @@ public class EnhancerController {
     public void connectEnhancerToKnode(
             @PathVariable Long knodeId,
             @PathVariable Long enhancerId){
+        knodeSameUser(knodeId);
+        enhancerSameUser(enhancerId);
         enhancerService.connectEnhancerToKnode(knodeId, enhancerId);
     }
 
@@ -70,6 +96,8 @@ public class EnhancerController {
     public void disconnectEnhancerToKnode(
             @PathVariable Long enhancerId,
             @PathVariable Long knodeId){
+        knodeSameUser(knodeId);
+        enhancerSameUser(enhancerId);
         enhancerService.disconnectEnhancerFromKnode(knodeId,enhancerId);
     }
 

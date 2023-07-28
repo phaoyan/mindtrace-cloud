@@ -23,7 +23,7 @@ public interface EnhancerClient {
     @GetMapping("/enhancer/knode/{knodeId}/enhancer")
     List<EnhancerDTO> getEnhancersOfKnode(@PathVariable Long knodeId);
 
-    @GetMapping("/enhancer/knode/{knodeId}/enhancer/beneath")
+    @GetMapping("/enhancer/knode/{knodeId}/offspring/enhancer")
     List<EnhancerDTO> getEnhancersOfKnodeIncludingBeneath(@PathVariable Long knodeId);
 
     @GetMapping("/enhancer/enhancer/{enhancerId}/resource")

@@ -7,10 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface StudyTraceQueryService {
-    Map<String, Long> getStudyTimeDistribution(Long knodeId);
 
     StudyTraceEnhancerInfo getStudyTraceEnhancerInfo(Long enhancerId);
 
     List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(Long knodeId);
+
+    List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(Long knodeId);
 
 }

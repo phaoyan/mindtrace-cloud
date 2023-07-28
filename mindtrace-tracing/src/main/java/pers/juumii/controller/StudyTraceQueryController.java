@@ -21,11 +21,6 @@ public class StudyTraceQueryController {
         this.studyTraceQueryService = studyTraceQueryService;
     }
 
-    @GetMapping("/study/knode/{knodeId}/time/distribution")
-    public Map<String, Long> getStudyTimeDistribution(@PathVariable Long knodeId){
-        return studyTraceQueryService.getStudyTimeDistribution(knodeId);
-    }
-
     @GetMapping("/study/knode/{knodeId}")
     public List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(@PathVariable Long knodeId){
         return studyTraceQueryService.getStudyTraceKnodeInfo(knodeId);
@@ -34,6 +29,11 @@ public class StudyTraceQueryController {
     @GetMapping("/study/enhancer/{enhancerId}")
     public StudyTraceEnhancerInfo getStudyTraceEnhancerInfo(@PathVariable Long enhancerId){
         return studyTraceQueryService.getStudyTraceEnhancerInfo(enhancerId);
+    }
+
+    @GetMapping("/study/knode/{knodeId}/enhancer")
+    public List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(@PathVariable Long knodeId){
+        return studyTraceQueryService.getStudyTraceEnhancerInfoUnderKnode(knodeId);
     }
 
 }

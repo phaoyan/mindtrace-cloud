@@ -155,7 +155,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         wrapper.eq(TraceEnhancerRel::getEnhancerId, enhancerId);
         return traceEnhancerRelMapper.selectList(wrapper).stream()
                 .map(rel->getStudyTrace(rel.getTraceId()))
-                .filter(trace->trace.getUserId().equals(StpUtil.getLoginIdAsLong()))
+                .filter(trace->trace != null && trace.getUserId().equals(StpUtil.getLoginIdAsLong()))
                 .toList();
     }
 
