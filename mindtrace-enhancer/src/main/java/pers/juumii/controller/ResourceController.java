@@ -1,16 +1,18 @@
 package pers.juumii.controller;
 
 import cn.dev33.satoken.util.SaResult;
+import cn.hutool.core.io.IoUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.data.Resource;
+import pers.juumii.dto.IdPair;
 import pers.juumii.dto.ResourceDTO;
-import pers.juumii.dto.ResourceWithData;
 import pers.juumii.service.ResourceService;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -24,28 +26,54 @@ public class ResourceController {
         this.resourceService = resourceService;
     }
 
+    @PostMapping("/enhancer/{enhancerId}/resource")
+    public ResourceDTO addResource(@PathVariable Long enhancerId, @RequestBody ResourceDTO dto){
+        return Resource.transfer(resourceService.addResourceToEnhancer(enhancerId, dto));
+    }
+
+    @PutMapping("/resource")
+    public ResourceDTO addResource(){
+        return Resource.transfer(resourceService.addResource());
+    }
+
+    @PutMapping("/resource/{resourceId}/title")
+    public void editTitle(@PathVariable Long resourceId, @RequestParam(required = false) String title){
+        resourceService.editTitle(resourceId, title);
+    }
+    @PutMapping("/resource/{resourceId}/type")
+    public void editType(@PathVariable Long resourceId, @RequestParam(required = false) String type){
+        resourceService.editType(resourceId, type);
+    }
+    @PutMapping("/resource/{resourceId}/createTime")
+    public void editCreateTime(@PathVariable Long resourceId, @RequestParam(required = false) String createTime){
+        resourceService.editCreateTime(resourceId, createTime);
+    }
     @GetMapping("/resource/{resourceId}/meta")
-    public ResourceDTO getResourceMetadata(@PathVariable Long resourceId){
-        return Resource.transfer(resourceService.getResourceMetadata(resourceId));
+    public ResourceDTO getResource(@PathVariable Long resourceId){
+        return Resource.transfer(resourceService.getResource(resourceId));
     }
 
     @GetMapping("/resource/{resourceId}/data")
-    public Map<String, Object> getDataFromResource(@PathVariable Long resourceId){
+    public Map<String, byte[]> getDataFromResource(@PathVariable Long resourceId){
         return resourceService.getDataFromResource(resourceId);
     }
 
+    @PostMapping("/batch/resource/data")
+    public List<Map<String, byte[]>> getDataFromResourceBatch(@RequestBody List<Long> resourceIds){
+        return resourceIds.stream().map(resourceService::getDataFromResource).toList();
+    }
+
     @GetMapping("/resource/{resourceId}/data/{dataName}")
-    public Object getDataFromResource(
+    public byte[] getDataFromResource(
             @PathVariable Long resourceId,
-            @PathVariable String dataName) throws InterruptedException {
-        Thread.sleep(1000);
+            @PathVariable String dataName) {
         return resourceService.getDataFromResource( resourceId, dataName);
     }
 
-    @PostMapping("/resource/{resourceId}/data")
+    @PutMapping("/resource/{resourceId}/data")
     public void addDataToResource(
             @PathVariable Long resourceId,
-            @RequestBody Map<String, Object> data){
+            @RequestBody Map<String, byte[]> data){
         resourceService.addDataToResource(resourceId, data);
     }
 
@@ -54,15 +82,15 @@ public class ResourceController {
             @PathVariable Long resourceId,
             @PathVariable String dataName,
             @RequestParam MultipartFile file) throws IOException {
-        resourceService.addDataToResource(resourceId, dataName, file.getInputStream());
+        resourceService.addDataToResource(resourceId, dataName, IoUtil.readBytes(file.getInputStream()));
     }
 
-    @PostMapping("/resource/{resourceId}/data/{dataName}/data")
+    @PostMapping("/resource/{resourceId}/data/{dataName}")
     public void addDataToResource(
             @PathVariable Long resourceId,
             @PathVariable String dataName,
-            @RequestBody Object data){
-        resourceService.addDataToResource(resourceId, dataName, data);
+            @RequestBody String data){
+        resourceService.addDataToResource(resourceId, dataName, data.getBytes(StandardCharsets.UTF_8));
     }
 
     @DeleteMapping("/resource/{resourceId}")
@@ -71,21 +99,32 @@ public class ResourceController {
         return SaResult.ok();
     }
 
-    @PutMapping("/enhancer/{enhancerId}/resource")
-    public ResourceDTO addResourceToEnhancer(
-            @PathVariable Long enhancerId,
-            @RequestBody ResourceWithData params){
-        return Resource.transfer(resourceService.addResourceToEnhancer(enhancerId, params.getMeta(), params.getData()));
-    }
-
     @GetMapping("/enhancer/{enhancerId}/resource")
     public List<ResourceDTO> getResourcesOfEnhancer(@PathVariable Long enhancerId){
         return Resource.transfer(resourceService.getResourcesOfEnhancer(enhancerId));
     }
 
+    @PostMapping("/batch/enhancer/resource")
+    public List<ResourceDTO> getResourceOfEnhancerBatch(@RequestBody List<Long> enhancerIds){
+        return enhancerIds.stream().map(resourceService::getResourcesOfEnhancer)
+                .flatMap(Collection::stream)
+                .map(Resource::transfer)
+                .toList();
+    }
+
     @GetMapping("/knode/{knodeId}/resource")
     public List<ResourceDTO> getResourcesOfKnode(@PathVariable Long knodeId){
         return Resource.transfer(resourceService.getResourcesOfKnode(knodeId));
+    }
+
+    @PostMapping("/rel/enhancer/resource")
+    public List<IdPair> getEnhancerResourceRels(@RequestBody List<Long> enhancerIds){
+        return resourceService.getEnhancerResourceRels(enhancerIds);
+    }
+
+    @PutMapping("/rel/enhancer/resource")
+    public void addEnhancerResourceRel(@RequestParam Long enhancerId, @RequestParam Long resourceId){
+        resourceService.connectResourceToEnhancer(enhancerId, resourceId);
     }
 
 }

@@ -2,12 +2,13 @@ package pers.juumii.service;
 
 
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.dto.StudyTraceDTO;
+import pers.juumii.dto.IdPair;
+import pers.juumii.dto.tracing.StudyTraceDTO;
 
 import java.util.List;
 
 public interface StudyTraceService {
-    StudyTrace postStudyTrace(StudyTraceDTO data);
+    StudyTrace addStudyTrace(StudyTraceDTO data);
 
     StudyTrace insertStudyTrace(StudyTraceDTO data);
 
@@ -23,7 +24,11 @@ public interface StudyTraceService {
 
     List<Long> getTraceKnodeRels(Long traceId);
 
+    List<IdPair> getTraceKnodeRels(List<Long> traceIds);
+
     List<Long> getTraceEnhancerRels(Long traceId);
+
+    List<IdPair> getTraceEnhancerRels(List<Long> traceIds);
 
     Boolean checkTraceKnodeRel(Long traceId, Long knodeId);
 
@@ -35,5 +40,9 @@ public interface StudyTraceService {
 
     List<StudyTrace> getStudyTracesOfEnhancer(Long enhancerId);
 
+
+    void addTraceKnodeRel(IdPair traceKnodeRel);
+
+    void addTraceEnhancerRel(IdPair traceEnhancerRel);
 
 }

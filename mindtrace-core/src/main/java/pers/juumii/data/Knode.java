@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.*;
 import pers.juumii.dto.KnodeDTO;
+import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -86,7 +87,7 @@ public class Knode{
         res.setTitle(knode.getTitle());
         res.setLabels(knode.getLabels().stream().map(Label::getName).toList());
         res.setCreateBy(knode.getCreateBy().toString());
-        res.setCreateTime(knode.getCreateTime());
+        res.setCreateTime(TimeUtils.format(knode.getCreateTime()));
         res.setIndex(knode.getIndex());
         Opt.ifPresent(knode.getStem(), stem->res.setStemId(stem.getId().toString()));
         knode.setBranches(new ArrayList<>(knode.getBranches()));

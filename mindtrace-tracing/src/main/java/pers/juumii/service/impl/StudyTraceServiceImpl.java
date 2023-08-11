@@ -10,8 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.persistent.TraceEnhancerRel;
 import pers.juumii.data.persistent.TraceKnodeRel;
+import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
-import pers.juumii.dto.StudyTraceDTO;
+import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
@@ -19,6 +20,7 @@ import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.DataUtils;
 
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -43,7 +45,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     @Override
     @Transactional
-    public StudyTrace postStudyTrace(StudyTraceDTO data) {
+    public StudyTrace addStudyTrace(StudyTraceDTO data) {
         return data.getId() != null ? updateStudyTrace(data) : insertStudyTrace(data);
     }
 
@@ -102,11 +104,29 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
+    public List<IdPair> getTraceKnodeRels(List<Long> traceIds) {
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(TraceKnodeRel::getTraceId, traceIds);
+        return traceKnodeRelMapper.selectList(wrapper).stream()
+                .map(rel->IdPair.of(rel.getTraceId(), rel.getKnodeId()))
+                .toList();
+    }
+
+    @Override
     public List<Long> getTraceEnhancerRels(Long traceId) {
         LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TraceEnhancerRel::getTraceId, traceId);
         return traceEnhancerRelMapper.selectList(wrapper)
                 .stream().map(TraceEnhancerRel::getEnhancerId)
+                .toList();
+    }
+
+    @Override
+    public List<IdPair> getTraceEnhancerRels(List<Long> traceIds) {
+        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(TraceEnhancerRel::getTraceId, traceIds);
+        return traceEnhancerRelMapper.selectList(wrapper).stream()
+                .map(rel->IdPair.of(rel.getTraceId(), rel.getEnhancerId()))
                 .toList();
     }
 
@@ -138,7 +158,8 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     @Override
     public List<StudyTrace> getStudyTracesOfKnode(Long knodeId) {
-        List<StudyTrace> traces = getUserStudyTraces(null);
+        KnodeDTO knode = coreClient.check(knodeId);
+        List<StudyTrace> traces = getUserStudyTraces(Convert.toLong(knode.getCreateBy()));
         List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
         return traces.stream().filter(trace->
             !DataUtils.intersection(
@@ -155,8 +176,19 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         wrapper.eq(TraceEnhancerRel::getEnhancerId, enhancerId);
         return traceEnhancerRelMapper.selectList(wrapper).stream()
                 .map(rel->getStudyTrace(rel.getTraceId()))
-                .filter(trace->trace != null && trace.getUserId().equals(StpUtil.getLoginIdAsLong()))
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void addTraceKnodeRel(IdPair traceKnodeRel) {
+        traceKnodeRelMapper.insert(TraceKnodeRel.prototype(traceKnodeRel.getLeftId(), traceKnodeRel.getRightId()));
+    }
+
+    @Override
+    @Transactional
+    public void addTraceEnhancerRel(IdPair traceEnhancerRel) {
+        traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceEnhancerRel.getLeftId(), traceEnhancerRel.getRightId()));
     }
 
 

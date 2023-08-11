@@ -16,16 +16,6 @@ public class UserShareController {
         this.userShareService = userShareService;
     }
 
-    @PostMapping("/user/{userId}")
-    public void openUserShare(@PathVariable Long userId){
-        userShareService.openUserShare(userId);
-    }
-
-    @DeleteMapping("/user/{userId}")
-    public void closeUserShare(@PathVariable Long userId){
-        userShareService.closeUserShare(userId);
-    }
-
     @GetMapping("/user/{userId}")
     public UserShareDTO getUserShare(@PathVariable Long userId){
         return UserShare.transfer(userShareService.getUserShare(userId));

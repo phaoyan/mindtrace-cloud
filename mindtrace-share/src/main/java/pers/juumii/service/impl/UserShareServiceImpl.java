@@ -11,31 +11,19 @@ import pers.juumii.utils.AuthUtils;
 public class UserShareServiceImpl implements UserShareService {
 
     private final UserShareMapper userShareMapper;
-    private final AuthUtils authUtils;
 
     @Autowired
-    public UserShareServiceImpl(
-            UserShareMapper userShareMapper,
-            AuthUtils authUtils) {
+    public UserShareServiceImpl(UserShareMapper userShareMapper) {
         this.userShareMapper = userShareMapper;
-        this.authUtils = authUtils;
-    }
-
-    @Override
-    public void openUserShare(Long userId) {
-        authUtils.same(userId);
-        userShareMapper.insert(UserShare.prototype(userId));
-    }
-
-    @Override
-    public void closeUserShare(Long userId) {
-        authUtils.same(userId);
-        userShareMapper.deleteByUserId(userId);
     }
 
     @Override
     public UserShare getUserShare(Long userId) {
-        authUtils.auth(userId);
-        return userShareMapper.selectByUserId(userId);
+        UserShare userShare = userShareMapper.selectByUserId(userId);
+        if(userShare == null){
+            userShare = UserShare.prototype(userId);
+            userShareMapper.insert(userShare);
+        }
+        return userShare;
     }
 }

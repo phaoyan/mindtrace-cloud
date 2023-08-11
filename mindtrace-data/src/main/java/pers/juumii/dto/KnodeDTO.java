@@ -13,7 +13,7 @@ public class KnodeDTO {
     private String title;
     private List<String> labels;
     private String createBy;
-    private LocalDateTime createTime;
+    private String createTime;
     private String stemId;
     private List<String> branchIds;
     private List<String> connectionIds;

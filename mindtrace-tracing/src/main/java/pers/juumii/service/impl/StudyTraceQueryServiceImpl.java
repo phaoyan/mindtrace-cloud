@@ -2,12 +2,12 @@ package pers.juumii.service.impl;
 
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.KnodeDTO;
-import pers.juumii.dto.StudyTraceEnhancerInfo;
-import pers.juumii.dto.StudyTraceKnodeInfo;
+import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
+import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.StudyTraceQueryService;
@@ -16,10 +16,7 @@ import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -104,10 +101,24 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
 
     @Override
     public List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(Long knodeId) {
-        List<EnhancerDTO> enhancers = enhancerClient.getEnhancersOfKnodeIncludingBeneath(knodeId);
-        return enhancers.stream()
-                .map(enhancer-> getStudyTraceEnhancerInfo(Convert.toLong(enhancer.getId())))
-                .filter(info->info.getMoments() != null && info.getMoments().size() > 0)
+        List<StudyTrace> traces = studyTraceService.getUserStudyTraces(null);
+        List<Long> enhancerIds = traces.stream()
+                .map(trace -> studyTraceService.getTraceEnhancerRels(trace.getId()))
+                // List<List> -> List
+                .flatMap(Collection::stream)
+                // 去重
+                .collect(Collectors.toSet())
+                // 检查如果这个enhancer的关联knode是子knode，则选中这一enhancer
+                .stream().filter((enhancerId)->{
+                    List<KnodeDTO> knodes = enhancerClient.getKnodeByEnhancerId(enhancerId);
+                    List<Long> knodeIds = knodes.stream().map(knode -> Convert.toLong(knode.getId())).toList();
+                    return DataUtils.ifAny(knodeIds, _knodeId->coreClient.isOffspring(_knodeId, knodeId));
+                }).toList();
+
+        return enhancerIds.stream()
+                .map(this::getStudyTraceEnhancerInfo)
+                // 过滤掉没有学习记录的enhancer
+                .filter(info -> info.getMoments() != null && info.getMoments().size() > 0)
                 .toList();
     }
 

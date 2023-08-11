@@ -20,16 +20,12 @@ import pers.juumii.service.EnhancerShareService;
 import pers.juumii.service.KnodeShareService;
 import pers.juumii.utils.DataUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class EnhancerShareServiceImpl implements EnhancerShareService {
 
     private final CoreClient coreClient;
-    private final KnodeShareService knodeShareService;
     private final EnhancerClient enhancerClient;
     private final EnhancerShareMapper enhancerShareMapper;
     private final KnodeShareMapper knodeShareMapper;
@@ -37,12 +33,10 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
     @Autowired
     public EnhancerShareServiceImpl(
             CoreClient coreClient,
-            KnodeShareService knodeShareService,
             EnhancerClient enhancerClient,
             EnhancerShareMapper enhancerShareMapper,
             KnodeShareMapper knodeShareMapper) {
         this.coreClient = coreClient;
-        this.knodeShareService = knodeShareService;
         this.enhancerClient = enhancerClient;
         this.enhancerShareMapper = enhancerShareMapper;
         this.knodeShareMapper = knodeShareMapper;
@@ -54,32 +48,7 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
         if(knode == null || knodeShareMapper.selectByKnodeId(knodeId) == null)
             return new ArrayList<>();
         List<EnhancerDTO> enhancers = enhancerClient.getEnhancersOfKnode(knodeId);
-        return enhancers.stream().map(enhancer -> enhancerShareMapper.selectByEnhancerId(Convert.toLong(enhancer.getId()))).toList();
-    }
-
-    @Override
-    public List<EnhancerShare> getRelatedEnhancerShare(Long knodeId, Long knodeCount) {
-        List<KnodeShare> knodeShares = knodeShareService.getRelatedKnodeShare(knodeId, knodeCount);
-        return DataUtils.join(
-                knodeShares.stream()
-                .map(share -> enhancerClient.getEnhancersOfKnode(share.getKnodeId()))
-                .toList()).stream()
-                .filter(enhancer->enhancerShareMapper.existsByEnhancerId(Convert.toLong(enhancer.getId())))
-                .filter(enhancer->enhancerClient.getEnhancerById(Convert.toLong(enhancer.getId())) != null)
-                .map(enhancer-> enhancerShareMapper.selectByEnhancerId(Convert.toLong(enhancer.getId())))
-                .toList();
-    }
-
-    @Override
-    public Map<String, List<EnhancerShareDTO>> getRelatedEnhancerShareWithMapping(Long knodeId, Long knodeCount){
-        List<KnodeShare> knodeShares = knodeShareService.getRelatedKnodeShare(knodeId, knodeCount);
-        HashMap<String, List<EnhancerShareDTO>> res = new HashMap<>();
-        for(KnodeShare knodeShare: knodeShares)
-            res.put(knodeShare.getKnodeId().toString(),
-                enhancerClient.getEnhancersOfKnode(knodeShare.getKnodeId()).stream()
-                .map(enhancer->EnhancerShare.transfer(enhancerShareMapper.selectByEnhancerId(Convert.toLong(enhancer.getId()))))
-                .toList());
-        return res;
+        return enhancers.stream().map(enhancer -> getEnhancerShare(Convert.toLong(enhancer.getId()))).toList();
     }
 
     @Override
@@ -99,7 +68,7 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
             meta.setCreateBy(Long.toString(userId));
             meta.setTitle(resource.getTitle());
             meta.setType(resource.getType());
-            Map<String, Object> data = enhancerClient.getDataFromResource(Convert.toLong(resource.getId()));
+            Map<String, byte[]> data = enhancerClient.getDataFromResource(Convert.toLong(resource.getId()));
             resourceWithData.setMeta(meta);
             resourceWithData.setData(data);
             ResourceDTO _resource = enhancerClient.addResourceToEnhancer(Convert.toLong(_enhancer.getId()), resourceWithData);
@@ -118,6 +87,12 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
 
     @Override
     public EnhancerShare getEnhancerShare(Long enhancerId) {
-        return enhancerShareMapper.selectByEnhancerId(enhancerId);
+        EnhancerShare res = enhancerShareMapper.selectByEnhancerId(enhancerId);
+        if(res == null){
+            EnhancerDTO enhancer = enhancerClient.getEnhancerById(enhancerId);
+            res = EnhancerShare.prototype(Convert.toLong(enhancer.getCreateBy()), enhancerId);
+            enhancerShareMapper.insert(res);
+        }
+        return res;
     }
 }

@@ -47,11 +47,11 @@ public class Resource {
         if(resource == null) return null;
 
         ResourceDTO res = new ResourceDTO();
-        res.setId(resource.getId().toString());
-        res.setCreateBy(resource.getCreateBy().toString());
-        res.setCreateTime(TimeUtils.format(resource.getCreateTime()));
-        res.setTitle(resource.getTitle());
-        res.setType(resource.getType());
+        if(resource.getId() != null) res.setId(resource.getId().toString());
+        if(resource.getCreateBy() != null) res.setCreateBy(resource.getCreateBy().toString());
+        if(resource.getCreateTime() != null) res.setCreateTime(TimeUtils.format(resource.getCreateTime()));
+        if(resource.getTitle() != null) res.setTitle(resource.getTitle());
+        if(resource.getType() != null) res.setType(resource.getType());
         return res;
     }
 

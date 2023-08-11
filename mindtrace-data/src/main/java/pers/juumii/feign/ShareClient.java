@@ -11,13 +11,5 @@ import pers.juumii.feign.interceptor.FeignSecurityInterceptor;
         configuration = FeignSecurityInterceptor.class)
 public interface ShareClient {
 
-    @GetMapping("/share/user/{userId}/public")
-    Boolean isUserPublic(@PathVariable Long userId);
-    @GetMapping("/share/knode/{knodeId}/public")
-    Boolean isKnodePublic(@PathVariable Long knodeId);
-    @GetMapping("/share/enhancer/{enhancerId}/public")
-    Boolean isEnhancerPublic(@PathVariable Long enhancerId);
-    @GetMapping("/share/resource/{resourceId}/public")
-    Boolean isResourcePublic(@PathVariable Long resourceId);
 
 }

@@ -10,8 +10,6 @@ import java.util.Map;
 
 public interface EnhancerShareService {
     List<EnhancerShare> getOwnedEnhancerShare(Long knodeId);
-    List<EnhancerShare> getRelatedEnhancerShare(Long knodeId, Long count);
-    Map<String, List<EnhancerShareDTO>> getRelatedEnhancerShareWithMapping(Long knodeId, Long knodeCount);
 
     EnhancerDTO forkEnhancerShare(Long shareId, Long targetId);
 

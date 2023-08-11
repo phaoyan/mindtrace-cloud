@@ -3,6 +3,7 @@ package pers.juumii.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qcloud.cos.COSClient;
@@ -25,9 +26,7 @@ import pers.juumii.service.UserService;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -60,13 +59,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean exists(Long id) {
         return userMapper.selectById(id) != null;
-    }
-
-    @Override
-    public Boolean exists(String username) {
-        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getUsername, username);
-        return userMapper.exists(wrapper);
     }
 
     @Override
@@ -113,36 +105,26 @@ public class UserServiceImpl implements UserService {
         return userMapper.selectById(loginId);
     }
 
+
     @Override
-    public User getUserPublicInfo(Long userId) {
-        User user = check(userId);
-        User res = new User();
-        res.setId(userId);
-        res.setUsername(user.getUsername());
-        res.setNickname(user.getNickname());
-        res.setGender(user.getGender());
-        res.setAvatar(user.getAvatar());
-        return res;
+    public User getUserInfo(Long userId) {
+        return check(userId);
     }
 
     @Override
-    public User getUserInfo(Long userId, String password) {
-        User user = check(userId);
-        if(user.getPassword().equals(password))
-            return user;
-        return null;
-    }
-
-    @Override
-    public User getUserInfo(String username, String password) {
-        if(username == null)
-            return check(StpUtil.getLoginIdAsLong());
+    public User getUserInfo(String username) {
+        if(username == null) return check(StpUtil.getLoginIdAsLong());
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
-        User user = userMapper.selectOne(wrapper);
-        if(user.getPassword().equals(password))
-            return user;
-        return null;
+        return userMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public List<User> getUserInfoByLike(String like) {
+        if(StrUtil.isBlank(like)) return new ArrayList<>();
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(User::getUsername, like);
+        return userMapper.selectList(wrapper);
     }
 
     @Override

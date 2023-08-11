@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.*;
 import pers.juumii.mapper.*;
+import pers.juumii.service.EnhancerShareService;
+import pers.juumii.service.KnodeShareService;
 import pers.juumii.service.SubscribeService;
+import pers.juumii.service.UserShareService;
 
 import java.util.List;
 
@@ -22,6 +25,9 @@ public class SubscribeServiceImpl implements SubscribeService {
     private final UserShareMapper userShareMapper;
     private final KnodeShareMapper knodeShareMapper;
     private final EnhancerShareMapper enhancerShareMapper;
+    private final UserShareService userShareService;
+    private final KnodeShareService knodeShareService;
+    private final EnhancerShareService enhancerShareService;
 
     @Autowired
     public SubscribeServiceImpl(
@@ -30,21 +36,26 @@ public class SubscribeServiceImpl implements SubscribeService {
             EnhancerSubscribeMapper enhancerSubscribeMapper,
             UserShareMapper userShareMapper,
             KnodeShareMapper knodeShareMapper,
-            EnhancerShareMapper enhancerShareMapper) {
+            EnhancerShareMapper enhancerShareMapper,
+            UserShareService userShareService,
+            KnodeShareService knodeShareService,
+            EnhancerShareService enhancerShareService) {
         this.userSubscribeMapper = userSubscribeMapper;
         this.knodeSubscribeMapper = knodeSubscribeMapper;
         this.enhancerSubscribeMapper = enhancerSubscribeMapper;
         this.userShareMapper = userShareMapper;
         this.knodeShareMapper = knodeShareMapper;
         this.enhancerShareMapper = enhancerShareMapper;
+        this.userShareService = userShareService;
+        this.knodeShareService = knodeShareService;
+        this.enhancerShareService = enhancerShareService;
     }
 
 
     @Override
     public List<Long> getUserSubscribes(Long knodeId) {
         LambdaQueryWrapper<UserSubscribe> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserSubscribe::getSubscriberKnodeId, knodeId)
-                .eq(UserSubscribe::getSubscriberId, StpUtil.getLoginIdAsLong());
+        wrapper.eq(UserSubscribe::getSubscriberKnodeId, knodeId);
         List<UserSubscribe> userSubscribes = userSubscribeMapper.selectList(wrapper);
         return userSubscribes.stream().map(UserSubscribe::getUserId).toList();
     }
@@ -52,8 +63,7 @@ public class SubscribeServiceImpl implements SubscribeService {
     @Override
     public List<Long> getKnodeSubscribes(Long knodeId) {
         LambdaQueryWrapper<KnodeSubscribe> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(KnodeSubscribe::getSubscriberKnodeId, knodeId)
-                .eq(KnodeSubscribe::getSubscriberId, StpUtil.getLoginIdAsLong());
+        wrapper.eq(KnodeSubscribe::getSubscriberKnodeId, knodeId);
         List<KnodeSubscribe> knodeSubscribes = knodeSubscribeMapper.selectList(wrapper);
         return knodeSubscribes.stream().map(KnodeSubscribe::getKnodeId).toList();
     }
@@ -61,8 +71,7 @@ public class SubscribeServiceImpl implements SubscribeService {
     @Override
     public List<Long> getEnhancerSubscribes(Long knodeId) {
         LambdaQueryWrapper<EnhancerSubscribe> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(EnhancerSubscribe::getSubscriberKnodeId, knodeId)
-                .eq(EnhancerSubscribe::getSubscriberId, StpUtil.getLoginIdAsLong());
+        wrapper.eq(EnhancerSubscribe::getSubscriberKnodeId, knodeId);
         List<EnhancerSubscribe> enhancerSubscribes = enhancerSubscribeMapper.selectList(wrapper);
         return enhancerSubscribes.stream().map(EnhancerSubscribe::getEnhancerId).toList();
     }
@@ -70,8 +79,11 @@ public class SubscribeServiceImpl implements SubscribeService {
     @Override
     @Transactional
     public void subscribeUser(Long knodeId, Long targetId) {
+        LambdaQueryWrapper<UserSubscribe> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserSubscribe::getSubscriberKnodeId, knodeId).eq(UserSubscribe::getUserId, targetId);
+        if(userSubscribeMapper.exists(wrapper)) return;
         userSubscribeMapper.insert(UserSubscribe.prototype(knodeId, targetId, StpUtil.getLoginIdAsLong()));
-        UserShare userShare = userShareMapper.selectByUserId(targetId);
+        UserShare userShare = userShareService.getUserShare(targetId);
         userShare.setFavorites(userShare.getFavorites() + 1);
         userShareMapper.updateById(userShare);
     }
@@ -79,8 +91,11 @@ public class SubscribeServiceImpl implements SubscribeService {
     @Override
     @Transactional
     public void subscribeKnode(Long knodeId, Long targetId) {
+        LambdaQueryWrapper<KnodeSubscribe> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(KnodeSubscribe::getSubscriberKnodeId, knodeId).eq(KnodeSubscribe::getKnodeId, targetId);
+        if(knodeSubscribeMapper.exists(wrapper)) return;
         knodeSubscribeMapper.insert(KnodeSubscribe.prototype(knodeId, targetId, StpUtil.getLoginIdAsLong()));
-        KnodeShare knodeShare = knodeShareMapper.selectByKnodeId(targetId);
+        KnodeShare knodeShare = knodeShareService.getKnodeShare(targetId);
         knodeShare.setFavorites(knodeShare.getFavorites() + 1);
         knodeShareMapper.updateById(knodeShare);
     }
@@ -88,8 +103,11 @@ public class SubscribeServiceImpl implements SubscribeService {
     @Override
     @Transactional
     public void subscribeEnhancer(Long knodeId, Long targetId) {
+        LambdaQueryWrapper<EnhancerSubscribe> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(EnhancerSubscribe::getSubscriberKnodeId, knodeId).eq(EnhancerSubscribe::getEnhancerId, targetId);
+        if(enhancerSubscribeMapper.exists(wrapper)) return;
         enhancerSubscribeMapper.insert(EnhancerSubscribe.prototype(knodeId, targetId, StpUtil.getLoginIdAsLong()));
-        EnhancerShare enhancerShare = enhancerShareMapper.selectByEnhancerId(targetId);
+        EnhancerShare enhancerShare = enhancerShareService.getEnhancerShare(targetId);
         enhancerShare.setFavorites(enhancerShare.getFavorites() + 1);
         enhancerShareMapper.updateById(enhancerShare);
     }
@@ -102,7 +120,7 @@ public class SubscribeServiceImpl implements SubscribeService {
                 .eq(UserSubscribe::getSubscriberKnodeId, knodeId)
                 .eq(UserSubscribe::getSubscriberId, StpUtil.getLoginIdAsLong());
         userSubscribeMapper.delete(wrapper);
-        UserShare userShare = userShareMapper.selectByUserId(targetId);
+        UserShare userShare = userShareService.getUserShare(targetId);
         userShare.setFavorites(userShare.getFavorites() - 1);
         userShareMapper.updateById(userShare);
     }
@@ -115,7 +133,7 @@ public class SubscribeServiceImpl implements SubscribeService {
                 .eq(KnodeSubscribe::getSubscriberKnodeId, knodeId)
                 .eq(KnodeSubscribe::getSubscriberId, StpUtil.getLoginIdAsLong());
         knodeSubscribeMapper.delete(wrapper);
-        KnodeShare knodeShare = knodeShareMapper.selectByKnodeId(targetId);
+        KnodeShare knodeShare = knodeShareService.getKnodeShare(targetId);
         knodeShare.setFavorites(knodeShare.getFavorites() - 1);
         knodeShareMapper.updateById(knodeShare);
     }
@@ -128,7 +146,7 @@ public class SubscribeServiceImpl implements SubscribeService {
                 .eq(EnhancerSubscribe::getSubscriberKnodeId, knodeId)
                 .eq(EnhancerSubscribe::getSubscriberId, StpUtil.getLoginIdAsLong());
         enhancerSubscribeMapper.delete(wrapper);
-        EnhancerShare enhancerShare = enhancerShareMapper.selectByEnhancerId(targetId);
+        EnhancerShare enhancerShare = enhancerShareService.getEnhancerShare(targetId);
         enhancerShare.setFavorites(enhancerShare.getFavorites() - 1);
         enhancerShareMapper.updateById(enhancerShare);
     }

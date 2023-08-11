@@ -3,13 +3,13 @@ package pers.juumii.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import pers.juumii.dto.StudyTraceEnhancerInfo;
-import pers.juumii.dto.StudyTraceKnodeInfo;
+import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
+import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 import pers.juumii.service.StudyTraceQueryService;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class StudyTraceQueryController {
@@ -22,7 +22,9 @@ public class StudyTraceQueryController {
     }
 
     @GetMapping("/study/knode/{knodeId}")
-    public List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(@PathVariable Long knodeId){
+    public List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(
+            @PathVariable Long knodeId,
+            @RequestParam(required = false) Long userId){
         return studyTraceQueryService.getStudyTraceKnodeInfo(knodeId);
     }
 

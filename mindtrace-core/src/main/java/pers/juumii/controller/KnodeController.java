@@ -22,7 +22,7 @@ public class KnodeController {
     @PostMapping("/knode/{knodeId}/branch")
     public KnodeDTO branch(
             @PathVariable Long knodeId,
-            @RequestParam("title") String title){
+            @RequestParam String title){
         return Knode.transfer(knodeService.branch(knodeId, title));
     }
 
@@ -36,6 +36,26 @@ public class KnodeController {
             @PathVariable Long knodeId,
             @RequestBody KnodeDTO dto){
         return knodeService.update(knodeId, dto);
+    }
+
+    @PostMapping("/knode/{knodeId}/createTime")
+    public void editCreateTime(@PathVariable Long knodeId, @RequestParam String createTime){
+        knodeService.editCreateTime(knodeId, createTime);
+    }
+
+    @PostMapping("/knode/{knodeId}/createBy")
+    public void editCreateBy(@PathVariable Long knodeId, @RequestParam String createBy){
+        knodeService.editCreateBy(knodeId, createBy);
+    }
+
+    @PostMapping("/knode/{knodeId}/title")
+    public void editTitle(@PathVariable Long knodeId, @RequestParam String title){
+        knodeService.editTitle(knodeId, title);
+    }
+
+    @PostMapping("/knode/{knodeId}/index")
+    public void editIndex(@PathVariable Long knodeId, @RequestParam Integer index){
+        knodeService.editIndex(knodeId, index);
     }
 
     // 将id为branchId的Knode移动到id为stemId的Knode下方

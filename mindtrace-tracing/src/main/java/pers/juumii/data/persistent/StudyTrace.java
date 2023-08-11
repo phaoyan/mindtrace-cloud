@@ -9,13 +9,14 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import pers.juumii.config.TimeListTypeHandler;
-import pers.juumii.dto.StudyTraceDTO;
+import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Data
 @TableName(autoResultMap = true)
@@ -34,6 +35,18 @@ public class StudyTrace {
     @TableLogic
     private Boolean deleted;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StudyTrace trace = (StudyTrace) o;
+        return id.equals(trace.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 
     public Duration duration() {
         if(getStartTime() == null ||

@@ -10,6 +10,8 @@ public interface KnodeQueryService {
 
     Knode check(Long knodeId);
 
+    List<Knode> checkByLike(String like, Integer threshold);
+
     List<Knode> checkByLabel(String labelName);
 
     // 返回包括完整子节点信息的knode
@@ -41,4 +43,9 @@ public interface KnodeQueryService {
 
     Map<String, List<String>> chainStyleTitleBeneath(Long knodeId);
 
+    Boolean isOffspring(Long childId, Long parentId);
+
+    List<Knode> checkByDate(String left, String right, Long knodeId);
+
+    List<Knode> checkAllRoots();
 }

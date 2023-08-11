@@ -18,7 +18,7 @@ public class UserRegisterEventConsumer {
         this.userService = userService;
     }
 
-    @RabbitListener(queues = UserExchange.REGISTER_EVENT_MQ)
+    @RabbitListener(queues = MessageQueues.REGISTER_EVENT_MQ)
     public void handleUserRegister(String message){
         userService.register(Convert.toLong(message));
     }

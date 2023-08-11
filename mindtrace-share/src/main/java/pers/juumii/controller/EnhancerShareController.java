@@ -8,6 +8,7 @@ import pers.juumii.dto.share.EnhancerShareDTO;
 import pers.juumii.service.EnhancerShareService;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 public class EnhancerShareController {
@@ -25,17 +26,9 @@ public class EnhancerShareController {
 
     @GetMapping("/knode/{knodeId}/enhancer")
     public List<EnhancerShareDTO> getOwnedEnhancerShare(@PathVariable Long knodeId){
-        return EnhancerShare.transfer(enhancerShareService.getOwnedEnhancerShare(knodeId));
-    }
-
-    @GetMapping("/knode/{knodeId}/similar/enhancer")
-    public Object getRelatedEnhancerShare(
-            @PathVariable Long knodeId,
-            @RequestParam("knodeCount") Long knodeCount,
-            @RequestParam("withMapping") Boolean withMapping){
-        return withMapping ?
-                enhancerShareService.getRelatedEnhancerShareWithMapping(knodeId, knodeCount) :
-                EnhancerShare.transfer(enhancerShareService.getRelatedEnhancerShare(knodeId, knodeCount));
+        return EnhancerShare.transfer(enhancerShareService.getOwnedEnhancerShare(knodeId))
+                .stream().filter(Objects::nonNull)
+                .toList();
     }
 
     @PostMapping("/enhancerShare/{shareId}/to/{targetId}")

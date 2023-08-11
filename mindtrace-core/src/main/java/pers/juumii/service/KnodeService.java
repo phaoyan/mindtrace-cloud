@@ -30,4 +30,12 @@ public interface KnodeService {
     List<Knode> initIndex(Long userId);
 
     void swapIndex(Long stemId, Integer index1, Integer index2);
+
+    void editCreateTime(Long knodeId, String createTime);
+
+    void editCreateBy(Long knodeId, String createBy);
+
+    void editTitle(Long knodeId, String title);
+
+    void editIndex(Long knodeId, Integer index);
 }

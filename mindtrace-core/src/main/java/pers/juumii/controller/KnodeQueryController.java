@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 
 @RestController
-@RequestMapping
 public class KnodeQueryController {
 
     private final KnodeQueryService knodeQuery;
@@ -20,6 +19,13 @@ public class KnodeQueryController {
     public KnodeQueryController(KnodeQueryService knodeQuery) {
         this.knodeQuery = knodeQuery;
     }
+
+
+    @GetMapping("/root")
+    public List<KnodeDTO> checkAllRoots(){
+        return Knode.transfer(knodeQuery.checkAllRoots()).stream().filter(Objects::nonNull).toList();
+    }
+
 
     @GetMapping("/knode")
     public List<KnodeDTO> checkAll(){
@@ -36,6 +42,28 @@ public class KnodeQueryController {
         return Knode.transfer(knodeQuery.check(knodeId));
     }
 
+    @GetMapping("/date/knode")
+    public List<KnodeDTO> checkByDate(
+            @RequestParam String left,
+            @RequestParam String right,
+            @RequestParam Long knodeId){
+        return Knode.transfer(knodeQuery.checkByDate(left, right, knodeId));
+    }
+
+    @GetMapping("/like/knode")
+    public List<KnodeDTO> checkByLike(@RequestParam String like, @RequestParam Integer count){
+        return Knode.transfer(knodeQuery.checkByLike(like, count));
+    }
+
+    @PostMapping("/batch/knode")
+    public List<KnodeDTO> checkBatch(@RequestBody List<Long> knodeIds){
+        return Knode.transfer(
+                knodeIds.stream()
+                .map(knodeQuery::check)
+                .filter(Objects::nonNull)
+                .toList());
+    }
+
     // 返回一个knode的所有直系分支
     @GetMapping("/knode/{knodeId}/branches")
     public List<KnodeDTO> branches(@PathVariable Long knodeId){
@@ -46,6 +74,11 @@ public class KnodeQueryController {
     @GetMapping("/knode/{knodeId}/offsprings")
     public List<KnodeDTO> offsprings(@PathVariable Long knodeId){
         return Knode.transfer(knodeQuery.offsprings(knodeId));
+    }
+
+    @GetMapping("/knode/{parentId}/knode/{childId}")
+    public Boolean isOffspring(@PathVariable Long childId, @PathVariable Long parentId){
+        return knodeQuery.isOffspring(childId, parentId);
     }
 
     @GetMapping("/knode/{knodeId}/leaves")

@@ -106,7 +106,7 @@ public class RecentKnodeExamStrategy implements ExamStrategyService {
         LocalDateTime beforeTime = TimeUtils.parse(before);
         LocalDateTime afterTime = TimeUtils.parse(after);
         return coreClient.leaves(rootId).stream()
-                .filter(knode-> TimeUtils.ordered(afterTime, knode.getCreateTime(), beforeTime))
+                .filter(knode-> TimeUtils.ordered(afterTime, TimeUtils.parse(knode.getCreateTime()), beforeTime))
                 .map(knode-> Convert.toLong(knode.getId()))
                 .toList();
     }

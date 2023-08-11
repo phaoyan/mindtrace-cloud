@@ -4,6 +4,8 @@ import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Enhancer;
 import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.IdPair;
+import pers.juumii.dto.KnodeDTO;
 
 import java.util.List;
 
@@ -32,4 +34,14 @@ public interface EnhancerService {
     List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId);
 
     Long getEnhancerCount(Long knodeId);
+
+    List<Enhancer> getEnhancersFromKnodeBatch(List<Long> knodeIds);
+
+    List<KnodeDTO> getKnodeByEnhancerId(Long enhancerId);
+
+    List<IdPair> getKnodeEnhancerRels(List<Long> knodeIds);
+
+    List<Enhancer> getEnhancersByDate(Long userId, String left, String right);
+
+    List<Enhancer> getEnhancersByDateBeneathKnode(Long knodeId, String left, String right);
 }

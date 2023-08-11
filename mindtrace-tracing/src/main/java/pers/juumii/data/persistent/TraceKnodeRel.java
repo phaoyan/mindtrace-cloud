@@ -5,7 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
-import pers.juumii.dto.TraceCoverageDTO;
+import pers.juumii.dto.tracing.TraceCoverageDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +25,10 @@ public class TraceKnodeRel {
         res.setTraceId(traceId);
         res.setKnodeId(knodeId);
         return res;
+    }
+
+    public static TraceKnodeRel prototype(String traceId, String knodeId){
+        return prototype(Convert.toLong(traceId), Convert.toLong(knodeId));
     }
 
     public static TraceKnodeRel transfer(TraceCoverageDTO dto){

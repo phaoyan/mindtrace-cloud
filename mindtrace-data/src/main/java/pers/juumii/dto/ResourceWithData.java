@@ -8,5 +8,5 @@ import java.util.Map;
 public class ResourceWithData {
 
     private ResourceDTO meta;
-    private Map<String, Object> data;
+    private Map<String, byte[]> data;
 }

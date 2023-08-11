@@ -3,7 +3,7 @@ package pers.juumii.data.temp;
 import cn.hutool.core.convert.Convert;
 import lombok.Data;
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.dto.CurrentStudyDTO;
+import pers.juumii.dto.tracing.CurrentStudyDTO;
 
 import java.util.ArrayList;
 import java.util.List;

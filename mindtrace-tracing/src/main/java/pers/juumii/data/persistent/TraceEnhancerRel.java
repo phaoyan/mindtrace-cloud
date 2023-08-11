@@ -1,10 +1,11 @@
 package pers.juumii.data.persistent;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
-import pers.juumii.dto.TraceEnhancerRelDTO;
+import pers.juumii.dto.tracing.TraceEnhancerRelDTO;
 
 import java.util.List;
 
@@ -23,6 +24,10 @@ public class TraceEnhancerRel {
         res.setTraceId(traceId);
         res.setEnhancerId(enhancerId);
         return res;
+    }
+
+    public static TraceEnhancerRel prototype(String traceId, String enhancerId){
+        return TraceEnhancerRel.prototype(Convert.toLong(traceId), Convert.toLong(enhancerId));
     }
 
     public static List<TraceEnhancerRelDTO> transfer(List<TraceEnhancerRel> enhancers) {

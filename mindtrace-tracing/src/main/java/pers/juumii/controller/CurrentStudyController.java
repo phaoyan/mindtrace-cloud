@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.temp.CurrentStudy;
-import pers.juumii.dto.CurrentStudyDTO;
-import pers.juumii.dto.StudyTraceDTO;
+import pers.juumii.dto.tracing.CurrentStudyDTO;
+import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.service.CurrentStudyService;
 
 import java.util.List;

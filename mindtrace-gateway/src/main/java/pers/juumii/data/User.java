@@ -29,19 +29,6 @@ public class User {
     @TableField(exist = false)
     private List<Role> roles;
 
-    public static User prototype(String username, String password) {
-        User user = new User();
-        user.setId(IdUtil.getSnowflakeNextId());
-        user.setUsername(username);
-        user.setNickname(username);
-        user.setPassword(password);
-        user.setCreateTime(LocalDateTime.now());
-        user.setStatus(true);
-        user.setDeleted(false);
-        user.setRoles(new ArrayList<>());
-        return user;
-    }
-
     public static User prototype(String username, String password, String email){
         User user = new User();
         user.setId(IdUtil.getSnowflakeNextId());
@@ -57,14 +44,19 @@ public class User {
     }
 
     public static UserDTO transfer(User user) {
+        if(user == null)
+            return null;
         UserDTO res = new UserDTO();
         res.setId(user.getId().toString());
         res.setUsername(user.getUsername());
-        res.setPassword(user.getPassword());
         res.setPhone(user.getPhone());
         res.setEmail(user.getEmail());
         res.setGender(user.getGender());
         res.setAvatar(user.getAvatar());
         return res;
+    }
+
+    public static List<UserDTO> transfer(List<User> users){
+        return users.stream().map(User::transfer).toList();
     }
 }

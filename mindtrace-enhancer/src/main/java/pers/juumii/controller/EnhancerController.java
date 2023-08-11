@@ -1,11 +1,13 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.Enhancer;
 import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.service.EnhancerService;
@@ -50,6 +52,17 @@ public class EnhancerController {
         return Enhancer.transfer(enhancerService.getEnhancerById(enhancerId));
     }
 
+    @GetMapping("/date/enhancer")
+    public List<EnhancerDTO> getEnhancersByDate(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long knodeId,
+            @RequestParam(required = false) String left,
+            @RequestParam(required = false) String right){
+        if(knodeId == null)
+            return Enhancer.transfer(enhancerService.getEnhancersByDate(userId, left, right));
+        else return Enhancer.transfer(enhancerService.getEnhancersByDateBeneathKnode(knodeId, left, right));
+    }
+
     @PostMapping("/enhancer/{enhancerId}")
     public SaResult updateEnhancer(
             @PathVariable Long enhancerId,
@@ -72,15 +85,30 @@ public class EnhancerController {
         return Enhancer.transfer(enhancerService.getEnhancersFromKnode(knodeId));
     }
 
+    @PostMapping("/batch/knode/enhancer")
+    public List<EnhancerDTO> getEnhancerFromKnodeBatch(@RequestBody List<Long> knodeIds){
+        return Enhancer.transfer(enhancerService.getEnhancersFromKnodeBatch(knodeIds));
+    }
+
     @GetMapping("/knode/{knodeId}/offspring/enhancer")
     public List<EnhancerDTO> getEnhancersFromKnodeIncludingBeneath(@PathVariable Long knodeId){
         return Enhancer.transfer(enhancerService.getEnhancersFromKnodeIncludingBeneath(knodeId));
+    }
+
+    @GetMapping("/enhancer/{enhancerId}/knode")
+    public List<KnodeDTO> getKnodeByEnhancerId(@PathVariable Long enhancerId){
+        return enhancerService.getKnodeByEnhancerId(enhancerId);
     }
 
     @PutMapping("knode/{knodeId}/enhancer")
     public EnhancerDTO addEnhancerToKnode(@PathVariable Long knodeId){
         knodeSameUser(knodeId);
         return Enhancer.transfer(enhancerService.addEnhancerToKnode(knodeId));
+    }
+
+    @PutMapping("/enhancer")
+    public EnhancerDTO addEnhancer(){
+        return Enhancer.transfer(enhancerService.addEnhancerToUser(StpUtil.getLoginIdAsLong()));
     }
 
     @PostMapping("knode/{knodeId}/enhancer/{enhancerId}")
@@ -104,6 +132,17 @@ public class EnhancerController {
     @GetMapping("/knode/{knodeId}/enhancer/count")
     public Long getEnhancerCount(@PathVariable Long knodeId){
         return enhancerService.getEnhancerCount(knodeId);
+    }
+
+
+    @PostMapping("/rel/knode/enhancer")
+    List<IdPair> getKnodeEnhancerRels(@RequestBody List<Long> knodeIds){
+        return enhancerService.getKnodeEnhancerRels(knodeIds);
+    }
+
+    @PutMapping("/rel/knode/enhancer")
+    void addKnodeEnhancerRel(@RequestParam Long knodeId, @RequestParam Long enhancerId){
+        enhancerService.connectEnhancerToKnode(knodeId, enhancerId);
     }
 
 }

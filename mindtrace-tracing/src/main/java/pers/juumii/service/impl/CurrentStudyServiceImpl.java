@@ -9,8 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.temp.CurrentStudy;
-import pers.juumii.dto.CurrentStudyDTO;
-import pers.juumii.mq.StudyTraceExchange;
+import pers.juumii.dto.tracing.CurrentStudyDTO;
 import pers.juumii.service.CurrentStudyService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.service.TraceEnhancerRelService;
@@ -76,11 +75,6 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
             studyTraceService.postTraceCoverage(currentStudy.getTrace().getId(), knodeId);
         for(Long enhancerId: currentStudy.getEnhancerIds())
             traceEnhancerRelService.postEnhancerTraceRel(currentStudy.getTrace().getId(), enhancerId);
-        rabbit.convertAndSend(
-                StudyTraceExchange.STUDY_TRACE_EVENT_EXCHANGE,
-                StudyTraceExchange.ROUTING_KEY_SETTLE,
-                JSONUtil.toJsonStr(currentStudy.getTrace()));
-
         removeCurrentStudy();
         return currentStudy.getTrace();
     }

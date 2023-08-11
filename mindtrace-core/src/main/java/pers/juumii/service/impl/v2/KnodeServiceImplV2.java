@@ -16,6 +16,8 @@ import pers.juumii.service.KnodeService;
 import pers.juumii.service.impl.v2.utils.Cypher;
 import pers.juumii.service.impl.v2.utils.Neo4jUtils;
 import pers.juumii.thread.ThreadUtils;
+import pers.juumii.utils.AuthUtils;
+import pers.juumii.utils.TimeUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ public class KnodeServiceImplV2 implements KnodeService {
     private final ThreadUtils threadUtils;
     private final KnodeQueryService knodeQuery;
     private final RabbitTemplate rabbit;
+    private final AuthUtils authUtils;
 
     public static Cypher createBasic(Knode knode){
         return Cypher.cypher("""
@@ -83,11 +86,12 @@ public class KnodeServiceImplV2 implements KnodeService {
             Neo4jUtils neo4j,
             ThreadUtils threadUtils,
             KnodeQueryService knodeQuery,
-            RabbitTemplate rabbit) {
+            RabbitTemplate rabbit, AuthUtils authUtils) {
         this.neo4j = neo4j;
         this.threadUtils = threadUtils;
         this.knodeQuery = knodeQuery;
         this.rabbit = rabbit;
+        this.authUtils = authUtils;
     }
 
     @Override
@@ -130,10 +134,10 @@ public class KnodeServiceImplV2 implements KnodeService {
 
     @Override
     public SaResult delete(Long knodeId) {
-        // check里面有authentication所以不用重复了
         Knode target = knodeQuery.check(knodeId);
         if(target == null)
             throw new RuntimeException("Knode Not Found: " + knodeId);
+        authUtils.same(target.getCreateBy());
         if(target.getBranches().isEmpty())
             threadUtils.getUserBlockingQueue().add(()->{
                 neo4j.transaction(List.of(deleteBasic(knodeId)));
@@ -149,15 +153,14 @@ public class KnodeServiceImplV2 implements KnodeService {
 
     @Override
     public SaResult update(Long knodeId, KnodeDTO dto) {
-        // check里面有authentication所以不用重复了
         // check放在外面的原因是里面的鉴权操作需要Web Context，如果放在同步队列里面就获取不到Request从而拿不到loginId
         Knode knode = knodeQuery.check(knodeId);
+        if(knode == null)
+            throw new RuntimeException("Knode Not Found: " + knodeId);
+        authUtils.same(knode.getCreateBy());
         threadUtils.getUserBlockingQueue().add(()->{
-            if(knode == null)
-                throw new RuntimeException("Knode Not Found: " + knodeId);
-
             Opt.ifPresent(dto.getCreateBy(), createBy->knode.setCreateBy(Convert.toLong(createBy)));
-            Opt.ifPresent(dto.getCreateTime(), knode::setCreateTime);
+            Opt.ifPresent(dto.getCreateTime(), (createTime)-> knode.setCreateTime(TimeUtils.parse(createTime)));
             Opt.ifPresent(dto.getTitle(), knode::setTitle);
             Opt.ifPresent(dto.getIndex(), knode::setIndex);
             neo4j.transaction(List.of(updateBasic(knode)));
@@ -168,6 +171,41 @@ public class KnodeServiceImplV2 implements KnodeService {
                     JSONUtil.toJsonStr(Knode.transfer(knode)));
         });
         return SaResult.ok();
+    }
+
+    @Override
+    public void editCreateTime(Long knodeId, String createTime) {
+        threadUtils.getUserBlockingQueue().add(()->{
+            KnodeDTO knodeDTO = new KnodeDTO();
+            knodeDTO.setCreateTime(createTime);
+            update(knodeId, knodeDTO);
+        });
+    }
+
+    @Override
+    public void editCreateBy(Long knodeId, String createBy) {
+        threadUtils.getUserBlockingQueue().add(()->{
+            KnodeDTO knodeDTO = new KnodeDTO();
+            knodeDTO.setCreateBy(createBy);
+            update(knodeId, knodeDTO);
+        });
+    }
+
+    @Override
+    public void editTitle(Long knodeId, String title) {
+        threadUtils.getUserBlockingQueue().add(()->{
+            KnodeDTO knodeDTO = new KnodeDTO();
+            knodeDTO.setTitle(title);
+            update(knodeId, knodeDTO);
+        });
+    }
+
+    @Override
+    public void editIndex(Long knodeId, Integer index) {
+        threadUtils.getUserBlockingQueue().add(()->{KnodeDTO knodeDTO = new KnodeDTO();
+            knodeDTO.setIndex(index);
+            update(knodeId, knodeDTO);
+        });
     }
 
     @Override
@@ -240,4 +278,6 @@ public class KnodeServiceImplV2 implements KnodeService {
             neo4j.transaction(List.of(cypher));
         });
     }
+
+
 }

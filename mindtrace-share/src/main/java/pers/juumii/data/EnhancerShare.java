@@ -40,6 +40,7 @@ public class EnhancerShare {
     }
 
     public static EnhancerShareDTO transfer(EnhancerShare share){
+        if(share == null) return null;
         EnhancerShareDTO res = new EnhancerShareDTO();
         res.setId(share.getId().toString());
         res.setEnhancerId(share.getEnhancerId().toString());

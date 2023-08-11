@@ -1,10 +1,9 @@
 package pers.juumii.service;
 
-import pers.juumii.dto.StudyTraceEnhancerInfo;
-import pers.juumii.dto.StudyTraceKnodeInfo;
+import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
+import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 
 import java.util.List;
-import java.util.Map;
 
 public interface StudyTraceQueryService {
 

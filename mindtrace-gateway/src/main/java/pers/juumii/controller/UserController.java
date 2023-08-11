@@ -65,23 +65,19 @@ public class UserController {
         return SaResult.data(userService.exists(id));
     }
 
-    @GetMapping("/user/{userId}/public")
-    public UserDTO getUserPublicInfo(@PathVariable Long userId){
-        return User.transfer(userService.getUserPublicInfo(userId));
-    }
-
     @GetMapping("/user/{userId}")
-    public UserDTO getUserInfo(
-            @PathVariable Long userId,
-            @RequestParam(value = "password", required = false) String password){
-        return User.transfer(userService.getUserInfo(userId, password));
+    public UserDTO getUserInfo(@PathVariable Long userId){
+        return User.transfer(userService.getUserInfo(userId));
     }
 
     @GetMapping("/user")
-    public UserDTO getUserInfo(
-            @RequestParam(value = "username", required = false) String username,
-            @RequestParam(value = "password", required = false) String password){
-        return User.transfer(userService.getUserInfo(username, password));
+    public UserDTO getUserInfo(@RequestParam(value = "username", required = false) String username){
+        return User.transfer(userService.getUserInfo(username));
+    }
+
+    @GetMapping("/like/user")
+    public List<UserDTO> getUserInfoByLike(@RequestParam String like){
+        return User.transfer(userService.getUserInfoByLike(like));
     }
 
     @PostMapping("/user/{userId}/password")

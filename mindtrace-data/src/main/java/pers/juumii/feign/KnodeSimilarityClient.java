@@ -6,10 +6,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(name = "mindtrace-knode-similarity-python")
 public interface KnodeSimilarityClient {
 
-    @GetMapping("/knode/{knodeId}/similar")
-    List<List<Object>> getNearestNeighbors(@PathVariable Long knodeId, @RequestParam("count") Long count);
+    @GetMapping("/knode/similar")
+    List<Map<String, ?>> getNearestNeighbors(@RequestParam Long knodeId, @RequestParam Double threshold);
+
 }
