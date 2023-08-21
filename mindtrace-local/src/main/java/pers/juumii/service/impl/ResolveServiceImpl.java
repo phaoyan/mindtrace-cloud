@@ -40,19 +40,34 @@ public class ResolveServiceImpl implements ResolveService {
 
     @Override
     public void resolve(Long stemId, KnodeInfoCollection main, Map<String, byte[]> dataIndex) {
-        resolveKnodes(stemId, main);
-        resolveEnhancers(main);
-        resolveResources(main);
-        resolveData(main, dataIndex);
-        resolveTraces(main);
+        try {
+            resolveKnodes(stemId, main);
+            resolveEnhancers(main);
+            resolveResources(main);
+            resolveData(main, dataIndex);
+            resolveTraces(main);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private void resolveTraces(KnodeInfoCollection data) {
         List<StudyTraceDTO> traces = data.getStudyTraces();
         List<IdPair> traceKnodeRels = data.getTraceKnodeRels();
         List<IdPair> traceEnhancerRels = data.getTraceEnhancerRels();
-        for(StudyTraceDTO trace: traces)
-            tracingClient.addStudyTrace(trace);
+        for(StudyTraceDTO trace: traces){
+            String oriTraceId = trace.getId();
+            trace.setId(null);
+            StudyTraceDTO newTrace = tracingClient.addStudyTrace(trace);
+            DataUtils.forAllIf(
+                    traceKnodeRels,
+                    rel->rel.getLeftId().equals(oriTraceId),
+                    rel->rel.setLeftId(newTrace.getId()));
+            DataUtils.forAllIf(
+                    traceEnhancerRels,
+                    rel->rel.getLeftId().equals(oriTraceId),
+                    rel->rel.setLeftId(newTrace.getId()));
+        }
         for(IdPair traceKnodeRel: traceKnodeRels)
             tracingClient.addStudyTraceKnodeRel(traceKnodeRel);
         for(IdPair traceEnhancerRel: traceEnhancerRels)
@@ -106,6 +121,7 @@ public class ResolveServiceImpl implements ResolveService {
             enhancerDTO.setTitle(enhancer.getTitle());
             enhancerDTO.setCreateTime(enhancer.getCreateTime());
             enhancerDTO.setIntroduction(enhancer.getIntroduction());
+            enhancerDTO.setIsQuiz(enhancer.getIsQuiz());
             enhancerClient.updateEnhancer(Convert.toLong(added.getId()), enhancerDTO);
             //将id换成新的以便后续rel对接
             DataUtils.forAllIf(

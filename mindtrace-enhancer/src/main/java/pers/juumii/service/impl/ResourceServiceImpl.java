@@ -65,8 +65,8 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @Transactional
-    public Resource addResource() {
-        Resource resource = Resource.prototype(new ResourceDTO());
+    public Resource addResource(Long userId) {
+        Resource resource = Resource.prototype(userId);
         resourceMapper.insert(resource);
         return resource;
     }
@@ -90,6 +90,7 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public Map<String, byte[]> getDataFromResource(Long resourceId) {
         Resource meta = getResource(resourceId);
+        if(meta == null) return new HashMap<>();
         Map<String, InputStream> dataMap = repository.load(meta);
         Map<String, byte[]> res = new HashMap<>();
         for(Map.Entry<String, InputStream> data: dataMap.entrySet())
@@ -119,7 +120,6 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public Map<String, Boolean> release(Long resourceId, List<String> data) {
         Resource meta = getResource(resourceId);
-        authUtils.same(meta.getCreateBy());
         Map<String, Boolean> deleted = new HashMap<>();
         for(String dataName: data)
             deleted.put(dataName, repository.release(meta.getCreateBy() ,resourceId, dataName));
@@ -130,11 +130,9 @@ public class ResourceServiceImpl implements ResourceService {
     public void removeResource(Long resourceId) {
         // 先释放该resource的所有资源文件再删除resource
         Long userId = getResource(resourceId).getCreateBy();
-        authUtils.same(userId);
         repository.releaseAll(userId, resourceId);
         resourceMapper.deleteById(resourceId);
         errMapper.deleteByResourceId(resourceId);
-
         rabbit.convertAndSend(
                 KnodeExchange.KNODE_EVENT_EXCHANGE,
                 KnodeExchange.ROUTING_KEY_REMOVE_RESOURCE,
@@ -144,7 +142,6 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public void removeAllResourcesFromEnhancer(Long enhancerId) {
         for(Resource resource: getResourcesOfEnhancer(enhancerId))
-            // removeResource中已有鉴权
             removeResource(resource.getId());
     }
 

@@ -143,9 +143,16 @@ public class EnhancerServiceImpl implements EnhancerService {
     }
 
     @Override
+    public List<Long> getKnodeIdsWithQuiz(Long rootId) {
+        return coreClient.offsprings(rootId).stream()
+                .map(knode->Convert.toLong(knode.getId()))
+                .filter(knodeId->DataUtils.ifAny(getEnhancersFromKnode(knodeId), Enhancer::getIsQuiz))
+                .toList();
+    }
+
+    @Override
     @Transactional
     public Enhancer addEnhancerToUser(Long userId) {
-        authUtils.same(userId);
         Enhancer enhancer = Enhancer.prototype(userId);
         enhancerMapper.insert(enhancer);
 
@@ -169,14 +176,28 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     @Transactional
-    public SaResult updateEnhancer(Long enhancerId, EnhancerDTO updated) {
+    public void updateEnhancer(Long enhancerId, EnhancerDTO updated) {
         Enhancer enhancer = enhancerMapper.selectById(enhancerId);
         Opt.ifPresent(updated.getTitle(), enhancer::setTitle);
         Opt.ifPresent(updated.getIntroduction(), enhancer::setIntroduction);
-        Opt.ifPresent(updated.getResourceIds(), resourceIds->
-            enhancer.setResources(resourceIds.stream().map(resourceMapper::selectById).toList()));
+        Opt.ifPresent(updated.getIsQuiz(), enhancer::setIsQuiz);
         enhancerMapper.updateById(enhancer);
-        return SaResult.ok("Enhancer updated:" + enhancerId);
+    }
+
+    @Override
+    @Transactional
+    public void setIsQuiz(Long enhancerId, Boolean isQuiz) {
+        Enhancer enhancer = enhancerMapper.selectById(enhancerId);
+        enhancer.setIsQuiz(isQuiz);
+        enhancerMapper.updateById(enhancer);
+    }
+
+    @Override
+    @Transactional
+    public void setTitle(Long enhancerId, String title) {
+        Enhancer enhancer = enhancerMapper.selectById(enhancerId);
+        enhancer.setTitle(title);
+        enhancerMapper.updateById(enhancer);
     }
 
     @Override
@@ -223,7 +244,11 @@ public class EnhancerServiceImpl implements EnhancerService {
     @Override
     public Long getEnhancerCount(Long knodeId){
         List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        return getEnhancerCountFromKnodeBatch(offsprings.stream().map(knode->Convert.toLong(knode.getId())).toList());
+        List<Long> knodeIds = offsprings.stream().map(knode -> Convert.toLong(knode.getId())).toList();
+        if(knodeIds.isEmpty()) return 0L;
+        LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(EnhancerKnodeRel::getKnodeId, knodeIds);
+        return ekrMapper.selectCount(wrapper);
     }
 
 }

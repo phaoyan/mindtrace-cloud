@@ -1,7 +1,6 @@
 package pers.juumii.service.impl.v2;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
@@ -95,23 +94,6 @@ public class KnodeServiceImplV2 implements KnodeService {
     }
 
     @Override
-    public Knode createRoot(Long userId) {
-        if(!userId.equals(StpUtil.getLoginIdAsLong()))
-            throw new RuntimeException("Authentication failed: can not create knode for other users");
-        Knode root = Knode.prototype("ROOT", null, userId);
-        root.setIndex(0);
-        threadUtils.getUserBlockingQueue().add(()->{
-            neo4j.transaction(List.of(createBasic(root)));
-
-            rabbit.convertAndSend(
-                    KnodeExchange.KNODE_EVENT_EXCHANGE,
-                    KnodeExchange.ROUTING_KEY_ADD_KNODE,
-                    JSONUtil.toJsonStr(Knode.transfer(root)));
-        });
-        return root;
-    }
-
-    @Override
     public Knode branch(Long knodeId, String title) {
         // check里面有authentication所以不用重复了
         Knode stem = knodeQuery.check(knodeId);
@@ -133,11 +115,10 @@ public class KnodeServiceImplV2 implements KnodeService {
     }
 
     @Override
-    public SaResult delete(Long knodeId) {
+    public void delete(Long knodeId) {
         Knode target = knodeQuery.check(knodeId);
         if(target == null)
             throw new RuntimeException("Knode Not Found: " + knodeId);
-        authUtils.same(target.getCreateBy());
         if(target.getBranches().isEmpty())
             threadUtils.getUserBlockingQueue().add(()->{
                 neo4j.transaction(List.of(deleteBasic(knodeId)));
@@ -148,16 +129,13 @@ public class KnodeServiceImplV2 implements KnodeService {
                         JSONUtil.toJsonStr(Knode.transfer(target)));
             });
         else throw new RuntimeException("Deleting knode failed: branches still exist.");
-        return SaResult.ok();
     }
 
     @Override
-    public SaResult update(Long knodeId, KnodeDTO dto) {
-        // check放在外面的原因是里面的鉴权操作需要Web Context，如果放在同步队列里面就获取不到Request从而拿不到loginId
+    public void update(Long knodeId, KnodeDTO dto) {
         Knode knode = knodeQuery.check(knodeId);
         if(knode == null)
             throw new RuntimeException("Knode Not Found: " + knodeId);
-        authUtils.same(knode.getCreateBy());
         threadUtils.getUserBlockingQueue().add(()->{
             Opt.ifPresent(dto.getCreateBy(), createBy->knode.setCreateBy(Convert.toLong(createBy)));
             Opt.ifPresent(dto.getCreateTime(), (createTime)-> knode.setCreateTime(TimeUtils.parse(createTime)));
@@ -170,52 +148,34 @@ public class KnodeServiceImplV2 implements KnodeService {
                     KnodeExchange.ROUTING_KEY_UPDATE_KNODE,
                     JSONUtil.toJsonStr(Knode.transfer(knode)));
         });
-        return SaResult.ok();
     }
 
     @Override
     public void editCreateTime(Long knodeId, String createTime) {
-        threadUtils.getUserBlockingQueue().add(()->{
-            KnodeDTO knodeDTO = new KnodeDTO();
-            knodeDTO.setCreateTime(createTime);
-            update(knodeId, knodeDTO);
-        });
+        KnodeDTO knodeDTO = new KnodeDTO();
+        knodeDTO.setCreateTime(createTime);
+        update(knodeId, knodeDTO);
     }
 
     @Override
     public void editCreateBy(Long knodeId, String createBy) {
-        threadUtils.getUserBlockingQueue().add(()->{
-            KnodeDTO knodeDTO = new KnodeDTO();
-            knodeDTO.setCreateBy(createBy);
-            update(knodeId, knodeDTO);
-        });
+        KnodeDTO knodeDTO = new KnodeDTO();
+        knodeDTO.setCreateBy(createBy);
+        update(knodeId, knodeDTO);
     }
 
     @Override
     public void editTitle(Long knodeId, String title) {
-        threadUtils.getUserBlockingQueue().add(()->{
-            KnodeDTO knodeDTO = new KnodeDTO();
-            knodeDTO.setTitle(title);
-            update(knodeId, knodeDTO);
-        });
+        KnodeDTO knodeDTO = new KnodeDTO();
+        knodeDTO.setTitle(title);
+        update(knodeId, knodeDTO);
     }
 
     @Override
     public void editIndex(Long knodeId, Integer index) {
-        threadUtils.getUserBlockingQueue().add(()->{KnodeDTO knodeDTO = new KnodeDTO();
-            knodeDTO.setIndex(index);
-            update(knodeId, knodeDTO);
-        });
-    }
-
-    @Override
-    public SaResult addLabelToKnode(Long knodeId, String label) {
-        return null;
-    }
-
-    @Override
-    public SaResult removeLabelFromKnode(Long knodeId, String label) {
-        return null;
+        KnodeDTO knodeDTO = new KnodeDTO();
+        knodeDTO.setIndex(index);
+        update(knodeId, knodeDTO);
     }
 
     @Override
@@ -237,16 +197,6 @@ public class KnodeServiceImplV2 implements KnodeService {
                 "userId", StpUtil.getLoginIdAsLong()));
         neo4j.transaction(List.of(cypher));
         return knodeQuery.checkAll(StpUtil.getLoginIdAsLong());
-    }
-
-    @Override
-    public SaResult connect(Long sourceId, Long targetId) {
-        return null;
-    }
-
-    @Override
-    public List<Knode> initIndex(Long userId) {
-        return null;
     }
 
     @Override
@@ -274,9 +224,7 @@ public class KnodeServiceImplV2 implements KnodeService {
                 "userId", StpUtil.getLoginIdAsLong(),
                 "index1", index1,
                 "index2", index2));
-        threadUtils.getUserBlockingQueue().add(()->{
-            neo4j.transaction(List.of(cypher));
-        });
+        threadUtils.getUserBlockingQueue().add(()-> neo4j.transaction(List.of(cypher)));
     }
 
 

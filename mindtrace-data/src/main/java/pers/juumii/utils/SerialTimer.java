@@ -3,6 +3,8 @@ package pers.juumii.utils;
 import lombok.Data;
 
 import java.util.Timer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Data
 public class SerialTimer {
@@ -36,11 +38,11 @@ public class SerialTimer {
         return res;
     }
 
-    public static SerialTimer timer(String info){
-        SerialTimer res = new SerialTimer();
-        res.setCounter(0L);
-        res.setInfo(info);
-        res.start();
+    public static <R> R timerWrapping(Supplier<R> func, String info){
+        SerialTimer timer = timer();
+        timer.setInfo(info);
+        R res = func.get();
+        timer.logAndRestart();
         return res;
     }
 }

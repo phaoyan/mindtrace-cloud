@@ -182,6 +182,19 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
     }
 
     @Override
+    public Integer leaveCount(Long knodeId) {
+        Cypher cypher = Cypher
+                .cypher("""
+                        MATCH (n:Knode {id: $knodeId})
+                        CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                        WITH nodes, [node IN nodes WHERE node.createBy=n.createBy AND NOT (node)-[:BRANCH_TO]->()] AS leafNodes
+                        UNWIND leafNodes AS knode
+                        RETURN COUNT(knode)
+                        """, Map.of("knodeId", knodeId));
+        return neo4j.session(cypher, record -> record.get("COUNT(knode)").asInt()).get(0);
+    }
+
+    @Override
     public Knode stem(Long knodeId) {
         return check(check(knodeId).getStem().getId());
     }
@@ -281,7 +294,6 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
 
     @Override
     public List<Knode> checkAll() {
-        authUtils.admin();
         Cypher cypher = Cypher.cypher("""
                         MATCH (knode: Knode)
                         """, Map.of())

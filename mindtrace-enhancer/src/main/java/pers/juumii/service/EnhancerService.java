@@ -23,7 +23,11 @@ public interface EnhancerService {
 
     Enhancer addEnhancerToKnode(Long knodeId);
 
-    SaResult updateEnhancer(Long enhancerId, EnhancerDTO updated);
+    void updateEnhancer(Long enhancerId, EnhancerDTO updated);
+
+    void setIsQuiz(Long enhancerId, Boolean isQuiz);
+
+    void setTitle(Long enhancerId, String title);
 
     void removeEnhancer(Long enhancerId);
 
@@ -44,4 +48,6 @@ public interface EnhancerService {
     List<Enhancer> getEnhancersByDate(Long userId, String left, String right);
 
     List<Enhancer> getEnhancersByDateBeneathKnode(Long knodeId, String left, String right);
+
+    List<Long> getKnodeIdsWithQuiz(Long rootId);
 }

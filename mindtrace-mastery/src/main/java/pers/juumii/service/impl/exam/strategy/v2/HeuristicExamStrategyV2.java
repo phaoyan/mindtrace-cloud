@@ -11,6 +11,7 @@ import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.ExamStrategyService;
 import pers.juumii.service.QuizGenerationService;
 import pers.juumii.service.impl.exam.strategy.ExamStrategyData;
@@ -24,13 +25,19 @@ public class HeuristicExamStrategyV2 implements ExamStrategyService {
 
     private final QuizGenerationService quizGenerationService;
     private final CoreClient coreClient;
+    private final EnhancerClient enhancerClient;
+    private final ExamStrategyUtils utils;
 
     @Autowired
     public HeuristicExamStrategyV2(
             QuizGenerationService quizGenerationService,
-            CoreClient coreClient) {
+            CoreClient coreClient,
+            EnhancerClient enhancerClient,
+            ExamStrategyUtils utils) {
         this.quizGenerationService = quizGenerationService;
         this.coreClient = coreClient;
+        this.enhancerClient = enhancerClient;
+        this.utils = utils;
     }
 
     /**
@@ -123,9 +130,12 @@ public class HeuristicExamStrategyV2 implements ExamStrategyService {
         List<Long> corrects = cache.getJSONArray("corrects").stream().map(Convert::toLong).toList();
         List<Long> mistakes = cache.getJSONArray("mistakes").stream().map(Convert::toLong).toList();
         List<Long> visited = DataUtils.joinList(corrects, mistakes);
-        List<KnodeDTO> toPick = coreClient.leaves(layerId).stream().filter(leaf -> !visited.contains(Convert.toLong(leaf.getId()))).toList();
-        if(toPick.isEmpty()) return null;
-        return DataUtils.randomPick(toPick).getId();
+        List<Long> knodeIds =
+                enhancerClient.getKnodeIdsWithQuiz(layerId).stream()
+                .map(Convert::toLong)
+                .filter(knodeId->!visited.contains(knodeId))
+                .toList();
+        return DataUtils.randomPick(knodeIds).toString();
     }
 
     public void updateVisited(ExamSession session, ExamInteract req) {
@@ -207,7 +217,7 @@ public class HeuristicExamStrategyV2 implements ExamStrategyService {
 
     @Override
     public List<QuizResult> extract(ExamSession session) {
-        return ExamStrategyUtils.extract(session);
+        return utils.extract(session);
     }
 
     @Override

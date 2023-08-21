@@ -11,6 +11,7 @@ import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.ExamStrategyService;
 import pers.juumii.service.QuizGenerationService;
 import pers.juumii.service.impl.exam.strategy.ExamStrategyData;
@@ -23,14 +24,20 @@ import java.util.List;
 public class SamplingExamStrategyV2 implements ExamStrategyService {
 
     private final CoreClient coreClient;
+    private final EnhancerClient enhancerClient;
     private final QuizGenerationService quizGenerationService;
+    private final ExamStrategyUtils utils;
 
     @Autowired
     public SamplingExamStrategyV2(
             CoreClient coreClient,
-            QuizGenerationService quizGenerationService) {
+            EnhancerClient enhancerClient,
+            QuizGenerationService quizGenerationService,
+            ExamStrategyUtils utils) {
         this.coreClient = coreClient;
+        this.enhancerClient = enhancerClient;
         this.quizGenerationService = quizGenerationService;
+        this.utils = utils;
     }
 
     /**
@@ -157,13 +164,13 @@ public class SamplingExamStrategyV2 implements ExamStrategyService {
 
     private List<String> select(ExamSession session) {
         Integer size = session.config().getInt("size");
-        List<KnodeDTO> leaves = coreClient.leaves(session.getExam().getRootId());
-        return DataUtils.randomPick(leaves.stream().map(KnodeDTO::getId).toList(), size);
+        List<String> selected = enhancerClient.getKnodeIdsWithQuiz(session.getExam().getRootId());
+        return DataUtils.randomPick(selected, size);
     }
 
     @Override
     public List<QuizResult> extract(ExamSession session) {
-        return ExamStrategyUtils.extract(session);
+        return utils.extract(session);
     }
 
     @Override

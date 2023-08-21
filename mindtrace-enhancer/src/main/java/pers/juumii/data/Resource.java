@@ -43,6 +43,14 @@ public class Resource {
         return res;
     }
 
+    public static Resource prototype(Long userId){
+        Resource res = new Resource();
+        res.setId(IdUtil.getSnowflakeNextId());
+        res.setCreateBy(userId);
+        res.setCreateTime(LocalDateTime.now());
+        return res;
+    }
+
     public static ResourceDTO transfer(Resource resource){
         if(resource == null) return null;
 

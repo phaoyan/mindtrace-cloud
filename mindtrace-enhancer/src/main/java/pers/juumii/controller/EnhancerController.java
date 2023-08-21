@@ -64,11 +64,23 @@ public class EnhancerController {
     }
 
     @PostMapping("/enhancer/{enhancerId}")
-    public SaResult updateEnhancer(
+    public void updateEnhancer(
             @PathVariable Long enhancerId,
             @RequestBody EnhancerDTO updated){
         enhancerSameUser(enhancerId);
-        return enhancerService.updateEnhancer(enhancerId, updated);
+        enhancerService.updateEnhancer(enhancerId, updated);
+    }
+
+    @PutMapping("/enhancer/{enhancerId}/title")
+    public void setTitle(@PathVariable Long enhancerId, @RequestParam String title){
+        enhancerSameUser(enhancerId);
+        enhancerService.setTitle(enhancerId, title);
+    }
+
+    @PutMapping("/enhancer/{enhancerId}/isQuiz")
+    public void setIsQuiz(@PathVariable Long enhancerId, @RequestParam Boolean isQuiz){
+        enhancerSameUser(enhancerId);
+        enhancerService.setIsQuiz(enhancerId, isQuiz);
     }
 
     @DeleteMapping("/enhancer/{enhancerId}")
@@ -98,6 +110,11 @@ public class EnhancerController {
     @GetMapping("/enhancer/{enhancerId}/knode")
     public List<KnodeDTO> getKnodeByEnhancerId(@PathVariable Long enhancerId){
         return enhancerService.getKnodeByEnhancerId(enhancerId);
+    }
+
+    @GetMapping("/knode/{rootId}/withQuiz")
+    List<String> getKnodeIdsWithQuiz(@PathVariable Long rootId){
+        return enhancerService.getKnodeIdsWithQuiz(rootId).stream().map(Object::toString).toList();
     }
 
     @PutMapping("knode/{knodeId}/enhancer")

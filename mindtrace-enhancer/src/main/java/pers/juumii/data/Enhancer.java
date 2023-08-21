@@ -31,7 +31,7 @@ public class Enhancer {
     private List<Resource> resources;
     @TableField(typeHandler = MybatisDurationTypeHandler.class)
     private Duration length;
-    // Enhancer 的标签用于数据分析
+    private Boolean isQuiz;
     @TableField(exist = false)
     private List<Label> labels;
     private LocalDateTime createTime;
@@ -47,6 +47,7 @@ public class Enhancer {
         res.setCreateBy(userId);
         res.setResources(new ArrayList<>());
         res.setLabels(new ArrayList<>());
+        res.setIsQuiz(true);
         return res;
     }
 
@@ -57,6 +58,7 @@ public class Enhancer {
         res.setIntroduction(enhancer.getIntroduction());
         res.setDeleted(enhancer.getDeleted());
         res.setTitle(enhancer.getTitle());
+        res.setIsQuiz(enhancer.getIsQuiz());
         res.setCreateBy(enhancer.getCreateBy().toString());
         res.setCreateTime(enhancer.getCreateTime().format(TimeUtils.DEFAULT_DATE_TIME_FORMATTER));
         Opt.ifPresent(enhancer.getLength(), length->res.setLength(length.getSeconds()));

@@ -38,6 +38,8 @@ public interface StudyTraceService {
 
     List<StudyTrace> getStudyTracesOfKnode(Long knodeId);
 
+    List<StudyTrace> getStudyTracesOfKnodeBatch(List<Long> knodeIds);
+
     List<StudyTrace> getStudyTracesOfEnhancer(Long enhancerId);
 
 

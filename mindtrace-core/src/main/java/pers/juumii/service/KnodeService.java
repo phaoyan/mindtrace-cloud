@@ -1,7 +1,5 @@
 package pers.juumii.service;
 
-import cn.dev33.satoken.util.SaResult;
-import org.neo4j.cypher.internal.expressions.In;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
@@ -11,23 +9,13 @@ import java.util.List;
 @Service
 public interface KnodeService {
 
-    Knode createRoot(Long userId);
-
     Knode branch(Long knodeId, String title);
 
-    SaResult delete(Long knodeId);
+    void delete(Long knodeId);
 
-    SaResult update(Long knodeId, KnodeDTO dto);
-
-    SaResult addLabelToKnode(Long knodeId, String label);
-
-    SaResult removeLabelFromKnode(Long knodeId, String label);
+    void update(Long knodeId, KnodeDTO dto);
 
     List<Knode> shift(Long stemId, Long branchId);
-
-    SaResult connect(Long sourceId, Long targetId);
-
-    List<Knode> initIndex(Long userId);
 
     void swapIndex(Long stemId, Integer index1, Integer index2);
 

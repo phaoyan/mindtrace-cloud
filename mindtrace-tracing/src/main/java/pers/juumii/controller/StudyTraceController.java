@@ -75,16 +75,8 @@ public class StudyTraceController {
     }
 
     @PostMapping("/batch/study/knode/trace")
-    public List<StudyTraceDTO> getStudyTracesOfKnodeBatch(
-            @RequestBody List<Long> knodeIds,
-            @RequestParam(required = false) Long userId){
-        return knodeIds.stream()
-                .map(studyTraceService::getStudyTracesOfKnode)
-                .flatMap(Collection::stream)
-                // 去重
-                .collect(Collectors.toSet())
-                .stream().map(StudyTrace::transfer)
-                .toList();
+    public List<StudyTraceDTO> getStudyTracesOfKnodeBatch(@RequestBody List<Long> knodeIds){
+        return StudyTrace.transfer(studyTraceService.getStudyTracesOfKnodeBatch(knodeIds));
     }
 
     @PostMapping("/rel/trace/knode")

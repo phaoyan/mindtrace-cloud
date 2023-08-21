@@ -26,6 +26,8 @@ public interface KnodeQueryService {
     // 返回一个节点下的所有叶子节点
     List<Knode> leaves(Long knodeId);
 
+    Integer leaveCount(Long knodeId);
+
     Knode stem(Long knodeId);
 
     List<Knode> ancestors(Long knodeId);
@@ -48,4 +50,6 @@ public interface KnodeQueryService {
     List<Knode> checkByDate(String left, String right, Long knodeId);
 
     List<Knode> checkAllRoots();
+
+
 }

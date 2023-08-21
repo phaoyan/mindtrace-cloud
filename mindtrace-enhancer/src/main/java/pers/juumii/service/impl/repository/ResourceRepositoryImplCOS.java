@@ -1,12 +1,17 @@
 package pers.juumii.service.impl.repository;
 
+import cn.hutool.core.io.FileUtil;
 import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.*;
+import com.qcloud.cos.transfer.MultipleFileDownload;
+import com.qcloud.cos.transfer.TransferManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.service.ResourceRepository;
 
+import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;

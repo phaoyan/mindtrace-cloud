@@ -88,7 +88,7 @@ public class KnodeQueryController {
 
     @GetMapping("/knode/{knodeId}/leave/count")
     public Integer leaveCount(@PathVariable Long knodeId){
-        return knodeQuery.leaves(knodeId).size();
+        return knodeQuery.leaveCount(knodeId);
     }
 
     // 返回一个knode的直系亲代

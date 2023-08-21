@@ -26,7 +26,7 @@ public interface TracingClient {
     @PostMapping("/tracing/rel/trace/enhancer")
     List<IdPair> getTraceEnhancerRels(@RequestBody List<Long> traceIds);
     @PutMapping("/tracing/study/trace")
-    void addStudyTrace(@RequestBody StudyTraceDTO trace);
+    StudyTraceDTO addStudyTrace(@RequestBody StudyTraceDTO trace);
     @PutMapping("/tracing/rel/trace/knode")
     void addStudyTraceKnodeRel(@RequestBody IdPair traceKnodeRel);
     @PutMapping("/tracing/rel/trace/enhancer")

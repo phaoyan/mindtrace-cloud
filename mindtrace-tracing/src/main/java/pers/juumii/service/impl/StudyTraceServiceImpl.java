@@ -20,6 +20,7 @@ import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.DataUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -168,6 +169,16 @@ public class StudyTraceServiceImpl implements StudyTraceService {
                     Convert.toLong(offspring.getId()))
                     .toList()).isEmpty())
             .toList();
+    }
+
+    @Override
+    public List<StudyTrace> getStudyTracesOfKnodeBatch(List<Long> knodeIds) {
+        if(knodeIds.isEmpty()) return new ArrayList<>();
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(TraceKnodeRel::getKnodeId, knodeIds);
+        List<TraceKnodeRel> rels = traceKnodeRelMapper.selectList(wrapper);
+        if(rels.isEmpty()) return new ArrayList<>();
+        return studyTraceMapper.selectBatchIds(rels.stream().map(TraceKnodeRel::getTraceId).toList());
     }
 
     @Override

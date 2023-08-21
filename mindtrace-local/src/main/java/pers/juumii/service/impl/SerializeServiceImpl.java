@@ -19,6 +19,7 @@ import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.EnhancerClient;
 import pers.juumii.feign.TracingClient;
 import pers.juumii.service.SerializeService;
+import pers.juumii.utils.SerialTimer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -71,6 +72,7 @@ public class SerializeServiceImpl implements SerializeService {
         res.setTraceKnodeRels(traceKnodeRels);
         res.setTraceEnhancerRels(traceEnhancerRels);
 
+        // 此句性能不佳
         Map<String, Map<String, byte[]>> dataList = resourceIds.stream()
                 .map(resourceId -> Map.entry(resourceId.toString(), enhancerClient.getDataFromResource(resourceId)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

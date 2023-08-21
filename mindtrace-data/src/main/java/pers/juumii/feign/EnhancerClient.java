@@ -49,6 +49,8 @@ public interface EnhancerClient {
             @RequestBody EnhancerDTO updated);
     @GetMapping("/enhancer/enhancer/{enhancerId}/knode")
     List<KnodeDTO> getKnodeByEnhancerId(@PathVariable Long enhancerId);
+    @GetMapping("/enhancer/knode/{rootId}/withQuiz")
+    List<String> getKnodeIdsWithQuiz(@PathVariable Long rootId);
     @PostMapping("/enhancer/rel/knode/enhancer")
     List<IdPair> getKnodeEnhancerRels(@RequestBody List<Long> knodeIds);
     @PostMapping("/enhancer/rel/enhancer/resource")
@@ -67,4 +69,6 @@ public interface EnhancerClient {
     void resourceEditType(@PathVariable Long resourceId, @RequestParam String type);
     @PutMapping("/enhancer/resource/{resourceId}/createTime")
     void resourceEditCreateTime(@PathVariable Long resourceId, @RequestParam String createTime);
+
+
 }

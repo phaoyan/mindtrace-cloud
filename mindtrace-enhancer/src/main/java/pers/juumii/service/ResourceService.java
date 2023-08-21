@@ -11,18 +11,15 @@ import java.util.Map;
 @Service
 public interface ResourceService {
 
-    Resource addResource();
+    Resource addResource(Long userId);
     Resource addResourceToEnhancer(Long enhancerId, ResourceDTO dto);
     // 返回resource对象元数据
     Resource getResource(Long resourceId);
     List<Resource> getResourcesOfEnhancer(Long enhancerId);
     List<Resource> getResourcesOfKnode(Long knodeId);
-    // 将Resource中存储的所有资源以json的形式返回
-    Map<String, byte[]> getDataFromResource(Long resourceId);
-    // 删除resource
     void removeResource(Long resourceId);
     void removeAllResourcesFromEnhancer(Long enhancerId);
-    // 将Resource中ID为dataId的资源以json的形式返回
+    Map<String, byte[]> getDataFromResource(Long resourceId);
     byte[] getDataFromResource(Long resourceId, String dataName);
     void addDataToResource(Long resourceId, Map<String, byte[]> data);
     void addDataToResource(Long resourceId, String dataName, byte[] data);

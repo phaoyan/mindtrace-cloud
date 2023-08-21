@@ -80,6 +80,7 @@ public class EnhancerShareServiceImpl implements EnhancerShareService {
         _enhancer.setLabels(enhancer.getLabels());
         _enhancer.setIntroduction(enhancer.getIntroduction());
         _enhancer.setResourceIds(_resources.stream().map(ResourceDTO::getId).toList());
+        _enhancer.setIsQuiz(enhancer.getIsQuiz());
         enhancerClient.updateEnhancer(Convert.toLong(_enhancer.getId()), _enhancer);
 
         return _enhancer;

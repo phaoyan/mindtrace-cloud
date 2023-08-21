@@ -22,9 +22,7 @@ public class StudyTraceQueryController {
     }
 
     @GetMapping("/study/knode/{knodeId}")
-    public List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(
-            @PathVariable Long knodeId,
-            @RequestParam(required = false) Long userId){
+    public List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(@PathVariable Long knodeId){
         return studyTraceQueryService.getStudyTraceKnodeInfo(knodeId);
     }
 

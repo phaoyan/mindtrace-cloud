@@ -7,8 +7,13 @@ import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.auth.COSCredentials;
 import com.qcloud.cos.http.HttpProtocol;
 import com.qcloud.cos.region.Region;
+import com.qcloud.cos.transfer.TransferManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Configuration
 public class COSConfig {
@@ -27,5 +32,10 @@ public class COSConfig {
         ClientConfig clientConfig = new ClientConfig(region);
         clientConfig.setHttpProtocol(HttpProtocol.https);
         return new COSClient(cred, clientConfig);
+    }
+
+    @Bean
+    public TransferManager transferManager(COSClient cosClient){
+        return new TransferManager(cosClient, Executors.newFixedThreadPool(8));
     }
 }

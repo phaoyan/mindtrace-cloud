@@ -9,6 +9,7 @@ import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.ExamStrategyService;
 import pers.juumii.service.impl.exam.strategy.ExamStrategyData;
 import pers.juumii.utils.TimeUtils;
@@ -23,13 +24,19 @@ public class RecentKnodeExamStrategy implements ExamStrategyService {
 
     private final CoreClient coreClient;
     private final SamplingExamStrategyV2 samplingExamStrategyV2;
+    private final ExamStrategyUtils utils;
+    private final EnhancerClient enhancerClient;
 
     @Autowired
     public RecentKnodeExamStrategy(
             CoreClient coreClient,
-            SamplingExamStrategyV2 samplingExamStrategyV2) {
+            SamplingExamStrategyV2 samplingExamStrategyV2,
+            ExamStrategyUtils utils,
+            EnhancerClient enhancerClient) {
         this.coreClient = coreClient;
         this.samplingExamStrategyV2 = samplingExamStrategyV2;
+        this.utils = utils;
+        this.enhancerClient = enhancerClient;
     }
 
     /**
@@ -105,7 +112,11 @@ public class RecentKnodeExamStrategy implements ExamStrategyService {
         String after = config.getStr("after");
         LocalDateTime beforeTime = TimeUtils.parse(before);
         LocalDateTime afterTime = TimeUtils.parse(after);
-        return coreClient.leaves(rootId).stream()
+        return coreClient.checkBatch(
+                    enhancerClient.getKnodeIdsWithQuiz(rootId)
+                    .stream().map(Convert::toLong)
+                    .toList()
+                ).stream()
                 .filter(knode-> TimeUtils.ordered(afterTime, TimeUtils.parse(knode.getCreateTime()), beforeTime))
                 .map(knode-> Convert.toLong(knode.getId()))
                 .toList();
@@ -113,7 +124,7 @@ public class RecentKnodeExamStrategy implements ExamStrategyService {
 
     @Override
     public List<QuizResult> extract(ExamSession session) {
-        return ExamStrategyUtils.extract(session);
+        return utils.extract(session);
     }
 
     @Override
