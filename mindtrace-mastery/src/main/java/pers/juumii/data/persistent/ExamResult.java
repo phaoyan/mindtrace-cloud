@@ -1,7 +1,6 @@
 package pers.juumii.data.persistent;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.qcloud.cos.COSClient;
@@ -9,7 +8,6 @@ import com.qcloud.cos.model.COSObjectInputStream;
 import lombok.Data;
 import pers.juumii.config.COSConfig;
 import pers.juumii.data.temp.Exam;
-import pers.juumii.data.temp.ExamInteract;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.dto.mastery.ExamResultDTO;
 import pers.juumii.utils.SpringUtils;
@@ -47,7 +45,7 @@ public class ExamResult {
         try{
             COSClient cosClient = SpringUtils.getBean(COSClient.class);
             COSConfig cosConfig = SpringUtils.getBean(COSConfig.class);
-            String bucket = cosConfig.getBUCKET_NAME();
+            String bucket = cosConfig.getExamResultBucketName();
             String key = "exam/result/cache/" + id.toString();
             COSObjectInputStream stream = cosClient.getObject(bucket, key).getObjectContent();
             String str = StrUtil.str(stream.readAllBytes(), StandardCharsets.UTF_8);

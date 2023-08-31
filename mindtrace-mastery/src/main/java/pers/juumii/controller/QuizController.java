@@ -17,8 +17,8 @@ public class QuizController {
     }
 
     @GetMapping("/knode/{knodeId}/quiz")
-    public List<Long> getQuiz(@PathVariable Long knodeId){
-        return quizGenerationService.getQuiz(knodeId);
+    public List<String> getQuiz(@PathVariable Long knodeId){
+        return quizGenerationService.getQuiz(knodeId).stream().map(Object::toString).toList();
     }
 
 }

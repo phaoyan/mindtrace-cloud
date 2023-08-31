@@ -18,12 +18,16 @@ public interface CoreClient {
     KnodeDTO check(@PathVariable Long knodeId);
     @PostMapping("/core/batch/knode")
     List<KnodeDTO> checkBatch(@RequestBody List<Long> knodeIds);
+    @PostMapping("/core/batch/knode/ancestor/id")
+    Map<Long, List<Long>> ancestorIdsBatch(@RequestBody List<Long> knodeIds);
     @GetMapping("/core/knode/{knodeId}/leaves")
     List<KnodeDTO> leaves(@PathVariable Long knodeId);
     @GetMapping("/core/knode/{knodeId}/createBy")
     Long checkKnodeCreateBy(@PathVariable Long knodeId);
     @GetMapping("/core/knode/{knodeId}/offsprings")
     List<KnodeDTO> offsprings(@PathVariable Long knodeId);
+    @GetMapping("/core/knode/{knodeId}/offspring/id")
+    List<Long> offspringIds(@PathVariable Long knodeId);
     @GetMapping("/core/knode/{knodeId}/chainStyleTitle")
     List<String> chainStyleTitle(@PathVariable Long knodeId);
     @GetMapping("/core/knode/{knodeId}/chainStyleTitleBeneath")
@@ -46,4 +50,5 @@ public interface CoreClient {
     void editTitle(@PathVariable Long knodeId, @RequestParam String title);
     @PostMapping("/core/knode/{knodeId}/index")
     void editIndex(@PathVariable Long knodeId, @RequestParam Integer index);
+
 }

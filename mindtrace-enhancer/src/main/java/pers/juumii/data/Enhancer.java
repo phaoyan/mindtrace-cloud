@@ -9,12 +9,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import pers.juumii.dto.EnhancerDTO;
-import pers.juumii.handler.MybatisDurationTypeHandler;
 import pers.juumii.service.ResourceService;
 import pers.juumii.utils.SpringUtils;
 import pers.juumii.utils.TimeUtils;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +27,6 @@ public class Enhancer {
     private String introduction;
     @TableField(exist = false)
     private List<Resource> resources;
-    @TableField(typeHandler = MybatisDurationTypeHandler.class)
-    private Duration length;
     private Boolean isQuiz;
     @TableField(exist = false)
     private List<Label> labels;
@@ -61,7 +57,6 @@ public class Enhancer {
         res.setIsQuiz(enhancer.getIsQuiz());
         res.setCreateBy(enhancer.getCreateBy().toString());
         res.setCreateTime(enhancer.getCreateTime().format(TimeUtils.DEFAULT_DATE_TIME_FORMATTER));
-        Opt.ifPresent(enhancer.getLength(), length->res.setLength(length.getSeconds()));
         res.setResourceIds(
             SpringUtils.getBean(ResourceService.class)
             .getResourcesOfEnhancer(enhancer.getId()).stream()

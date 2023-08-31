@@ -6,7 +6,7 @@ import pers.juumii.data.temp.CurrentStudy;
 import java.util.List;
 
 public interface CurrentStudyService {
-    CurrentStudy startCurrentStudy(Long userId);
+    CurrentStudy startCurrentStudy();
 
     CurrentStudy getCurrentStudy();
 
@@ -28,4 +28,7 @@ public interface CurrentStudyService {
 
     void removeTraceEnhancerRel(Long enhancerId);
 
+    CurrentStudy updateStartTime(String startTime);
+
+    CurrentStudy updateEndTime(String endTime);
 }

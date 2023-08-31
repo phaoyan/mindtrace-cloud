@@ -4,7 +4,6 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.map.MapUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -15,13 +14,13 @@ import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.MqClient;
 import pers.juumii.mapper.EnhancerResourceRelationshipMapper;
 import pers.juumii.mapper.ResourceMapper;
-import pers.juumii.mq.KnodeExchange;
+import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceService;
-import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.TimeUtils;
 
@@ -32,12 +31,11 @@ import java.util.*;
 public class ResourceServiceImpl implements ResourceService {
 
 
-    private final AuthUtils authUtils;
     private final ResourceMapper resourceMapper;
     private final ResourceRepository repository;
     private final EnhancerResourceRelationshipMapper errMapper;
-    private final RabbitTemplate rabbit;
     private final CoreClient coreClient;
+    private final MqClient mqClient;
     private EnhancerService enhancerService;
 
     @Lazy
@@ -48,18 +46,16 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Autowired
     public ResourceServiceImpl(
-            AuthUtils authUtils,
             ResourceMapper resourceMapper,
             ResourceRepository repository,
             EnhancerResourceRelationshipMapper errMapper,
-            RabbitTemplate rabbit,
-            CoreClient coreClient) {
-        this.authUtils = authUtils;
+            CoreClient coreClient,
+            MqClient mqClient) {
         this.resourceMapper = resourceMapper;
         this.repository = repository;
         this.errMapper = errMapper;
-        this.rabbit = rabbit;
         this.coreClient = coreClient;
+        this.mqClient = mqClient;
     }
 
 
@@ -133,10 +129,7 @@ public class ResourceServiceImpl implements ResourceService {
         repository.releaseAll(userId, resourceId);
         resourceMapper.deleteById(resourceId);
         errMapper.deleteByResourceId(resourceId);
-        rabbit.convertAndSend(
-                KnodeExchange.KNODE_EVENT_EXCHANGE,
-                KnodeExchange.ROUTING_KEY_REMOVE_RESOURCE,
-                resourceId.toString());
+        mqClient.emit(MessageEvents.REMOVE_RESOURCE, resourceId.toString());
     }
 
     @Override

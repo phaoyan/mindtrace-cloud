@@ -132,7 +132,7 @@ public class SessionServiceImpl implements SessionService {
         // 结算mysql数据
         examResultMapper.insert(res);
         // cache存入COS
-        String bucket = cosConfig.getBUCKET_NAME();
+        String bucket = cosConfig.getExamResultBucketName();
         String key = "exam/result/cache/" + res.getId();
         cosClient.putObject(bucket, key, IoUtil.toStream(session.getCache(), StandardCharsets.UTF_8), new ObjectMetadata());
         return new ExamAnalysis(ExamResult.transfer(res), analysisService.analyze(session, AnalyzerNames.STATISTICS_ANALYSIS));

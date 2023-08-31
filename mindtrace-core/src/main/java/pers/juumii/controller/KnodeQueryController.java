@@ -6,6 +6,7 @@ import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.service.KnodeQueryService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,6 +77,11 @@ public class KnodeQueryController {
         return Knode.transfer(knodeQuery.offsprings(knodeId));
     }
 
+    @GetMapping("/knode/{knodeId}/offspring/id")
+    public List<Long> offspringIds(@PathVariable Long knodeId){
+        return knodeQuery.offspringIds(knodeId);
+    }
+
     @GetMapping("/knode/{parentId}/knode/{childId}")
     public Boolean isOffspring(@PathVariable Long childId, @PathVariable Long parentId){
         return knodeQuery.isOffspring(childId, parentId);
@@ -100,6 +106,16 @@ public class KnodeQueryController {
     @GetMapping("/knode/{knodeId}/ancestor")
     public List<KnodeDTO> ancestors(@PathVariable Long knodeId){
         return Knode.transfer(knodeQuery.ancestors(knodeId));
+    }
+
+    @GetMapping("/knode/{knodeId}/ancestor/id")
+    public List<Long> ancestorIds(@PathVariable Long knodeId){
+        return knodeQuery.ancestors(knodeId).stream().map(Knode::getId).toList();
+    }
+
+    @PostMapping("/batch/knode/ancestor/id")
+    public Map<Long, List<Long>> ancestorIdsBatch(@RequestBody List<Long> knodeIds){
+        return knodeQuery.ancestorIdsBatch(knodeIds);
     }
 
     @GetMapping("/knode/{knodeId}/chainStyleTitle")

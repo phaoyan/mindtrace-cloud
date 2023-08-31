@@ -19,10 +19,9 @@ import pers.juumii.mapper.TraceEnhancerRelMapper;
 import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.DataUtils;
+import pers.juumii.utils.SerialTimer;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class StudyTraceServiceImpl implements StudyTraceService {
@@ -161,14 +160,16 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     public List<StudyTrace> getStudyTracesOfKnode(Long knodeId) {
         KnodeDTO knode = coreClient.check(knodeId);
         List<StudyTrace> traces = getUserStudyTraces(Convert.toLong(knode.getCreateBy()));
-        List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        return traces.stream().filter(trace->
-            !DataUtils.intersection(
-                getTraceKnodeRels(trace.getId()),
-                offsprings.stream().map(offspring->
-                    Convert.toLong(offspring.getId()))
-                    .toList()).isEmpty())
-            .toList();
+        List<Long> offspringIds = coreClient.offspringIds(knodeId);
+        HashSet<Long> offspringIdSet = new HashSet<>(offspringIds);
+        List<StudyTrace> res = new ArrayList<>();
+        for(StudyTrace trace: traces)
+            for (Long kid: getTraceKnodeRels(trace.getId()))
+                if(offspringIdSet.contains(kid)){
+                    res.add(trace);
+                    break;
+                }
+        return res;
     }
 
     @Override

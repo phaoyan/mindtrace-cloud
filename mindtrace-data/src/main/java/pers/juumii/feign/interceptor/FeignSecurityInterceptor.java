@@ -17,6 +17,6 @@ public class FeignSecurityInterceptor implements RequestInterceptor {
             requestTemplate.header("admin-pass", System.getenv("MINDTRACE_SECRET"));
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             requestTemplate.header("Cookie", request.getHeader("Cookie"));
-        }catch (IllegalStateException e){}
+        }catch (IllegalStateException ignored){}
     }
 }

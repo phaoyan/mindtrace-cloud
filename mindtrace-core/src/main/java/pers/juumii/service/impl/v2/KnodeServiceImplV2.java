@@ -4,18 +4,17 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
-import pers.juumii.mq.KnodeExchange;
+import pers.juumii.feign.MqClient;
+import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.KnodeService;
 import pers.juumii.service.impl.v2.utils.Cypher;
 import pers.juumii.service.impl.v2.utils.Neo4jUtils;
 import pers.juumii.thread.ThreadUtils;
-import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.TimeUtils;
 
 import java.util.List;
@@ -27,8 +26,7 @@ public class KnodeServiceImplV2 implements KnodeService {
     private final Neo4jUtils neo4j;
     private final ThreadUtils threadUtils;
     private final KnodeQueryService knodeQuery;
-    private final RabbitTemplate rabbit;
-    private final AuthUtils authUtils;
+    private final MqClient mqClient;
 
     public static Cypher createBasic(Knode knode){
         return Cypher.cypher("""
@@ -85,12 +83,11 @@ public class KnodeServiceImplV2 implements KnodeService {
             Neo4jUtils neo4j,
             ThreadUtils threadUtils,
             KnodeQueryService knodeQuery,
-            RabbitTemplate rabbit, AuthUtils authUtils) {
+            MqClient mqClient) {
         this.neo4j = neo4j;
         this.threadUtils = threadUtils;
         this.knodeQuery = knodeQuery;
-        this.rabbit = rabbit;
-        this.authUtils = authUtils;
+        this.mqClient = mqClient;
     }
 
     @Override
@@ -105,12 +102,8 @@ public class KnodeServiceImplV2 implements KnodeService {
             neo4j.transaction(List.of(
                     createBasic(branch),
                     relateToStem(knodeId,branch.getId())));
-
-            rabbit.convertAndSend(
-                    KnodeExchange.KNODE_EVENT_EXCHANGE,
-                    KnodeExchange.ROUTING_KEY_ADD_KNODE,
-                    JSONUtil.toJsonStr(Knode.transfer(branch)));
         });
+        mqClient.emit(MessageEvents.ADD_KNODE, JSONUtil.toJsonStr(Knode.transfer(branch)));
         return branch;
     }
 
@@ -119,15 +112,11 @@ public class KnodeServiceImplV2 implements KnodeService {
         Knode target = knodeQuery.check(knodeId);
         if(target == null)
             throw new RuntimeException("Knode Not Found: " + knodeId);
-        if(target.getBranches().isEmpty())
-            threadUtils.getUserBlockingQueue().add(()->{
-                neo4j.transaction(List.of(deleteBasic(knodeId)));
+        if(target.getBranches().isEmpty()){
+            threadUtils.getUserBlockingQueue().add(()-> neo4j.transaction(List.of(deleteBasic(knodeId))));
+            mqClient.emit(MessageEvents.REMOVE_KNODE, JSONUtil.toJsonStr(Knode.transfer(target)));
+        }
 
-                rabbit.convertAndSend(
-                        KnodeExchange.KNODE_EVENT_EXCHANGE,
-                        KnodeExchange.ROUTING_KEY_REMOVE_KNODE,
-                        JSONUtil.toJsonStr(Knode.transfer(target)));
-            });
         else throw new RuntimeException("Deleting knode failed: branches still exist.");
     }
 
@@ -136,18 +125,12 @@ public class KnodeServiceImplV2 implements KnodeService {
         Knode knode = knodeQuery.check(knodeId);
         if(knode == null)
             throw new RuntimeException("Knode Not Found: " + knodeId);
-        threadUtils.getUserBlockingQueue().add(()->{
-            Opt.ifPresent(dto.getCreateBy(), createBy->knode.setCreateBy(Convert.toLong(createBy)));
-            Opt.ifPresent(dto.getCreateTime(), (createTime)-> knode.setCreateTime(TimeUtils.parse(createTime)));
-            Opt.ifPresent(dto.getTitle(), knode::setTitle);
-            Opt.ifPresent(dto.getIndex(), knode::setIndex);
-            neo4j.transaction(List.of(updateBasic(knode)));
-
-            rabbit.convertAndSend(
-                    KnodeExchange.KNODE_EVENT_EXCHANGE,
-                    KnodeExchange.ROUTING_KEY_UPDATE_KNODE,
-                    JSONUtil.toJsonStr(Knode.transfer(knode)));
-        });
+        Opt.ifPresent(dto.getCreateBy(), createBy->knode.setCreateBy(Convert.toLong(createBy)));
+        Opt.ifPresent(dto.getCreateTime(), (createTime)-> knode.setCreateTime(TimeUtils.parse(createTime)));
+        Opt.ifPresent(dto.getTitle(), knode::setTitle);
+        Opt.ifPresent(dto.getIndex(), knode::setIndex);
+        threadUtils.getUserBlockingQueue().add(()-> neo4j.transaction(List.of(updateBasic(knode))));
+        mqClient.emit(MessageEvents.UPDATE_KNODE, JSONUtil.toJsonStr(Knode.transfer(knode)));
     }
 
     @Override

@@ -32,6 +32,8 @@ public interface KnodeQueryService {
 
     List<Knode> ancestors(Long knodeId);
 
+    Map<Long, List<Long>> ancestorIdsBatch(List<Long> knodeIds);
+
     List<Knode> knodeChain(Long knodeId);
 
     Knode findRoot(Long knodeId);
@@ -51,5 +53,7 @@ public interface KnodeQueryService {
 
     List<Knode> checkAllRoots();
 
+
+    List<Long> offspringIds(Long knodeId);
 
 }

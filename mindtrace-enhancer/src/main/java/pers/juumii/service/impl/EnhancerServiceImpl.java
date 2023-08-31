@@ -1,7 +1,6 @@
 package pers.juumii.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -18,14 +17,13 @@ import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.feign.MqClient;
 import pers.juumii.mapper.EnhancerKnodeRelationshipMapper;
 import pers.juumii.mapper.EnhancerMapper;
-import pers.juumii.mapper.ResourceMapper;
-import pers.juumii.mq.KnodeExchange;
+import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
 import pers.juumii.thread.ThreadUtils;
-import pers.juumii.utils.AuthUtils;
 import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.TimeUtils;
 
@@ -38,13 +36,11 @@ import java.util.List;
 public class EnhancerServiceImpl implements EnhancerService {
 
     private final ThreadUtils threadUtils;
-    private final AuthUtils authUtils;
     private final CoreClient coreClient;
     private final EnhancerMapper enhancerMapper;
-    private final ResourceMapper resourceMapper;
     private final EnhancerKnodeRelationshipMapper ekrMapper;
     private ResourceService resourceService;
-    private final RabbitTemplate rabbit;
+    private final MqClient mqClient;
 
     @Lazy
     @Autowired
@@ -55,19 +51,15 @@ public class EnhancerServiceImpl implements EnhancerService {
     @Autowired
     public EnhancerServiceImpl(
             ThreadUtils threadUtils,
-            AuthUtils authUtils,
             CoreClient coreClient,
             EnhancerMapper enhancerMapper,
-            ResourceMapper resourceMapper,
             EnhancerKnodeRelationshipMapper ekrMapper,
-            RabbitTemplate rabbit) {
+            MqClient mqClient) {
         this.threadUtils = threadUtils;
-        this.authUtils = authUtils;
+        this.mqClient = mqClient;
         this.coreClient = coreClient;
         this.enhancerMapper = enhancerMapper;
-        this.resourceMapper = resourceMapper;
         this.ekrMapper = ekrMapper;
-        this.rabbit = rabbit;
     }
 
     @Override
@@ -155,13 +147,7 @@ public class EnhancerServiceImpl implements EnhancerService {
     public Enhancer addEnhancerToUser(Long userId) {
         Enhancer enhancer = Enhancer.prototype(userId);
         enhancerMapper.insert(enhancer);
-
-        threadUtils.getUserBlockingQueue().add(()->{
-            rabbit. convertAndSend(
-                    KnodeExchange.KNODE_EVENT_EXCHANGE,
-                    KnodeExchange.ROUTING_KEY_ADD_ENHANCER,
-                    JSONUtil.toJsonStr(Enhancer.transfer(enhancer)));
-        });
+        mqClient.emit(MessageEvents.ADD_ENHANCER, JSONUtil.toJsonStr(Enhancer.transfer(enhancer)));
         return enhancer;
     }
 
@@ -211,11 +197,7 @@ public class EnhancerServiceImpl implements EnhancerService {
                 ekrMapper.getByEnhancerId(enhancerId).stream()
                 .map(EnhancerKnodeRel::getKnodeId).toList();
         knodeIds.forEach(knodeId->ekrMapper.deleteRelationship(enhancerId, knodeId));
-        threadUtils.getUserBlockingQueue(target.getCreateBy()).add(()->
-            rabbit.convertAndSend(
-                KnodeExchange.KNODE_EVENT_EXCHANGE,
-                KnodeExchange.ROUTING_KEY_REMOVE_ENHANCER,
-                enhancerId.toString()));
+        mqClient.emit(MessageEvents.REMOVE_ENHANCER, enhancerId.toString());
     }
 
     @Override

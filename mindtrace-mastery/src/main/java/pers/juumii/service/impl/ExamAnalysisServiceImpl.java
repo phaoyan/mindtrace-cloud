@@ -12,7 +12,6 @@ import pers.juumii.data.temp.ExamSession;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.mastery.ExamAnalysis;
 import pers.juumii.feign.CoreClient;
-import pers.juumii.mapper.ExamInteractMapper;
 import pers.juumii.mapper.ExamResultMapper;
 import pers.juumii.service.ExamAnalysisService;
 import pers.juumii.service.ExamAnalyzer;
@@ -26,7 +25,6 @@ import java.util.Map;
 public class ExamAnalysisServiceImpl implements ExamAnalysisService {
 
     private final ExamResultMapper examResultMapper;
-    private final ExamInteractMapper examInteractMapper;
     private final CoreClient coreClient;
     private final COSClient cosClient;
     private final COSConfig cosConfig;
@@ -35,12 +33,10 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
     @Autowired
     public ExamAnalysisServiceImpl(
             ExamResultMapper examResultMapper,
-            ExamInteractMapper examInteractMapper,
             CoreClient coreClient,
             COSClient cosClient,
             COSConfig cosConfig) {
         this.examResultMapper = examResultMapper;
-        this.examInteractMapper = examInteractMapper;
         this.coreClient = coreClient;
         this.cosClient = cosClient;
         this.cosConfig = cosConfig;
@@ -96,7 +92,7 @@ public class ExamAnalysisServiceImpl implements ExamAnalysisService {
     @Transactional
     public void removeExamResult(Long resultId) {
         examResultMapper.deleteById(resultId);
-        String bucket = cosConfig.getBUCKET_NAME();
+        String bucket = cosConfig.getExamResultBucketName();
         String key = "exam/result/cache/" + resultId;
         cosClient.deleteObject(bucket, key);
     }

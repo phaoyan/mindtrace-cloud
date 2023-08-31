@@ -21,8 +21,10 @@ public class COSConfig {
     private String secretKey;
     @NacosValue(value = "${tencent.cos.region}", autoRefreshed = true)
     private String regionName;
-    @NacosValue(value = "${tencent.cos.bucket.name}", autoRefreshed = true)
-    private String BUCKET_NAME;
+    @NacosValue(value = "${tencent.cos.bucket.exam-result}", autoRefreshed = true)
+    private String examResultBucketName;
+    @NacosValue(value = "${tencent.cos.bucket.review-calendar}", autoRefreshed = true)
+    private String reviewCalendarBucketName;
 
 
     @Bean

@@ -21,8 +21,18 @@ public class CurrentStudyController {
     }
 
     @PostMapping("study/current")
-    public CurrentStudyDTO startCurrentStudy(@RequestParam(value = "userId", required = false) Long userId){
-        return CurrentStudy.transfer(currentStudyService.startCurrentStudy(userId));
+    public CurrentStudyDTO startCurrentStudy(){
+        return CurrentStudy.transfer(currentStudyService.startCurrentStudy());
+    }
+
+    @PostMapping("/study/current/start")
+    public CurrentStudyDTO updateStartTime(@RequestParam String startTime){
+        return CurrentStudy.transfer(currentStudyService.updateStartTime(startTime));
+    }
+
+    @PostMapping("/study/current/end")
+    public CurrentStudyDTO updateEndTime(@RequestParam String endTime){
+        return CurrentStudy.transfer(currentStudyService.updateEndTime(endTime));
     }
 
     @GetMapping("/study/current")

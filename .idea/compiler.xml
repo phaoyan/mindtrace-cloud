@@ -18,6 +18,7 @@
         <module name="mindtrace-mastery" />
         <module name="mindtrace-core" />
         <module name="mindtrace-hub" />
+        <module name="mindtrace-mq" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -37,6 +38,7 @@
       <module name="mindtrace-hub" options="-parameters" />
       <module name="mindtrace-local" options="-parameters" />
       <module name="mindtrace-mastery" options="-parameters" />
+      <module name="mindtrace-mq" options="-parameters" />
       <module name="mindtrace-path-optimizer" options="-parameters" />
       <module name="mindtrace-recommend" options="-parameters" />
       <module name="mindtrace-security" options="-parameters" />

@@ -36,7 +36,6 @@ public class UserServiceImpl implements UserService {
     private final COSClient cosClient;
     private final DiscoveryClient discoveryClient;
     private final UserMapper userMapper;
-    private final RabbitTemplate rabbit;
     private final JavaMailSender mail;
     private final StringRedisTemplate redis;
 
@@ -45,13 +44,11 @@ public class UserServiceImpl implements UserService {
             COSClient cosClient,
             DiscoveryClient discoveryClient,
             UserMapper userMapper,
-            RabbitTemplate rabbit,
             JavaMailSender javaMailSender,
             StringRedisTemplate redis) {
         this.cosClient = cosClient;
         this.discoveryClient = discoveryClient;
         this.userMapper = userMapper;
-        this.rabbit = rabbit;
         this.mail = javaMailSender;
         this.redis = redis;
     }
@@ -95,7 +92,6 @@ public class UserServiceImpl implements UserService {
         // bcrypt加密
         user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
         userMapper.insert(user);
-        rabbit.convertAndSend("user_event_exchange", "register", user.getId());
         return SaResult.data(user.getId());
     }
 

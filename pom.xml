@@ -16,6 +16,7 @@
     <module>mindtrace-share</module>
     <module>mindtrace-hub</module>
     <module>mindtrace-local</module>
+      <module>mindtrace-mq</module>
   </modules>
 
   <parent>

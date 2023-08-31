@@ -13,6 +13,7 @@ import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.StudyTraceQueryService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.DataUtils;
+import pers.juumii.utils.SerialTimer;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.Duration;
@@ -61,36 +62,46 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
 
     @Override
     public List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(Long knodeId) {
-        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnode(knodeId);
-        List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        HashMap<String, KnodeDTO> knodeIdMap = new HashMap<>();
-        Map<String, Long> durationMap = new HashMap<>();
-        Map<String, Integer> reviewMap = new HashMap<>();
-        Map<String, List<String>> momentsMap = new HashMap<>();
-        for(KnodeDTO offspring: offsprings){
-            knodeIdMap.put(offspring.getId(), offspring);
-            durationMap.put(offspring.getId(), 0L);
-            reviewMap.put(offspring.getId(), 0);
-            momentsMap.put(offspring.getId(), new ArrayList<>());
+        // 为了只调用一次offspring提速，将getStudyTraceOfKnode的逻辑在此重写一遍
+        List<Long> offspringIds = coreClient.offspringIds(knodeId);
+        HashSet<Long> offspringIdSet = new HashSet<>(offspringIds);
+        KnodeDTO knode = coreClient.check(knodeId);
+        List<StudyTrace> allTraces = studyTraceService.getUserStudyTraces(Convert.toLong(knode.getCreateBy()));
+        List<StudyTrace> traces = new ArrayList<>();
+        for(StudyTrace trace: allTraces){
+            for (Long kid: studyTraceService.getTraceKnodeRels(trace.getId()))
+                if(offspringIdSet.contains(kid)){
+                    traces.add(trace);
+                    break;
+                }
         }
+        Map<Long, Long> durationMap = new HashMap<>();
+        Map<Long, Integer> reviewMap = new HashMap<>();
+        Map<Long, List<String>> momentsMap = new HashMap<>();
+        for(Long offspringId: offspringIds){
+            durationMap.put(offspringId, 0L);
+            reviewMap.put(offspringId, 0);
+            momentsMap.put(offspringId, new ArrayList<>());
+        }
+        Map<Long, List<Long>> ancestorSeriesList = coreClient.ancestorIdsBatch(offspringIds);
         for(StudyTrace trace: traces){
             List<Long> knodeIds = studyTraceService.getTraceKnodeRels(trace.getId());
             int size = knodeIds.size();
             long duration = trace.duration().getSeconds();
             long portion = duration / size;
-            for (Long _knodeId: knodeIds.stream().filter(id->durationMap.containsKey(id.toString())).toList())
-                for(String ancestorId: knodeAncestorIds(_knodeId, knodeIdMap)){
+            for (Long _knodeId: knodeIds.stream().filter(durationMap::containsKey).toList())
+                for(Long ancestorId: ancestorSeriesList.get(_knodeId)){
+                    if(!durationMap.containsKey(ancestorId)) continue;
                     durationMap.compute(ancestorId, (id, _duration)->_duration + portion);
-                    reviewMap.compute(ancestorId, (id,review)->review+1);
+                    reviewMap.compute(ancestorId, (id,review)->review + 1);
                     momentsMap.compute(ancestorId, (id, moments)->
                         DataUtils.join(moments, TimeUtils.format(trace.getStartTime())));
                 }
         }
         List<StudyTraceKnodeInfo> res = new ArrayList<>();
-        for(KnodeDTO offspring: offsprings){
+        for(Long offspringId: offspringIds){
             StudyTraceKnodeInfo item = new StudyTraceKnodeInfo();
-            String offspringId = offspring.getId();
-            item.setKnodeId(offspringId);
+            item.setKnodeId(offspringId.toString());
             item.setDuration(durationMap.get(offspringId));
             item.setReview(reviewMap.get(offspringId));
             item.setMoments(momentsMap.get(offspringId));
@@ -122,13 +133,5 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 .toList();
     }
 
-    private List<String> knodeAncestorIds(Long coverId, Map<String, KnodeDTO> knodeIdMap) {
-        List<String> res = new ArrayList<>();
-        KnodeDTO knode = knodeIdMap.get(coverId.toString());
-        while (knode != null){
-            res.add(knode.getId());
-            knode = knodeIdMap.get(knode.getStemId());
-        }
-        return res;
-    }
+
 }

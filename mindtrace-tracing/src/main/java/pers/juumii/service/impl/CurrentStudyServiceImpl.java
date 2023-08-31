@@ -13,6 +13,7 @@ import pers.juumii.dto.tracing.CurrentStudyDTO;
 import pers.juumii.service.CurrentStudyService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.service.TraceEnhancerRelService;
+import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,7 +22,6 @@ import java.util.List;
 public class CurrentStudyServiceImpl implements CurrentStudyService {
 
     private final StringRedisTemplate redis;
-    private final RabbitTemplate rabbit;
     private final StudyTraceService studyTraceService;
     private final TraceEnhancerRelService traceEnhancerRelService;
 
@@ -29,11 +29,9 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     public CurrentStudyServiceImpl(
             StringRedisTemplate redis,
             StudyTraceService studyTraceService,
-            RabbitTemplate rabbit,
             TraceEnhancerRelService traceEnhancerRelService) {
         this.redis = redis;
         this.studyTraceService = studyTraceService;
-        this.rabbit = rabbit;
         this.traceEnhancerRelService = traceEnhancerRelService;
     }
 
@@ -42,11 +40,11 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     }
 
     @Override
-    public CurrentStudy startCurrentStudy(Long userId) {
+    public CurrentStudy startCurrentStudy() {
         String key = key();
         if(redis.opsForValue().get(key) != null)
             redis.opsForValue().getAndDelete(key);
-        StudyTrace trace = StudyTrace.prototype(userId);
+        StudyTrace trace = StudyTrace.prototype(null);
         CurrentStudy currentStudy = CurrentStudy.prototype(trace);
         redis.opsForValue().set(key, JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
@@ -69,7 +67,8 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     @Transactional
     public StudyTrace settleCurrentStudy() {
         CurrentStudy currentStudy = getCurrentStudy();
-        currentStudy.getTrace().setEndTime(LocalDateTime.now());
+        if(currentStudy.getTrace().getEndTime() == null)
+            currentStudy.getTrace().setEndTime(LocalDateTime.now());
         studyTraceService.insertStudyTrace(StudyTrace.transfer(currentStudy.getTrace()));
         for(Long knodeId: currentStudy.getKnodeIds())
             studyTraceService.postTraceCoverage(currentStudy.getTrace().getId(), knodeId);
@@ -90,6 +89,7 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     @Override
     public CurrentStudy pauseCurrentStudy() {
         CurrentStudy currentStudy = getCurrentStudy();
+        if(currentStudy.getTrace().getEndTime() != null) return currentStudy;
         currentStudy.getTrace().getPauseList().add(LocalDateTime.now());
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
@@ -98,7 +98,24 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     @Override
     public CurrentStudy continueCurrentStudy() {
         CurrentStudy currentStudy = getCurrentStudy();
+        if(currentStudy.getTrace().getEndTime() != null) return currentStudy;
         currentStudy.getTrace().getContinueList().add(LocalDateTime.now());
+        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
+        return currentStudy;
+    }
+
+    @Override
+    public CurrentStudy updateStartTime(String startTime) {
+        CurrentStudy currentStudy = getCurrentStudy();
+        currentStudy.getTrace().setStartTime(TimeUtils.parse(startTime));
+        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
+        return currentStudy;
+    }
+
+    @Override
+    public CurrentStudy updateEndTime(String endTime) {
+        CurrentStudy currentStudy = getCurrentStudy();
+        currentStudy.getTrace().setEndTime(TimeUtils.parse(endTime));
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
     }
@@ -132,4 +149,6 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         currentStudy.getEnhancerIds().removeIf(id->id.equals(enhancerId));
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
     }
+
+
 }

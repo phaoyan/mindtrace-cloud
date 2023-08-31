@@ -19,13 +19,6 @@
     </properties>
 
     <dependencies>
-        <!--mybatis-->
-        <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.5.3.1</version>
-        </dependency>
-
         <!-- Sa-Token 权限认证, 在线文档：https://sa-token.cc -->
         <dependency>
             <groupId>cn.dev33</groupId>
