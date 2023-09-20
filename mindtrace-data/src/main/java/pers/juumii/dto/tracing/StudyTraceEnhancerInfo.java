@@ -11,5 +11,5 @@ public class StudyTraceEnhancerInfo {
     private Long duration; //学习时长
     private Integer review; //学习次数
     private List<String> moments; //各次学习的起始时间的字符串
-    private Map<String, Long> momentsWithDuration;
+    private List<StudyTraceDTO> traces;
 }

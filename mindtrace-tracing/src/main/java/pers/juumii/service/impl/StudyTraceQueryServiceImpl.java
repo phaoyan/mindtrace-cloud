@@ -41,7 +41,10 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
     public StudyTraceEnhancerInfo getStudyTraceEnhancerInfo(Long enhancerId) {
         StudyTraceEnhancerInfo res = new StudyTraceEnhancerInfo();
         res.setEnhancerId(enhancerId.toString());
-        List<StudyTrace> traces = studyTraceService.getStudyTracesOfEnhancer(enhancerId);
+        List<StudyTrace> traces = studyTraceService
+                .getStudyTracesOfEnhancer(enhancerId)
+                .stream().filter(Objects::nonNull)
+                .toList();
         if(traces.size() == 0) return res;
         res.setDuration(traces.stream()
                 .map(StudyTrace::duration)
@@ -52,11 +55,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         res.setMoments(traces.stream()
                 .map(trace -> TimeUtils.format(trace.getStartTime()))
                 .toList());
-        res.setMomentsWithDuration(
-                traces.stream().collect(
-                Collectors.toMap(
-                    trace->TimeUtils.format(trace.getStartTime()),
-                    trace -> trace.duration().getSeconds())));
+        res.setTraces(StudyTrace.transfer(traces));
         return res;
     }
 
