@@ -47,6 +47,12 @@ public class StudyTraceController {
         studyTraceService.postTraceCoverage(traceId, knodeId);
     }
 
+    @PostMapping("/study/trace")
+    public void updateTraceTitle(@RequestBody StudyTraceDTO trace){
+        studyTraceService.updateStudyTrace(trace);
+    }
+
+
     @GetMapping("/study/trace/{traceId}/knode")
     public List<String> getTraceKnodeRels(@PathVariable Long traceId){
         return studyTraceService.getTraceKnodeRels(traceId).stream().map(Object::toString).toList();

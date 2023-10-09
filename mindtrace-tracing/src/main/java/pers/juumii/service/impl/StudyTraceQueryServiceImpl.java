@@ -2,7 +2,6 @@ package pers.juumii.service.impl;
 
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.KnodeDTO;
@@ -13,7 +12,6 @@ import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.StudyTraceQueryService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.DataUtils;
-import pers.juumii.utils.SerialTimer;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.Duration;
@@ -52,9 +50,6 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 .orElse(Duration.ZERO)
                 .getSeconds());
         res.setReview(traces.size());
-        res.setMoments(traces.stream()
-                .map(trace -> TimeUtils.format(trace.getStartTime()))
-                .toList());
         res.setTraces(StudyTrace.transfer(traces));
         return res;
     }
@@ -128,7 +123,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         return enhancerIds.stream()
                 .map(this::getStudyTraceEnhancerInfo)
                 // 过滤掉没有学习记录的enhancer
-                .filter(info -> info.getMoments() != null && info.getMoments().size() > 0)
+                .filter(info -> info.getTraces() != null && !info.getTraces().isEmpty())
                 .toList();
     }
 

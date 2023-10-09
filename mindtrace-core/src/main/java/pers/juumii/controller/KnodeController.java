@@ -99,4 +99,18 @@ public class KnodeController {
         knodeService.swapIndex(knodeId, index1, index2);
     }
 
+    @PostMapping("knode/connection")
+    public void connect(@RequestParam Long knodeId1, @RequestParam Long knodeId2){
+        knodeSameUser(knodeId1);
+        knodeSameUser(knodeId2);
+        knodeService.connect(knodeId1, knodeId2);
+    }
+
+    @DeleteMapping("/knode/connection")
+    public void disconnect(@RequestParam Long knodeId1, @RequestParam Long knodeId2){
+        knodeSameUser(knodeId1);
+        knodeSameUser(knodeId2);
+        knodeService.disconnect(knodeId1, knodeId2);
+    }
+
 }

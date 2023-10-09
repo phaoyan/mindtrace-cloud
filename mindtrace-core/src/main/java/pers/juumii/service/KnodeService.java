@@ -26,4 +26,8 @@ public interface KnodeService {
     void editTitle(Long knodeId, String title);
 
     void editIndex(Long knodeId, Integer index);
+
+    void connect(Long knodeId1, Long knodeId2);
+
+    void disconnect(Long knodeId1, Long knodeId2);
 }

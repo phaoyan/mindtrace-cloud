@@ -1,10 +1,12 @@
 package pers.juumii.service;
 
+import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.temp.CurrentStudy;
 
 import java.util.List;
 
+@Service
 public interface CurrentStudyService {
     CurrentStudy startCurrentStudy();
 

@@ -162,6 +162,27 @@ public class KnodeServiceImplV2 implements KnodeService {
     }
 
     @Override
+    public void connect(Long knodeId1, Long knodeId2) {
+        Cypher cypher = Cypher.cypher("""
+                MATCH (n1:Knode {id:$knodeId1})
+                MATCH (n2:Knode {id:$knodeId2})
+                CREATE (n1)-[r1:CONNECT_TO]->(n2)
+                CREATE (n2)-[r2:CONNECT_TO]->(n1)
+                """, Map.of("knodeId1", knodeId1, "knodeId2", knodeId2));
+        neo4j.transaction(List.of(cypher));
+    }
+
+    @Override
+    public void disconnect(Long knodeId1, Long knodeId2) {
+        Cypher cypher = Cypher.cypher("""
+                MATCH (n1:Knode {id:$knodeId1})-[r1:CONNECT_TO]->(n2:Knode {id:$knodeId2})
+                MATCH (n2)-[r2:CONNECT_TO]->(n1)
+                DELETE r1, r2
+                """, Map.of("knodeId1", knodeId1, "knodeId2", knodeId2));
+        neo4j.transaction(List.of(cypher));
+    }
+
+    @Override
     public List<Knode> shift(Long stemId, Long branchId) {
         // userId用于鉴权
         Cypher cypher = Cypher.cypher("""
@@ -209,6 +230,8 @@ public class KnodeServiceImplV2 implements KnodeService {
                 "index2", index2));
         threadUtils.getUserBlockingQueue().add(()-> neo4j.transaction(List.of(cypher)));
     }
+
+
 
 
 }
