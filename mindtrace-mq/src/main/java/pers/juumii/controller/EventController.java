@@ -34,9 +34,8 @@ public class EventController {
     @PutMapping("/listener")
     public void addListener(
             @RequestParam String event,
-            @RequestParam String listener,
             @RequestParam String callback){
-        eventService.addListener(event, listener, callback);
+        eventService.addListener(event, callback);
     }
 
     @DeleteMapping("/listener")

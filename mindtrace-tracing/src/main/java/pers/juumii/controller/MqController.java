@@ -1,4 +1,4 @@
-package pers.juumii;
+package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +16,7 @@ public class MqController {
         this.consumer = consumer;
     }
 
-    @PostMapping("/mq/knode/remove")
+    @PostMapping("mq/knode/remove")
     public void handleRemoveKnode(@RequestBody String data){
         consumer.handleRemoveKnode(data);
     }
@@ -24,11 +24,6 @@ public class MqController {
     @PostMapping("/mq/enhancer/remove")
     public void handleRemoveEnhancer(@RequestBody String data){
         consumer.handleRemoveEnhancer(data);
-    }
-
-    @PostMapping("/mq/resource/remove")
-    public void handleRemoveResource(@RequestBody String data){
-        consumer.handleRemoveResource(data);
     }
 
 }

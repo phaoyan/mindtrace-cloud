@@ -20,7 +20,6 @@ import java.util.List;
 @Component
 public class MqEventRegistration implements ApplicationRunner {
 
-    public static final String REMOVE_KNODE_LISTENER = "handleRemoveKnode";
     private final EnhancerKnodeRelationshipMapper ekrMapper;
     private final EnhancerService enhancerService;
     private final MqClient mqClient;
@@ -51,6 +50,6 @@ public class MqEventRegistration implements ApplicationRunner {
         Thread.sleep(1000);
         ServiceInstance self = loadBalancerClient.choose("mindtrace-enhancer");
         String targetUrl = self.getUri().toString() + "/mq/knode/remove";
-        mqClient.addListener(MessageEvents.REMOVE_KNODE, REMOVE_KNODE_LISTENER, targetUrl);
+        mqClient.addListener(MessageEvents.REMOVE_KNODE, targetUrl);
     }
 }

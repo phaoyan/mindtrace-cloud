@@ -1,6 +1,5 @@
 package pers.juumii.controller;
 
-import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +8,9 @@ import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.service.KnodeService;
 import pers.juumii.utils.AuthUtils;
+import pers.juumii.utils.SerialTimer;
 
+import java.io.Serial;
 import java.util.List;
 
 @RestController

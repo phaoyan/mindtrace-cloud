@@ -15,6 +15,6 @@ public interface MqClient {
     void emit(@RequestParam String event, @RequestParam String data);
 
     @PutMapping("/mq/listener")
-    void addListener(@RequestParam String event, @RequestParam String listener, @RequestParam String callback);
+    void addListener(@RequestParam String event, @RequestParam String callback);
 
 }

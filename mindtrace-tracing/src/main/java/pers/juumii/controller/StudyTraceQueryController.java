@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import pers.juumii.dto.tracing.EnhancerStudyTimeline;
+import pers.juumii.dto.tracing.EnhancerStudyTimelineItem;
 import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
 import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 import pers.juumii.service.StudyTraceQueryService;
@@ -34,6 +36,14 @@ public class StudyTraceQueryController {
     @GetMapping("/study/knode/{knodeId}/enhancer")
     public List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(@PathVariable Long knodeId){
         return studyTraceQueryService.getStudyTraceEnhancerInfoUnderKnode(knodeId);
+    }
+
+    @GetMapping("/study/knode/{knodeId}/timeline/enhancer")
+    public EnhancerStudyTimeline getEnhancerStudyTimeline(
+            @PathVariable Long knodeId,
+            @RequestParam Long minDuration,
+            @RequestParam Long minInterval){
+        return studyTraceQueryService.getEnhancerStudyTimeline(knodeId, minDuration, minInterval);
     }
 
 }

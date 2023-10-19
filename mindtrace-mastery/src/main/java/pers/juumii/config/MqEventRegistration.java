@@ -42,7 +42,7 @@ public class MqEventRegistration implements ApplicationRunner {
         Thread.sleep(1000);
         ServiceInstance self = loadBalancerClient.choose("mindtrace-mastery");
         String handleAddKnode = self.getUri().toString() + "/mq/knode/add";
-        mqClient.addListener(MessageEvents.ADD_KNODE, "mindtrace-mastery::handleAddKnode", handleAddKnode);
+        mqClient.addListener(MessageEvents.ADD_KNODE, handleAddKnode);
     }
 
     public void handleAddKnode(String knodeStr) {

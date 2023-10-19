@@ -4,7 +4,10 @@ import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
+import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
+import pers.juumii.dto.tracing.EnhancerStudyTimeline;
+import pers.juumii.dto.tracing.EnhancerStudyTimelineItem;
 import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
 import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 import pers.juumii.feign.CoreClient;
@@ -125,6 +128,58 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 // 过滤掉没有学习记录的enhancer
                 .filter(info -> info.getTraces() != null && !info.getTraces().isEmpty())
                 .toList();
+    }
+
+    @Override
+    public EnhancerStudyTimeline getEnhancerStudyTimeline(Long knodeId, Long minDuration, Long minInterval) {
+        EnhancerStudyTimeline res = new EnhancerStudyTimeline();
+        res.setKnodeId(knodeId.toString());
+        res.setMinInterval(minInterval);
+        res.setMinDuration(minDuration);
+        List<EnhancerStudyTimelineItem> items = new ArrayList<>();
+        res.setItems(items);
+        List<Long> traceIds =
+                studyTraceService.getStudyTracesOfKnode(knodeId)
+                .stream().map(StudyTrace::getId)
+                .toList();
+        List<IdPair> rels = studyTraceService.getTraceEnhancerRels(traceIds);
+        Map<String, List<IdPair>> relMap = rels.stream().collect(Collectors.groupingBy(IdPair::getRightId));
+        for(String enhancerId: relMap.keySet()){
+            List<StudyTrace> traces = relMap.get(enhancerId).stream()
+                    .map(idPair -> studyTraceService.getStudyTrace(Convert.toLong(idPair.getLeftId())))
+                    .sorted(Comparator.comparing(StudyTrace::getStartTime))
+                    .toList();
+            List<List<StudyTrace>> splices = new ArrayList<>();
+            for(StudyTrace trace: traces){
+                if(splices.isEmpty()){
+                    splices.add(new ArrayList<>(List.of(trace)));
+                    continue;
+                }
+                List<StudyTrace> lastSplice = splices.get(splices.size() - 1);
+                StudyTrace lastTrace = lastSplice.get(lastSplice.size() - 1);
+                if(Duration.between(lastTrace.getStartTime(), trace.getStartTime()).toSeconds() > minInterval)
+                    splices.add(new ArrayList<>(List.of(trace)));
+                else lastSplice.add(trace);
+            }
+            for(List<StudyTrace> splice: splices){
+                Long duration = splice.stream().map(trace -> trace.duration().getSeconds()).reduce(Long::sum).orElseGet(() -> 0L);
+                if(duration < minDuration) continue;
+                String start = TimeUtils.format(splice.get(0).getStartTime());
+                String end = TimeUtils.format(splice.get(splice.size() - 1).getEndTime());
+                int period = splice.size();
+                EnhancerStudyTimelineItem item = new EnhancerStudyTimelineItem();
+                item.setEnhancerId(enhancerId);
+                item.setEnhancer(enhancerClient.getEnhancerById(Convert.toLong(enhancerId)));
+                item.setStart(start);
+                item.setEnd(end);
+                item.setDuration(duration);
+                item.setPeriods(period);
+                item.setTraceIds(splice.stream().map(tr->tr.getId().toString()).toList());
+                items.add(item);
+            }
+        }
+        res.getItems().sort(Comparator.comparing(item->TimeUtils.parse(item.getStart())));
+        return res;
     }
 
 

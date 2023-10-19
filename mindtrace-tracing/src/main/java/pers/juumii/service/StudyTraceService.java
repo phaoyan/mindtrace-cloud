@@ -2,6 +2,8 @@ package pers.juumii.service;
 
 
 import pers.juumii.data.persistent.StudyTrace;
+import pers.juumii.data.persistent.TraceEnhancerRel;
+import pers.juumii.data.persistent.TraceKnodeRel;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 
@@ -16,15 +18,21 @@ public interface StudyTraceService {
 
     List<StudyTrace> getUserStudyTraces(Long userId);
 
+    List<StudyTrace> getAllStudyTraces();
+
     StudyTrace getStudyTrace(Long traceId);
 
     void removeStudyTrace(Long traceId);
 
     void postTraceCoverage(Long traceId, Long knodeId);
 
+    List<TraceKnodeRel> getAllTraceKnodeRels();
+
     List<Long> getTraceKnodeRels(Long traceId);
 
     List<IdPair> getTraceKnodeRels(List<Long> traceIds);
+
+    List<TraceEnhancerRel> getAllTraceEnhancerRels();
 
     List<Long> getTraceEnhancerRels(Long traceId);
 
@@ -47,4 +55,7 @@ public interface StudyTraceService {
 
     void addTraceEnhancerRel(IdPair traceEnhancerRel);
 
+    void removeTraceEnhancerRel(Long id);
+
+    void removeTraceKnodeRel(Long id);
 }

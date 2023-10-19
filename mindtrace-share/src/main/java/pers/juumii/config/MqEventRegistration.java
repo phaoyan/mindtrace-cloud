@@ -77,8 +77,8 @@ public class MqEventRegistration implements ApplicationRunner {
         String removeKnodeUrl = self.getUri().toString() + "/mq/knode/remove";
         String removeEnhancerUrl = self.getUri().toString() + "/mq/enhancer/remove";
         String removeResourceUrl = self.getUri().toString() + "/mq/resource/remove";
-        mqClient.addListener(MessageEvents.REMOVE_KNODE, "mindtrace-share::handleRemoveKnode", removeKnodeUrl);
-        mqClient.addListener(MessageEvents.REMOVE_ENHANCER, "mindtrace-share::handleRemoveEnhancer", removeEnhancerUrl);
-        mqClient.addListener(MessageEvents.REMOVE_RESOURCE, "mindtrace-share::handleRemoveResource", removeResourceUrl);
+        mqClient.addListener(MessageEvents.REMOVE_KNODE, removeKnodeUrl);
+        mqClient.addListener(MessageEvents.REMOVE_ENHANCER, removeEnhancerUrl);
+        mqClient.addListener(MessageEvents.REMOVE_RESOURCE, removeResourceUrl);
     }
 }

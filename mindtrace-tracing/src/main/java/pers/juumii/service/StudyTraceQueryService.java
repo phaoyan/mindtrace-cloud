@@ -1,5 +1,7 @@
 package pers.juumii.service;
 
+import pers.juumii.dto.tracing.EnhancerStudyTimeline;
+import pers.juumii.dto.tracing.EnhancerStudyTimelineItem;
 import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
 import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 
@@ -12,5 +14,7 @@ public interface StudyTraceQueryService {
     List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(Long knodeId);
 
     List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(Long knodeId);
+
+    EnhancerStudyTimeline getEnhancerStudyTimeline(Long knodeId, Long minDuration, Long minInterval);
 
 }

@@ -34,25 +34,27 @@ public class EventServiceImpl implements EventService {
         Map<String, List<MessageListener>> eventMap = getEventMap();
         List<MessageListener> listenerList = eventMap.get(event);
         if(listenerList == null || listenerList.isEmpty()) return;
-        MessageListener listener = DataUtils.randomPick(listenerList);
-        try {
-            rest.postForEntity(listener.getCallback(), data, Void.class);
-            System.out.println("EMIT: " + event);
-        }catch (Exception e){
-            removeListener(listener.getId());
+        for(MessageListener listener: listenerList){
+            try {
+                rest.postForEntity(listener.getCallback(), data, Void.class);
+                System.out.println("EMIT: " + event);
+            }catch (Exception e){
+                removeListener(listener.getId());
+            }
         }
+
     }
 
     @Override
-    public void addListener(String event, String listener, String callback) {
+    public void addListener(String event, String callback) {
         Map<String, List<MessageListener>> eventMap = getEventMap();
         List<MessageListener> listenerList = eventMap.getOrDefault(event, new ArrayList<>());
-        if(DataUtils.ifAny(listenerList, l->l.getName().equals(listener) && l.getCallback().equals(callback)))
+        if(DataUtils.ifAny(listenerList, l-> l.getCallback().equals(callback)))
             return;
-        listenerList.add(MessageListener.prototype(event, listener, callback));
+        listenerList.add(MessageListener.prototype(event, callback));
         eventMap.put(event, listenerList);
         redis.opsForValue().set(LISTENERS_REDIS_KEY, JSONUtil.toJsonStr(eventMap));
-        System.out.println("ADD LISTENER : " + listener + " " + event + " " + callback);
+        System.out.println("ADD LISTENER : " + event + " " + callback);
     }
 
     @Override

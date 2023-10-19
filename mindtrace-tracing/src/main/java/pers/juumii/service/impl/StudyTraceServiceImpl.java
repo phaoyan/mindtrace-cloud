@@ -18,8 +18,6 @@ import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
 import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
-import pers.juumii.utils.DataUtils;
-import pers.juumii.utils.SerialTimer;
 
 import java.util.*;
 
@@ -74,6 +72,11 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
+    public List<StudyTrace> getAllStudyTraces() {
+        return studyTraceMapper.selectList(new LambdaQueryWrapper<>());
+    }
+
+    @Override
     public StudyTrace getStudyTrace(Long traceId) {
         return studyTraceMapper.selectById(traceId);
     }
@@ -95,6 +98,11 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
+    public List<TraceKnodeRel> getAllTraceKnodeRels() {
+        return traceKnodeRelMapper.selectList(new LambdaQueryWrapper<>());
+    }
+
+    @Override
     public List<Long> getTraceKnodeRels(Long traceId) {
         LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TraceKnodeRel::getTraceId, traceId);
@@ -110,6 +118,11 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         return traceKnodeRelMapper.selectList(wrapper).stream()
                 .map(rel->IdPair.of(rel.getTraceId(), rel.getKnodeId()))
                 .toList();
+    }
+
+    @Override
+    public List<TraceEnhancerRel> getAllTraceEnhancerRels() {
+        return traceEnhancerRelMapper.selectList(new LambdaQueryWrapper<>());
     }
 
     @Override
@@ -201,6 +214,16 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Transactional
     public void addTraceEnhancerRel(IdPair traceEnhancerRel) {
         traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceEnhancerRel.getLeftId(), traceEnhancerRel.getRightId()));
+    }
+
+    @Override
+    public void removeTraceEnhancerRel(Long id) {
+        traceEnhancerRelMapper.deleteById(id);
+    }
+
+    @Override
+    public void removeTraceKnodeRel(Long id) {
+        traceKnodeRelMapper.deleteById(id);
     }
 
 

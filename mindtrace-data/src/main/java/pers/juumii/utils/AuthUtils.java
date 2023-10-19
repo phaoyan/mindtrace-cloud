@@ -20,7 +20,10 @@ public class AuthUtils {
             String adminPass = request.getHeader("admin-pass");
             if(adminPass != null && adminPass.equals(ADMIN_PASS)) return;
         }catch (Exception ignored){}
+        SerialTimer timer = SerialTimer.timer();
+        timer.setInfo("TEST SAME ");
         Long loginId = StpUtil.getLoginIdAsLong();
+        timer.logAndRestart();
         if(!loginId.equals(userId))
             throw new RuntimeException("Authentication failed: not allowed to visit user " + userId);
     }
