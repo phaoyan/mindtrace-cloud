@@ -62,13 +62,15 @@ public interface EnhancerClient {
     @PutMapping("/enhancer/rel/enhancer/resource")
     void addEnhancerResourceRel(@RequestParam Long enhancerId, @RequestParam Long resourceId);
     @PutMapping("/enhancer/resource")
-    ResourceDTO addResource();
+    ResourceDTO addResource(@RequestParam String type);
     @PutMapping("/enhancer/resource/{resourceId}/title")
     void resourceEditTitle(@PathVariable Long resourceId, @RequestParam String title);
     @PutMapping("/enhancer/resource/{resourceId}/type")
     void resourceEditType(@PathVariable Long resourceId, @RequestParam String type);
     @PutMapping("/enhancer/resource/{resourceId}/createTime")
     void resourceEditCreateTime(@PathVariable Long resourceId, @RequestParam String createTime);
-
-
+    @GetMapping("/enhancer/resource/{resourceId}/meta")
+    ResourceDTO getResourceById(@PathVariable Long resourceId);
+    @DeleteMapping("/enhancer/resource/{resourceId}")
+    void removeResourceById(@PathVariable Long resourceId);
 }

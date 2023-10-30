@@ -12,7 +12,7 @@ import pers.juumii.service.StudyTraceService;
 
 import java.util.List;
 
-@Component
+//@Component
 public class DataCleaner implements ApplicationRunner {
 
     private final StudyTraceService service;

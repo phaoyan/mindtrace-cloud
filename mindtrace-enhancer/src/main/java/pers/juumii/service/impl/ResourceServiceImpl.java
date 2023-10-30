@@ -61,8 +61,9 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     @Transactional
-    public Resource addResource(Long userId) {
+    public Resource addResource(Long userId, String type) {
         Resource resource = Resource.prototype(userId);
+        resource.setType(type);
         resourceMapper.insert(resource);
         return resource;
     }

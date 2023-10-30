@@ -1,7 +1,6 @@
 package pers.juumii.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.IoUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.data.Enhancer;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.IdPair;
-import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
-import pers.juumii.feign.CoreClient;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
 import pers.juumii.utils.AuthUtils;
@@ -32,18 +29,15 @@ public class ResourceController {
     private final ResourceService resourceService;
     private final EnhancerService enhancerService;
     private final AuthUtils authUtils;
-    private final CoreClient coreClient;
 
     @Autowired
     public ResourceController(
             ResourceService resourceService,
             EnhancerService enhancerService,
-            AuthUtils authUtils,
-            CoreClient coreClient) {
+            AuthUtils authUtils) {
         this.resourceService = resourceService;
         this.enhancerService = enhancerService;
         this.authUtils = authUtils;
-        this.coreClient = coreClient;
     }
 
     private void enhancerSameUser(Long enhancerId){
@@ -63,8 +57,8 @@ public class ResourceController {
     }
 
     @PutMapping("/resource")
-    public ResourceDTO addResource(){
-        return Resource.transfer(resourceService.addResource(StpUtil.getLoginIdAsLong()));
+    public ResourceDTO addResource(@RequestParam(required = false) String type){
+        return Resource.transfer(resourceService.addResource(StpUtil.getLoginIdAsLong(), type));
     }
 
     @PutMapping("/resource/{resourceId}/title")

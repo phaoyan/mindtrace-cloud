@@ -91,7 +91,7 @@ public class ResolveServiceImpl implements ResolveService {
         for(IdPair rel: rels)
             resourceToEnhancerRelMap.compute(rel.getRightId(), (k,v)->{v.add(rel.getLeftId());return v;});
         for(ResourceDTO resource: resources){
-            ResourceDTO added  = enhancerClient.addResource();
+            ResourceDTO added  = enhancerClient.addResource(null);
             Long addedId = Convert.toLong(added.getId());
             resourceToEnhancerRelMap.get(resource.getId()).forEach(enhancerId->
                     enhancerClient.addEnhancerResourceRel(Convert.toLong(enhancerId), addedId));

@@ -137,6 +137,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Override
     public List<IdPair> getTraceEnhancerRels(List<Long> traceIds) {
         LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
+        if(traceIds.isEmpty()) return new ArrayList<>();
         wrapper.in(TraceEnhancerRel::getTraceId, traceIds);
         return traceEnhancerRelMapper.selectList(wrapper).stream()
                 .map(rel->IdPair.of(rel.getTraceId(), rel.getEnhancerId()))

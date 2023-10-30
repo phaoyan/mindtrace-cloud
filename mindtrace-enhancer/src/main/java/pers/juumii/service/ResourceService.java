@@ -11,7 +11,7 @@ import java.util.Map;
 @Service
 public interface ResourceService {
 
-    Resource addResource(Long userId);
+    Resource addResource(Long userId, String type);
     Resource addResourceToEnhancer(Long enhancerId, ResourceDTO dto);
     // 返回resource对象元数据
     Resource getResource(Long resourceId);

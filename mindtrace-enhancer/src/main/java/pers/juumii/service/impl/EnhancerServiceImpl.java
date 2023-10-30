@@ -35,7 +35,6 @@ import java.util.List;
 @Service
 public class EnhancerServiceImpl implements EnhancerService {
 
-    private final ThreadUtils threadUtils;
     private final CoreClient coreClient;
     private final EnhancerMapper enhancerMapper;
     private final EnhancerKnodeRelationshipMapper ekrMapper;
@@ -50,12 +49,10 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Autowired
     public EnhancerServiceImpl(
-            ThreadUtils threadUtils,
             CoreClient coreClient,
             EnhancerMapper enhancerMapper,
             EnhancerKnodeRelationshipMapper ekrMapper,
             MqClient mqClient) {
-        this.threadUtils = threadUtils;
         this.mqClient = mqClient;
         this.coreClient = coreClient;
         this.enhancerMapper = enhancerMapper;
