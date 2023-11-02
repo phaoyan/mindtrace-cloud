@@ -98,12 +98,9 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
     @Override
     public List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(Long knodeId) {
         List<Long> enhancerIds = enhancerClient.getEnhancerIdsFromKnodeIncludingBeneath(knodeId);
-        List<Long> selectedEnhancerIds = enhancerIds.stream()
-                .filter(enhancerId -> !studyTraceService.isEnhancerTraced(enhancerId))
-                .toList();
-        return selectedEnhancerIds.stream()
+        List<Long> tracedEnhancerIds = studyTraceService.getTracedEnhancerIdsFromList(enhancerIds);
+        return tracedEnhancerIds.stream()
                 .map(this::getStudyTraceEnhancerInfo)
-                // 过滤掉没有学习记录的enhancer
                 .filter(info -> info.getTraces() != null && !info.getTraces().isEmpty())
                 .toList();
     }

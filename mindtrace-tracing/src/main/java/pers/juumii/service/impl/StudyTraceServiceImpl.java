@@ -21,6 +21,7 @@ import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.SerialTimer;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class StudyTraceServiceImpl implements StudyTraceService {
@@ -173,7 +174,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     @Override
     public List<StudyTrace> getStudyTracesOfKnodeIncludingBeneath(Long knodeId) {
-        List<Long> offspringIds = coreClient.offspringIds(knodeId);
+        List<Long> offspringIds = getTracedKnodeIdsFromList(coreClient.offspringIds(knodeId));
         if(offspringIds.isEmpty()) return new ArrayList<>();
         LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(TraceKnodeRel::getKnodeId, offspringIds);
@@ -181,18 +182,6 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         List<Long> traceIds = rels.stream().map(TraceKnodeRel::getTraceId).toList();
         if(traceIds.isEmpty()) return new ArrayList<>();
         return studyTraceMapper.selectBatchIds(traceIds);
-
-//        KnodeDTO knode = coreClient.check(knodeId);
-//        List<StudyTrace> traces = getUserStudyTraces(Convert.toLong(knode.getCreateBy()));
-//        HashSet<Long> offspringIdSet = new HashSet<>(offspringIds);
-//        List<StudyTrace> res = new ArrayList<>();
-//        for(StudyTrace trace: traces)
-//            for (Long kid: getTraceKnodeRels(trace.getId()))
-//                if(offspringIdSet.contains(kid)){
-//                    res.add(trace);
-//                    break;
-//                }
-//        return res;
     }
 
     @Override
@@ -227,6 +216,36 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         wrapper.eq(TraceKnodeRel::getKnodeId, knodeId);
         return traceKnodeRelMapper.exists(wrapper);
     }
+
+    @Override
+    public List<Long> getTracedEnhancerIdsFromList(List<Long> enhancerIds){
+        if(enhancerIds.isEmpty()) return new ArrayList<>();
+        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(TraceEnhancerRel::getEnhancerId, enhancerIds);
+        List<TraceEnhancerRel> rels = traceEnhancerRelMapper.selectList(wrapper);
+        return rels
+                .stream()
+                .map(TraceEnhancerRel::getEnhancerId)
+                .collect(Collectors.toSet())
+                .stream()
+                .toList();
+    }
+
+    @Override
+    public List<Long> getTracedKnodeIdsFromList(List<Long> knodeIds){
+        if(knodeIds.isEmpty()) return new ArrayList<>();
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(TraceKnodeRel::getKnodeId, knodeIds);
+        List<TraceKnodeRel> rels = traceKnodeRelMapper.selectList(wrapper);
+        return rels
+                .stream()
+                .map(TraceKnodeRel::getKnodeId)
+                .collect(Collectors.toSet())
+                .stream()
+                .toList();
+    }
+
+
 
     @Override
     @Transactional

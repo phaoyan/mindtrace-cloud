@@ -61,4 +61,7 @@ public interface StudyTraceService {
     void removeTraceEnhancerRel(Long id);
 
     void removeTraceKnodeRel(Long id);
+
+    List<Long> getTracedEnhancerIdsFromList(List<Long> enhancerIds);
+    List<Long> getTracedKnodeIdsFromList(List<Long> knodeIds);
 }
