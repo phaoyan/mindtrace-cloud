@@ -37,6 +37,8 @@ public interface EnhancerService {
 
     List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId);
 
+    List<Long> getEnhancerIdsFromKnodeIncludingBeneath(Long knodeId);
+
     Long getEnhancerCount(Long knodeId);
 
     List<Enhancer> getEnhancersFromKnodeBatch(List<Long> knodeIds);

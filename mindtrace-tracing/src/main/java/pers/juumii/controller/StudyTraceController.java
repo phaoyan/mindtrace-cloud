@@ -7,9 +7,7 @@ import pers.juumii.dto.IdPair;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.service.StudyTraceService;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class StudyTraceController {
@@ -77,7 +75,7 @@ public class StudyTraceController {
     public List<StudyTraceDTO> getStudyTracesOfKnode(
             @PathVariable Long knodeId,
             @RequestParam(required = false) Long userId){
-        return StudyTrace.transfer(studyTraceService.getStudyTracesOfKnode(knodeId));
+        return StudyTrace.transfer(studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId));
     }
 
     @PostMapping("/batch/study/knode/trace")

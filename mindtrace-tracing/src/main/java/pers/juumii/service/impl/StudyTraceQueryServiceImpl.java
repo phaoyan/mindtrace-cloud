@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.IdPair;
-import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.tracing.EnhancerStudyTimeline;
 import pers.juumii.dto.tracing.EnhancerStudyTimelineItem;
 import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
@@ -59,19 +58,8 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
 
     @Override
     public List<StudyTraceKnodeInfo> getStudyTraceKnodeInfo(Long knodeId) {
-        // 为了只调用一次offspring提速，将getStudyTraceOfKnode的逻辑在此重写一遍
         List<Long> offspringIds = coreClient.offspringIds(knodeId);
-        HashSet<Long> offspringIdSet = new HashSet<>(offspringIds);
-        KnodeDTO knode = coreClient.check(knodeId);
-        List<StudyTrace> allTraces = studyTraceService.getUserStudyTraces(Convert.toLong(knode.getCreateBy()));
-        List<StudyTrace> traces = new ArrayList<>();
-        for(StudyTrace trace: allTraces){
-            for (Long kid: studyTraceService.getTraceKnodeRels(trace.getId()))
-                if(offspringIdSet.contains(kid)){
-                    traces.add(trace);
-                    break;
-                }
-        }
+        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId);
         Map<Long, Long> durationMap = new HashMap<>();
         Map<Long, Integer> reviewMap = new HashMap<>();
         Map<Long, List<String>> momentsMap = new HashMap<>();
@@ -109,21 +97,11 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
 
     @Override
     public List<StudyTraceEnhancerInfo> getStudyTraceEnhancerInfoUnderKnode(Long knodeId) {
-        List<StudyTrace> traces = studyTraceService.getUserStudyTraces(null);
-        List<Long> enhancerIds = traces.stream()
-                .map(trace -> studyTraceService.getTraceEnhancerRels(trace.getId()))
-                // List<List> -> List
-                .flatMap(Collection::stream)
-                // 去重
-                .collect(Collectors.toSet())
-                // 检查如果这个enhancer的关联knode是子knode，则选中这一enhancer
-                .stream().filter((enhancerId)->{
-                    List<KnodeDTO> knodes = enhancerClient.getKnodeByEnhancerId(enhancerId);
-                    List<Long> knodeIds = knodes.stream().map(knode -> Convert.toLong(knode.getId())).toList();
-                    return DataUtils.ifAny(knodeIds, _knodeId->coreClient.isOffspring(_knodeId, knodeId));
-                }).toList();
-
-        return enhancerIds.stream()
+        List<Long> enhancerIds = enhancerClient.getEnhancerIdsFromKnodeIncludingBeneath(knodeId);
+        List<Long> selectedEnhancerIds = enhancerIds.stream()
+                .filter(enhancerId -> !studyTraceService.isEnhancerTraced(enhancerId))
+                .toList();
+        return selectedEnhancerIds.stream()
                 .map(this::getStudyTraceEnhancerInfo)
                 // 过滤掉没有学习记录的enhancer
                 .filter(info -> info.getTraces() != null && !info.getTraces().isEmpty())
@@ -139,7 +117,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         List<EnhancerStudyTimelineItem> items = new ArrayList<>();
         res.setItems(items);
         List<Long> traceIds =
-                studyTraceService.getStudyTracesOfKnode(knodeId)
+                studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId)
                 .stream().map(StudyTrace::getId)
                 .toList();
         List<IdPair> rels = studyTraceService.getTraceEnhancerRels(traceIds);

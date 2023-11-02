@@ -1,3 +1,7 @@
 nacos:
   config:
     server-addr: ${SERVER_HOST}
+
+logging:
+  file:
+    name: ${MINDTRACE_LOG_DIR}/enhancer.log

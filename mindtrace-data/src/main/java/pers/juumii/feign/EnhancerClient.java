@@ -22,7 +22,9 @@ public interface EnhancerClient {
     @PostMapping("/enhancer/batch/knode/enhancer")
     List<EnhancerDTO> getEnhancerOfKnodeBatch(@RequestBody List<Long> knodeIds);
     @GetMapping("/enhancer/knode/{knodeId}/offspring/enhancer")
-    List<EnhancerDTO> getEnhancersOfKnodeIncludingBeneath(@PathVariable Long knodeId);
+    List<EnhancerDTO> getEnhancersFromKnodeIncludingBeneath(@PathVariable Long knodeId);
+    @GetMapping("/enhancer/knode/{knodeId}/offspring/enhancer/id")
+    List<Long> getEnhancerIdsFromKnodeIncludingBeneath(@PathVariable Long knodeId);
     @GetMapping("/enhancer/enhancer/{enhancerId}/resource")
     List<ResourceDTO> getResourcesOfEnhancer(@PathVariable Long enhancerId);
     @PostMapping("/enhancer/batch/enhancer/resource")

@@ -2,6 +2,10 @@ nacos:
   config:
     server-addr: ${SERVER_HOST}
 
+logging:
+  file:
+    name: ${MINDTRACE_LOG_DIR}/gateway.log
+
 spring:
   mail:
     host: smtp.qq.com

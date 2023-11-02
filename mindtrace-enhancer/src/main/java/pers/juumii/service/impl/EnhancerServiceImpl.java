@@ -25,6 +25,7 @@ import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
 import pers.juumii.thread.ThreadUtils;
 import pers.juumii.utils.DataUtils;
+import pers.juumii.utils.SerialTimer;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
@@ -79,6 +80,7 @@ public class EnhancerServiceImpl implements EnhancerService {
         return enhancerMapper.selectBatchIds(enhancerIds);
     }
 
+
     @Override
     public List<KnodeDTO> getKnodeByEnhancerId(Long enhancerId) {
         List<EnhancerKnodeRel> rels = ekrMapper.getByEnhancerId(enhancerId);
@@ -93,13 +95,6 @@ public class EnhancerServiceImpl implements EnhancerService {
                 .flatMap(Collection::stream)
                 .map(rel->IdPair.of(rel.getKnodeId().toString(), rel.getEnhancerId().toString()))
                 .toList();
-    }
-
-    public Long getEnhancerCountFromKnodeBatch(List<Long> knodeIds){
-        if(knodeIds == null || knodeIds.isEmpty()) return 0L;
-        LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(EnhancerKnodeRel::getKnodeId, knodeIds);
-        return ekrMapper.selectCount(wrapper);
     }
 
     @Override
@@ -216,17 +211,23 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     public List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId) {
-        List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        return getEnhancersFromKnodeBatch(offsprings.stream().map(knode -> Convert.toLong(knode.getId())).toList());
+        return getEnhancersFromKnodeBatch(coreClient.offspringIds(knodeId));
     }
 
     @Override
+    public List<Long> getEnhancerIdsFromKnodeIncludingBeneath(Long knodeId){
+        return getEnhancersFromKnodeIncludingBeneath(knodeId)
+                .stream().map(Enhancer::getId)
+                .toList();
+    }
+
+
+    @Override
     public Long getEnhancerCount(Long knodeId){
-        List<KnodeDTO> offsprings = coreClient.offsprings(knodeId);
-        List<Long> knodeIds = offsprings.stream().map(knode -> Convert.toLong(knode.getId())).toList();
-        if(knodeIds.isEmpty()) return 0L;
+        List<Long> offspringIds = coreClient.offspringIds(knodeId);
+        if(offspringIds.isEmpty()) return 0L;
         LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(EnhancerKnodeRel::getKnodeId, knodeIds);
+        wrapper.in(EnhancerKnodeRel::getKnodeId, offspringIds);
         return ekrMapper.selectCount(wrapper);
     }
 

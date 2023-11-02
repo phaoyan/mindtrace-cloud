@@ -18,6 +18,7 @@ import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
 import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
+import pers.juumii.utils.SerialTimer;
 
 import java.util.*;
 
@@ -171,19 +172,27 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
-    public List<StudyTrace> getStudyTracesOfKnode(Long knodeId) {
-        KnodeDTO knode = coreClient.check(knodeId);
-        List<StudyTrace> traces = getUserStudyTraces(Convert.toLong(knode.getCreateBy()));
+    public List<StudyTrace> getStudyTracesOfKnodeIncludingBeneath(Long knodeId) {
         List<Long> offspringIds = coreClient.offspringIds(knodeId);
-        HashSet<Long> offspringIdSet = new HashSet<>(offspringIds);
-        List<StudyTrace> res = new ArrayList<>();
-        for(StudyTrace trace: traces)
-            for (Long kid: getTraceKnodeRels(trace.getId()))
-                if(offspringIdSet.contains(kid)){
-                    res.add(trace);
-                    break;
-                }
-        return res;
+        if(offspringIds.isEmpty()) return new ArrayList<>();
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(TraceKnodeRel::getKnodeId, offspringIds);
+        List<TraceKnodeRel> rels = traceKnodeRelMapper.selectList(wrapper);
+        List<Long> traceIds = rels.stream().map(TraceKnodeRel::getTraceId).toList();
+        if(traceIds.isEmpty()) return new ArrayList<>();
+        return studyTraceMapper.selectBatchIds(traceIds);
+
+//        KnodeDTO knode = coreClient.check(knodeId);
+//        List<StudyTrace> traces = getUserStudyTraces(Convert.toLong(knode.getCreateBy()));
+//        HashSet<Long> offspringIdSet = new HashSet<>(offspringIds);
+//        List<StudyTrace> res = new ArrayList<>();
+//        for(StudyTrace trace: traces)
+//            for (Long kid: getTraceKnodeRels(trace.getId()))
+//                if(offspringIdSet.contains(kid)){
+//                    res.add(trace);
+//                    break;
+//                }
+//        return res;
     }
 
     @Override
@@ -203,6 +212,20 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         return traceEnhancerRelMapper.selectList(wrapper).stream()
                 .map(rel->getStudyTrace(rel.getTraceId()))
                 .toList();
+    }
+
+    @Override
+    public boolean isEnhancerTraced(Long enhancerId){
+        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceEnhancerRel::getEnhancerId, enhancerId);
+        return traceEnhancerRelMapper.exists(wrapper);
+    }
+
+    @Override
+    public boolean isKnodeTraced(Long knodeId){
+        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceKnodeRel::getKnodeId, knodeId);
+        return traceKnodeRelMapper.exists(wrapper);
     }
 
     @Override

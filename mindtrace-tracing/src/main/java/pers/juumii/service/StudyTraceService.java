@@ -44,12 +44,15 @@ public interface StudyTraceService {
 
     void removeTraceCoverage(Long traceId, Long knodeId);
 
-    List<StudyTrace> getStudyTracesOfKnode(Long knodeId);
+    List<StudyTrace> getStudyTracesOfKnodeIncludingBeneath(Long knodeId);
 
     List<StudyTrace> getStudyTracesOfKnodeBatch(List<Long> knodeIds);
 
     List<StudyTrace> getStudyTracesOfEnhancer(Long enhancerId);
 
+    boolean isEnhancerTraced(Long enhancerId);
+
+    boolean isKnodeTraced(Long knodeId);
 
     void addTraceKnodeRel(IdPair traceKnodeRel);
 

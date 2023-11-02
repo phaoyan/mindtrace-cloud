@@ -2,3 +2,6 @@ nacos:
   config:
     server-addr: ${SERVER_HOST}
 
+logging:
+  file:
+    name: ${MINDTRACE_LOG_DIR}/core.log
