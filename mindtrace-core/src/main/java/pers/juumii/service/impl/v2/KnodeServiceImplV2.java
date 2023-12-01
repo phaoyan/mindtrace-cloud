@@ -184,7 +184,7 @@ public class KnodeServiceImplV2 implements KnodeService {
     }
 
     @Override
-    public List<Knode> shift(Long stemId, Long branchId) {
+    public void shift(Long stemId, Long branchId) {
         // userId用于鉴权
         Cypher cypher = Cypher.cypher("""
                 MATCH
@@ -201,7 +201,6 @@ public class KnodeServiceImplV2 implements KnodeService {
                 "branchId", branchId,
                 "userId", StpUtil.getLoginIdAsLong()));
         neo4j.transaction(List.of(cypher));
-        return knodeQuery.checkAll(StpUtil.getLoginIdAsLong());
     }
 
     @Override

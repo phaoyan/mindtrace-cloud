@@ -4,14 +4,18 @@ import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.persistent.Milestone;
+import pers.juumii.data.persistent.StudyTrace;
+import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.dto.tracing.MilestoneDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.MilestoneService;
+import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.AuthUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -21,17 +25,20 @@ public class MilestoneController {
     private final EnhancerClient enhancerClient;
     private final AuthUtils authUtils;
     private final MilestoneService milestoneService;
+    private final StudyTraceService studyTraceService;
 
     @Autowired
     public MilestoneController(
             CoreClient coreClient,
             EnhancerClient enhancerClient,
             AuthUtils authUtils,
-            MilestoneService milestoneService) {
+            MilestoneService milestoneService,
+            StudyTraceService studyTraceService) {
         this.coreClient = coreClient;
         this.enhancerClient = enhancerClient;
         this.authUtils = authUtils;
         this.milestoneService = milestoneService;
+        this.studyTraceService = studyTraceService;
     }
 
     private Long knodeSameUser(Long knodeId){
@@ -48,6 +55,11 @@ public class MilestoneController {
     private void resourceSameUser(Long resourceId){
         ResourceDTO resource = enhancerClient.getResourceById(resourceId);
         authUtils.same(Convert.toLong(resource.getCreateBy()));
+    }
+
+    private void traceSameUser(Long traceId){
+        StudyTrace studyTrace = studyTraceService.getStudyTrace(traceId);
+        authUtils.same(studyTrace.getUserId());
     }
 
     @PutMapping("/milestone")
@@ -106,5 +118,34 @@ public class MilestoneController {
     @GetMapping("/milestone/{id}/resource")
     public List<ResourceDTO> getResourcesFromMilestone(@PathVariable Long id){
         return milestoneService.getResourcesFromMilestone(id);
+    }
+
+    @GetMapping("/rel/milestone/trace")
+    public List<?> getMilestoneTraceRels(
+            @RequestParam(required = false) Long milestoneId,
+            @RequestParam(required = false) Long traceId){
+        if(milestoneId != null)
+            return milestoneService.getStudyTraces(milestoneId).stream()
+                .map((rel)->StudyTrace.transfer(studyTraceService.getStudyTrace(rel.getTraceId())))
+                .toList();
+        else if(traceId != null)
+            return milestoneService.getMilestones(traceId).stream()
+                .map((rel)->Milestone.transfer(milestoneService.getById(rel.getMilestoneId())))
+                .toList();
+        else return new ArrayList<>();
+    }
+
+    @PutMapping("/rel/milestone/trace")
+    public void addMilestoneTraceRel(@RequestParam Long milestoneId, @RequestParam Long traceId){
+        milestoneSameUser(milestoneId);
+        traceSameUser(traceId);
+        milestoneService.addStudyTrace(milestoneId, traceId);
+    }
+
+    @DeleteMapping("/rel/milestone/trace")
+    public void removeMilestoneTraceRel(@RequestParam Long milestoneId, @RequestParam Long traceId){
+        milestoneSameUser(milestoneId);
+        traceSameUser(traceId);
+        milestoneService.removeStudyTrace(milestoneId, traceId);
     }
 }

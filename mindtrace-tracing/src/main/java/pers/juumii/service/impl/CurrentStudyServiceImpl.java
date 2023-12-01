@@ -1,6 +1,7 @@
 package pers.juumii.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,6 +101,27 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         CurrentStudy currentStudy = getCurrentStudy();
         if(currentStudy.getTrace().getEndTime() != null) return currentStudy;
         currentStudy.getTrace().getContinueList().add(LocalDateTime.now());
+        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
+        return currentStudy;
+    }
+
+    @Override
+    @Transactional
+    public CurrentStudy restartStudy(Long traceId) {
+        StudyTrace trace = studyTraceService.getStudyTrace(traceId);
+        if(trace == null)
+            throw new RuntimeException("StudyTrace Not Found: " + traceId);
+        CurrentStudy currentStudy = startCurrentStudy();
+        currentStudy.setTrace(trace);
+        currentStudy.getTrace().getPauseList().add(trace.getEndTime());
+        currentStudy.getTrace().getContinueList().add(LocalDateTime.now());
+        currentStudy.getTrace().setEndTime(null);
+        List<Long> traceKnodeIds = studyTraceService.getTraceKnodeRels(trace.getId());
+        List<Long> traceEnhancerIds = studyTraceService.getTraceEnhancerRels(trace.getId());
+        currentStudy.setKnodeIds(traceKnodeIds);
+        currentStudy.setEnhancerIds(traceEnhancerIds);
+        studyTraceService.removeStudyTrace(trace.getId());
+        currentStudy.getTrace().setId(IdUtil.getSnowflakeNextId());
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
     }

@@ -2,6 +2,7 @@ package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.tracing.StudyTraceDTO;
@@ -94,12 +95,12 @@ public class StudyTraceController {
     }
 
     @PutMapping("/rel/trace/knode")
-    void addTraceKnodeRel(@RequestBody IdPair traceKnodeRel){
+    public void addTraceKnodeRel(@RequestBody IdPair traceKnodeRel){
         studyTraceService.addTraceKnodeRel(traceKnodeRel);
     }
 
     @PutMapping("/rel/trace/enhancer")
-    void addTraceEnhancerRel(@RequestBody IdPair traceEnhancerRel){
+    public void addTraceEnhancerRel(@RequestBody IdPair traceEnhancerRel){
         studyTraceService.addTraceEnhancerRel(traceEnhancerRel);
     }
 

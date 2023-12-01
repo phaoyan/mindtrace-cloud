@@ -21,8 +21,10 @@ public class CurrentStudyController {
     }
 
     @PostMapping("study/current")
-    public CurrentStudyDTO startCurrentStudy(){
-        return CurrentStudy.transfer(currentStudyService.startCurrentStudy());
+    public CurrentStudyDTO startCurrentStudy(@RequestParam(required = false) Long traceId){
+        return traceId == null ?
+                CurrentStudy.transfer(currentStudyService.startCurrentStudy()) :
+                CurrentStudy.transfer(currentStudyService.restartStudy(traceId));
     }
 
     @PostMapping("/study/current/start")
@@ -86,6 +88,8 @@ public class CurrentStudyController {
     public CurrentStudyDTO editCurrentStudyTitle(@RequestParam("title") String title){
         return CurrentStudy.transfer(currentStudyService.editCurrentStudyTitle(title));
     }
+
+
 
 
 

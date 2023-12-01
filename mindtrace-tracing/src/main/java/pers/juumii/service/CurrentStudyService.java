@@ -20,6 +20,8 @@ public interface CurrentStudyService {
 
     CurrentStudy continueCurrentStudy();
 
+    CurrentStudy restartStudy(Long traceId);
+
     CurrentStudy editCurrentStudyTitle(String title);
 
     List<Long> addKnodeId(Long knodeId);
@@ -33,4 +35,5 @@ public interface CurrentStudyService {
     CurrentStudy updateStartTime(String startTime);
 
     CurrentStudy updateEndTime(String endTime);
+
 }

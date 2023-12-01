@@ -1,31 +1,34 @@
 package pers.juumii.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.KnodeService;
 import pers.juumii.utils.AuthUtils;
-import pers.juumii.utils.SerialTimer;
 
-import java.io.Serial;
 import java.util.List;
 
 @RestController
 public class KnodeController {
 
     private final KnodeService knodeService;
+    private final KnodeQueryService knodeQueryService;
     private final AuthUtils authUtils;
     private final CoreClient coreClient;
 
     @Autowired
     public KnodeController(
             KnodeService knodeService,
+            KnodeQueryService knodeQueryService,
             AuthUtils authUtils,
             CoreClient coreClient) {
         this.knodeService = knodeService;
+        this.knodeQueryService = knodeQueryService;
         this.authUtils = authUtils;
         this.coreClient = coreClient;
     }
@@ -88,7 +91,19 @@ public class KnodeController {
             @PathVariable Long branchId){
         knodeSameUser(stemId);
         knodeSameUser(branchId);
-        return Knode.transfer(knodeService.shift(stemId, branchId));
+        knodeService.shift(stemId, branchId);
+        return Knode.transfer(knodeQueryService.checkAll(StpUtil.getLoginIdAsLong()));
+    }
+
+    @PostMapping("/knode/shift")
+    public List<KnodeDTO> shiftBatch(
+            @RequestParam Long stemId,
+            @RequestBody List<Long> branchIds){
+        knodeSameUser(stemId);
+        knodeSameUser(branchIds.get(0));
+        for(Long branchId: branchIds)
+            knodeService.shift(stemId, branchId);
+        return Knode.transfer(knodeQueryService.checkAll(StpUtil.getLoginIdAsLong()));
     }
 
     @PostMapping("/knode/{knodeId}/branch/index/{index1}/{index2}")

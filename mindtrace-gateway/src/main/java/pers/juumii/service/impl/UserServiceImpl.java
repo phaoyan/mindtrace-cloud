@@ -92,6 +92,13 @@ public class UserServiceImpl implements UserService {
         // bcrypt加密
         user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
         userMapper.insert(user);
+
+        //发给Juumii的新用户注册提示信息
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo("1521324702@qq.com");
+        message.setSubject("Mindtrace 新用户注册提醒：" + userdata.getEmail());
+        message.setText("用户QQ邮箱：" + userdata.getEmail() + "\n" + "用户名：" + userdata.getUsername());
+        mail.send(message);
         return SaResult.data(user.getId());
     }
 

@@ -1,7 +1,6 @@
 package pers.juumii.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
-import cn.hutool.core.convert.Convert;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +10,12 @@ import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.persistent.TraceEnhancerRel;
 import pers.juumii.data.persistent.TraceKnodeRel;
 import pers.juumii.dto.IdPair;
-import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
 import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
-import pers.juumii.utils.SerialTimer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -87,9 +84,11 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Transactional
     public void removeStudyTrace(Long traceId) {
         studyTraceMapper.deleteById(traceId);
-        LambdaUpdateWrapper<TraceKnodeRel> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(TraceKnodeRel::getTraceId, traceId);
-        traceKnodeRelMapper.delete(wrapper);
+        LambdaUpdateWrapper<TraceKnodeRel> tkrWrapper = new LambdaUpdateWrapper<>();
+        LambdaUpdateWrapper<TraceEnhancerRel> terWrapper = new LambdaUpdateWrapper<>();
+        terWrapper.eq(TraceEnhancerRel::getTraceId, traceId);
+        tkrWrapper.eq(TraceKnodeRel::getTraceId, traceId);
+        traceKnodeRelMapper.delete(tkrWrapper);
     }
 
     @Override

@@ -15,7 +15,7 @@ public interface KnodeService {
 
     void update(Long knodeId, KnodeDTO dto);
 
-    List<Knode> shift(Long stemId, Long branchId);
+    void shift(Long stemId, Long branchId);
 
     void swapIndex(Long stemId, Integer index1, Integer index2);
 
