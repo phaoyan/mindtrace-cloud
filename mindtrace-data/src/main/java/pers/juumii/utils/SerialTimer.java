@@ -1,6 +1,8 @@
 package pers.juumii.utils;
 
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Timer;
 import java.util.function.Function;
@@ -12,6 +14,7 @@ public class SerialTimer {
     private Long curMilli;
     private Long counter;
     private String info;
+    private Logger logger;
 
     public void start(){
         setCurMilli(System.currentTimeMillis());
@@ -27,22 +30,24 @@ public class SerialTimer {
     }
 
     public void logAndRestart(){
-        System.out.println(info + "T" + counter + " --- " + restart());
+        logger.info(info + "T" + counter + " --- " + restart());
     }
 
-    public static SerialTimer timer(){
+    public static SerialTimer timer(Logger logger){
         SerialTimer res = new SerialTimer();
         res.setCounter(0L);
         res.setInfo("    ");
+        res.setLogger(logger);
         res.start();
         return res;
     }
 
-    public static <R> R timerWrapping(Supplier<R> func, String info){
-        SerialTimer timer = timer();
-        timer.setInfo(info);
-        R res = func.get();
-        timer.logAndRestart();
+    public static SerialTimer timer(Logger logger, String info){
+        SerialTimer res = new SerialTimer();
+        res.setCounter(0L);
+        res.setInfo(info);
+        res.setLogger(logger);
+        res.start();
         return res;
     }
 }

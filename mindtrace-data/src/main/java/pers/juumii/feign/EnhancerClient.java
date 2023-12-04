@@ -75,4 +75,6 @@ public interface EnhancerClient {
     ResourceDTO getResourceById(@PathVariable Long resourceId);
     @DeleteMapping("/enhancer/resource/{resourceId}")
     void removeResourceById(@PathVariable Long resourceId);
+    @GetMapping("/enhancer/resource/{resourceId}/data/{dataName}/url")
+    String getCosResourceUrl(@PathVariable Long resourceId, @PathVariable String dataName);
 }

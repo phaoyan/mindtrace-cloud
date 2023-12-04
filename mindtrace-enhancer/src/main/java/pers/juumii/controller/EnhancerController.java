@@ -92,8 +92,7 @@ public class EnhancerController {
     }
 
     @GetMapping("/knode/{knodeId}/enhancer")
-    public List<EnhancerDTO> getEnhancersFromKnode(
-            @PathVariable Long knodeId){
+    public List<EnhancerDTO> getEnhancersFromKnode(@PathVariable Long knodeId){
         return Enhancer.transfer(enhancerService.getEnhancersFromKnode(knodeId));
     }
 

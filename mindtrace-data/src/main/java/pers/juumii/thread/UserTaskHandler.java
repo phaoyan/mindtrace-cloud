@@ -1,7 +1,5 @@
 package pers.juumii.thread;
 
-import pers.juumii.utils.SerialTimer;
-
 import java.util.concurrent.BlockingQueue;
 
 public class UserTaskHandler implements Runnable {
@@ -22,10 +20,7 @@ public class UserTaskHandler implements Runnable {
         while (state){
             try{
                 Runnable task = queue.take();
-                SerialTimer timer = SerialTimer.timer();
                 task.run();
-                timer.setInfo("User Task: " + task);
-                timer.logAndRestart();
             }catch (Throwable e){
                 e.printStackTrace();
             }

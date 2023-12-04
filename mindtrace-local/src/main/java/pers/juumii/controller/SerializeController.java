@@ -29,6 +29,11 @@ public class SerializeController {
         return serializeService.serializeAll(knodeId);
     }
 
+    @GetMapping("/knode/{knodeId}/content")
+    public ResponseEntity<byte[]> serializeContent(@PathVariable Long knodeId){
+        return serializeService.serializeContentsToMarkdown(knodeId);
+    }
+
 
 
 }

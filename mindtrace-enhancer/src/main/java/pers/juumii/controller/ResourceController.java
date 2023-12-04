@@ -3,6 +3,7 @@ package pers.juumii.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.IoUtil;
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,6 +30,10 @@ public class ResourceController {
     private final ResourceService resourceService;
     private final EnhancerService enhancerService;
     private final AuthUtils authUtils;
+    @NacosValue(value = "${tencent.cos.bucket.name}", autoRefreshed = true)
+    private String COS_BUCKET_NAME;
+    @NacosValue(value = "${tencent.cos.region}", autoRefreshed = true)
+    private String COS_REGION;
 
     @Autowired
     public ResourceController(
@@ -111,6 +116,14 @@ public class ResourceController {
                 .body(resourceService.getDataFromResource( resourceId, dataName));
     }
 
+    @GetMapping("/resource/{resourceId}/data/{dataName}/url")
+    public String getCosResourceUrl(
+            @PathVariable Long resourceId,
+            @PathVariable String dataName){
+        Resource resource = resourceService.getResource(resourceId);
+        return "https://" + COS_BUCKET_NAME + ".cos." + COS_REGION + ".myqcloud.com/" + resource.getCreateBy() + "/" + resourceId + "/" + dataName;
+    }
+
     @PutMapping("/resource/{resourceId}/data")
     public void addDataToResource(
             @PathVariable Long resourceId,
@@ -120,12 +133,13 @@ public class ResourceController {
     }
 
     @PostMapping("/resource/{resourceId}/data/{dataName}/file")
-    public void addDataToResource(
+    public String addDataToResource(
             @PathVariable Long resourceId,
             @PathVariable String dataName,
             @RequestParam MultipartFile file) throws IOException {
         resourceSameUser(resourceId);
         resourceService.addDataToResource(resourceId, dataName, IoUtil.readBytes(file.getInputStream()));
+        return "https://" + COS_BUCKET_NAME + ".cos." + COS_REGION + ".myqcloud.com/" + StpUtil.getLoginIdAsLong() + "/" + resourceId + "/" + dataName;
     }
 
     @PostMapping("/resource/{resourceId}/data/{dataName}")

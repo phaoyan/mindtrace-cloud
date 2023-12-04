@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 /**
  * [Sa-Token 权限认证] 全局配置类
  */
@@ -50,11 +53,21 @@ public class SaTokenConfigure implements WebFluxConfigurer {
                     SaRequest request = SaHolder.getRequest();
                     // 处理预检请求
                     if(SaHolder.getRequest().getMethod().equals("OPTIONS")){
-                        SaHolder.getResponse()
-                                .addHeader("Access-Control-Allow-Credentials","true")
-                                .addHeader("Access-Control-Allow-Origin","http://"+System.getenv("LOCAL_HOST"))
-                                .addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                                .addHeader("Access-Control-Allow-Headers","Content-Type,Authorization,x-requested-with");
+                        try {
+                            URL url = new URL(request.getUrl());
+                            SaHolder.getResponse()
+                                    .addHeader("Access-Control-Allow-Credentials","true")
+                                    .addHeader("Access-Control-Allow-Origin",
+                                            url.getHost().equals("localhost") ?
+                                            "http://"+System.getenv("LOCAL_HOST") :
+                                            "http://"+System.getenv("SERVER_HOST"))
+                                    .addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+                                    .addHeader("Access-Control-Allow-Headers","Content-Type,Authorization,x-requested-with");
+
+                        } catch (MalformedURLException ex) {
+                            ex.printStackTrace();
+                        }
+
                         return SaResult.ok();
                     }
 

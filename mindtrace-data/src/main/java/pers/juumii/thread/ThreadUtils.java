@@ -39,4 +39,8 @@ public class ThreadUtils {
         });
     }
 
+    public ThreadPoolTaskExecutor getGlobalExecutor(){
+        return globalExecutor;
+    }
+
 }
