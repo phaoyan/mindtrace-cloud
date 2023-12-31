@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.Milestone;
 import pers.juumii.data.persistent.MilestoneResourceRel;
 import pers.juumii.data.persistent.MilestoneTraceRel;
+import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.feign.CoreClient;
@@ -17,8 +18,10 @@ import pers.juumii.mapper.MilestoneMapper;
 import pers.juumii.mapper.MilestoneResourceRelMapper;
 import pers.juumii.mapper.MilestoneTraceRelMapper;
 import pers.juumii.service.MilestoneService;
+import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.TimeUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -156,5 +159,27 @@ public class MilestoneServiceImpl implements MilestoneService {
         LambdaQueryWrapper<MilestoneTraceRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(MilestoneTraceRel::getTraceId, traceId);
         return mtrMapper.selectList(wrapper);
+    }
+
+    @Override
+    public void copyMilestoneAsEnhancerToKnode(Long milestoneId, Long knodeId) {
+        List<ResourceDTO> resources = getResourcesFromMilestone(milestoneId);
+        Milestone milestone = getById(milestoneId);
+        EnhancerDTO enhancer = enhancerClient.addEnhancer();
+        Long enhancerId = Convert.toLong(enhancer.getId());
+        enhancerClient.addKnodeEnhancerRel(knodeId, enhancerId);
+        for(ResourceDTO resource: resources)
+            enhancerClient.addEnhancerResourceRel(enhancerId, Convert.toLong(resource.getId()));
+        enhancer.setTitle(milestone.getDescription());
+        enhancerClient.updateEnhancer(enhancerId, enhancer);
+    }
+
+    @Override
+    public List<Long> getTracesInMilestones(List<Long> traceIds) {
+        return traceIds.stream().filter(traceId->{
+            LambdaQueryWrapper<MilestoneTraceRel> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(MilestoneTraceRel::getTraceId, traceId);
+            return mtrMapper.exists(wrapper);
+        }).toList();
     }
 }

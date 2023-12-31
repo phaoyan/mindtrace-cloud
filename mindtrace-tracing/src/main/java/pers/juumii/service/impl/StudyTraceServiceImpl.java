@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.persistent.TraceEnhancerRel;
 import pers.juumii.data.persistent.TraceKnodeRel;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.feign.CoreClient;
+import pers.juumii.mapper.MilestoneTraceRelMapper;
 import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
 import pers.juumii.mapper.TraceKnodeRelMapper;
@@ -153,7 +155,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
-    public List<Long> getKnodeCoveringTraces(Long knodeId) {
+    public List<Long> getStudyTracesOfKnode(Long knodeId) {
         LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TraceKnodeRel::getKnodeId, knodeId);
         return traceKnodeRelMapper.selectList(wrapper)
@@ -243,7 +245,6 @@ public class StudyTraceServiceImpl implements StudyTraceService {
                 .stream()
                 .toList();
     }
-
 
 
     @Override

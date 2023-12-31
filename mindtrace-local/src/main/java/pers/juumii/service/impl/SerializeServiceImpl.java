@@ -153,7 +153,8 @@ public class SerializeServiceImpl implements SerializeService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", "data.md");
+        String title = new String(offsprings.get(0).getTitle().getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
+        headers.setContentDispositionFormData("attachment", title + ".md");
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(markdown.getBytes(StandardCharsets.UTF_8));
@@ -184,7 +185,7 @@ public class SerializeServiceImpl implements SerializeService {
             List<ResourceDTO> resources = enhancerClient.getResourcesOfEnhancer(Convert.toLong(enhancer.getId()));
             for(int i = 0; i < resources.size(); i ++)
                 res.append(markdownBuilder.buildResourceContent(resources.get(i)))
-                    .append(i == resources.size() - 1 ? "\n" : "\n --- \n");
+                    .append(i == resources.size() - 1 ? "\n\n" : "\n");
         }
         return res.toString();
     }
@@ -203,11 +204,13 @@ public class SerializeServiceImpl implements SerializeService {
             KnodeDTO top = stack.pop();
             visited.add(top);
             res.add(top);
-            for(String knodeId: top.getBranchIds()){
-                KnodeDTO br = idMap.get(knodeId);
-                if(!visited.contains(br))
-                    stack.push(br);
-            }
+            for(KnodeDTO br:
+                    top.getBranchIds().stream()
+                    .map(idMap::get)
+                    .sorted(Comparator.comparingInt(knode->-knode.getIndex()))
+                    .filter(br->!visited.contains(br))
+                    .toList())
+                stack.push(br);
         }
 
         return res;

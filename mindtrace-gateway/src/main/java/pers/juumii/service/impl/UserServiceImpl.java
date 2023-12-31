@@ -1,5 +1,6 @@
 package pers.juumii.service.impl;
 
+import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.util.SaResult;
 import cn.hutool.core.convert.Convert;
@@ -93,12 +94,15 @@ public class UserServiceImpl implements UserService {
         user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
         userMapper.insert(user);
 
-        //发给Juumii的新用户注册提示信息
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo("1521324702@qq.com");
-        message.setSubject("Mindtrace 新用户注册提醒：" + userdata.getEmail());
-        message.setText("用户QQ邮箱：" + userdata.getEmail() + "\n" + "用户名：" + userdata.getUsername());
-        mail.send(message);
+        try{
+            //发给Juumii的新用户注册提示信息
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo("1521324702@qq.com");
+            message.setSubject("Mindtrace 新用户注册提醒：" + userdata.getEmail());
+            message.setText("用户QQ邮箱：" + userdata.getEmail() + "\n" + "用户名：" + userdata.getUsername());
+            mail.send(message);
+        }catch (Exception ignored){}
+
         return SaResult.data(user.getId());
     }
 
@@ -116,7 +120,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUserInfo(String username) {
-        if(username == null) return check(StpUtil.getLoginIdAsLong());
+        if(username == null){
+            try {
+                return check(StpUtil.getLoginIdAsLong());
+            }catch (NotLoginException e){
+                return null;
+            }
+        }
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
         return userMapper.selectOne(wrapper);

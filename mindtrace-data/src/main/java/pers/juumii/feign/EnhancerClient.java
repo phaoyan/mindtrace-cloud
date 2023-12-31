@@ -35,6 +35,8 @@ public interface EnhancerClient {
     ResourceDTO getResourceMetadata(@PathVariable Long resourceId);
     @GetMapping("/enhancer/resource/{resourceId}/data")
     Map<String, byte[]> getDataFromResource(@PathVariable Long resourceId);
+    @GetMapping("/enhancer/resource/{resourceId}/data/{dataName}")
+    byte[] getDataFromResource(@PathVariable Long resourceId, @PathVariable String dataName);
     @PostMapping("/enhancer/batch/resource/data")
     List<Map<String, byte[]>> getDataFromResourceBatch(@RequestBody List<Long> resourceIds);
     @PutMapping("/enhancer/resource/{resourceId}/data")

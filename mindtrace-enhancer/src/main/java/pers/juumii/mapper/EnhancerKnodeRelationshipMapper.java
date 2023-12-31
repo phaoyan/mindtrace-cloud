@@ -29,4 +29,12 @@ public interface EnhancerKnodeRelationshipMapper extends BaseMapper<EnhancerKnod
         wrapper.eq(EnhancerKnodeRel::getKnodeId, knodeId);
         return selectList(wrapper);
     }
+
+    default void updateIndex(Long knodeId, Long enhancerId, Integer index){
+        LambdaUpdateWrapper<EnhancerKnodeRel> wrapper = new LambdaUpdateWrapper<>();
+        wrapper
+                .eq(EnhancerKnodeRel::getKnodeId, knodeId)
+                .eq(EnhancerKnodeRel::getEnhancerId, enhancerId);
+        update(EnhancerKnodeRel.prototype(knodeId, enhancerId, index), wrapper);
+    }
 }

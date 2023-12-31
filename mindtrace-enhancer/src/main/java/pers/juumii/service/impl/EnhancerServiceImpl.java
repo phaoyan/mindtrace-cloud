@@ -6,7 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -23,14 +23,13 @@ import pers.juumii.mapper.EnhancerMapper;
 import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
-import pers.juumii.thread.ThreadUtils;
 import pers.juumii.utils.DataUtils;
-import pers.juumii.utils.SerialTimer;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -67,7 +66,11 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     public List<Enhancer> getEnhancersFromKnode(Long knodeId) {
-        return enhancerMapper.queryByKnodeId(knodeId);
+        return
+                ekrMapper.getByKnodeId(knodeId).stream()
+                .sorted(Comparator.comparingInt(EnhancerKnodeRel::getEnhancerIndex))
+                .map(rel->enhancerMapper.selectById(rel.getEnhancerId()))
+                .toList();
     }
 
     public List<Enhancer> getEnhancersFromKnodeBatch(List<Long> knodeIds){
@@ -136,6 +139,35 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     @Transactional
+    public void setEnhancerIndexInKnode(Long knodeId, Long enhancerId, Integer index) {
+        if(index < 0)
+            throw new RuntimeException("Wrong Index : " + index);
+        correctEnhancerIndexInKnode(knodeId);
+        List<EnhancerKnodeRel> rels = ekrMapper.getByKnodeId(knodeId);
+        int oriIndex = -1;
+        for(EnhancerKnodeRel rel: rels)
+            if(rel.getEnhancerId().equals(enhancerId))
+                oriIndex = rel.getEnhancerIndex();
+        for(EnhancerKnodeRel rel: rels){
+            if(rel.getEnhancerIndex().equals(oriIndex))
+                ekrMapper.updateIndex(rel.getKnodeId(), rel.getEnhancerId(), index);
+            else if(rel.getEnhancerIndex().equals(index))
+                ekrMapper.updateIndex(rel.getKnodeId(), rel.getEnhancerId(), oriIndex);
+        }
+    }
+
+    private void correctEnhancerIndexInKnode(Long knodeId) {
+        List<EnhancerKnodeRel> rels = ekrMapper.getByKnodeId(knodeId);
+        rels.sort(Comparator.comparingInt(EnhancerKnodeRel::getEnhancerIndex));
+        for(int i = 1; i < rels.size(); i ++){
+            EnhancerKnodeRel cur = rels.get(i);
+            cur.setEnhancerIndex(i);
+            ekrMapper.updateIndex(knodeId, cur.getEnhancerId(), i);
+        }
+    }
+
+    @Override
+    @Transactional
     public Enhancer addEnhancerToUser(Long userId) {
         Enhancer enhancer = Enhancer.prototype(userId);
         enhancerMapper.insert(enhancer);
@@ -188,7 +220,7 @@ public class EnhancerServiceImpl implements EnhancerService {
         List<Long> knodeIds =
                 ekrMapper.getByEnhancerId(enhancerId).stream()
                 .map(EnhancerKnodeRel::getKnodeId).toList();
-        knodeIds.forEach(knodeId->ekrMapper.deleteRelationship(enhancerId, knodeId));
+        knodeIds.forEach(knodeId-> ekrMapper.deleteRelationship(enhancerId, knodeId));
         mqClient.emit(MessageEvents.REMOVE_ENHANCER, enhancerId.toString());
     }
 
@@ -198,6 +230,8 @@ public class EnhancerServiceImpl implements EnhancerService {
         EnhancerKnodeRel relationship = new EnhancerKnodeRel();
         relationship.setEnhancerId(enhancerId);
         relationship.setKnodeId(knodeId);
+        relationship.setEnhancerIndex(getEnhancersFromKnode(knodeId).size());
+        relationship.setDeleted(false);
         ekrMapper.insert(relationship);
     }
 

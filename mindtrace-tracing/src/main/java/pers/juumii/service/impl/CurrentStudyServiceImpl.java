@@ -3,14 +3,16 @@ package pers.juumii.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.temp.CurrentStudy;
 import pers.juumii.dto.tracing.CurrentStudyDTO;
+import pers.juumii.mapper.MilestoneTraceRelMapper;
 import pers.juumii.service.CurrentStudyService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.service.TraceEnhancerRelService;
@@ -25,15 +27,18 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     private final StringRedisTemplate redis;
     private final StudyTraceService studyTraceService;
     private final TraceEnhancerRelService traceEnhancerRelService;
+    private final MilestoneTraceRelMapper milestoneTraceRelMapper;
 
     @Autowired
     public CurrentStudyServiceImpl(
             StringRedisTemplate redis,
             StudyTraceService studyTraceService,
-            TraceEnhancerRelService traceEnhancerRelService) {
+            TraceEnhancerRelService traceEnhancerRelService,
+            MilestoneTraceRelMapper milestoneTraceRelMapper) {
         this.redis = redis;
         this.studyTraceService = studyTraceService;
         this.traceEnhancerRelService = traceEnhancerRelService;
+        this.milestoneTraceRelMapper = milestoneTraceRelMapper;
     }
 
     private String key(){
@@ -121,6 +126,9 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         currentStudy.setKnodeIds(traceKnodeIds);
         currentStudy.setEnhancerIds(traceEnhancerIds);
         studyTraceService.removeStudyTrace(trace.getId());
+        LambdaUpdateWrapper<MilestoneTraceRel> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(MilestoneTraceRel::getTraceId, traceId);
+        milestoneTraceRelMapper.delete(wrapper);
         currentStudy.getTrace().setId(IdUtil.getSnowflakeNextId());
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;

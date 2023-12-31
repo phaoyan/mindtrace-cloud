@@ -6,7 +6,6 @@ import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.dto.ResourceDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public interface MilestoneService {
@@ -38,4 +37,8 @@ public interface MilestoneService {
     List<MilestoneTraceRel> getStudyTraces(Long milestoneId);
 
     List<MilestoneTraceRel> getMilestones(Long traceId);
+
+    void copyMilestoneAsEnhancerToKnode(Long milestoneId, Long knodeId);
+
+    List<Long> getTracesInMilestones(List<Long> traceIds);
 }

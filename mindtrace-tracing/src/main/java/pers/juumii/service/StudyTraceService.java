@@ -40,7 +40,7 @@ public interface StudyTraceService {
 
     Boolean checkTraceKnodeRel(Long traceId, Long knodeId);
 
-    List<Long> getKnodeCoveringTraces(Long knodeId);
+    List<Long> getStudyTracesOfKnode(Long knodeId);
 
     void removeTraceCoverage(Long traceId, Long knodeId);
 
@@ -63,5 +63,7 @@ public interface StudyTraceService {
     void removeTraceKnodeRel(Long id);
 
     List<Long> getTracedEnhancerIdsFromList(List<Long> enhancerIds);
+
     List<Long> getTracedKnodeIdsFromList(List<Long> knodeIds);
+
 }

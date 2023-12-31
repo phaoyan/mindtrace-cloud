@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.persistent.Milestone;
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.dto.tracing.MilestoneDTO;
@@ -17,6 +16,7 @@ import pers.juumii.utils.AuthUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 public class MilestoneController {
@@ -126,14 +126,24 @@ public class MilestoneController {
             @RequestParam(required = false) Long traceId){
         if(milestoneId != null)
             return milestoneService.getStudyTraces(milestoneId).stream()
-                .map((rel)->StudyTrace.transfer(studyTraceService.getStudyTrace(rel.getTraceId())))
+                .map(rel->studyTraceService.getStudyTrace(rel.getTraceId()))
+                .filter(Objects::nonNull)
+                .map(StudyTrace::transfer)
                 .toList();
         else if(traceId != null)
             return milestoneService.getMilestones(traceId).stream()
-                .map((rel)->Milestone.transfer(milestoneService.getById(rel.getMilestoneId())))
+                .map(rel->milestoneService.getById(rel.getMilestoneId()))
+                .filter(Objects::nonNull)
+                .map(Milestone::transfer)
                 .toList();
         else return new ArrayList<>();
     }
+
+    @PostMapping("/batch/exist/rel/milestone/trace")
+    public List<String> getTracesInMilestones(@RequestBody List<Long> traceIds){
+        return milestoneService.getTracesInMilestones(traceIds).stream().map(Convert::toStr).toList();
+    }
+
 
     @PutMapping("/rel/milestone/trace")
     public void addMilestoneTraceRel(@RequestParam Long milestoneId, @RequestParam Long traceId){
@@ -147,5 +157,13 @@ public class MilestoneController {
         milestoneSameUser(milestoneId);
         traceSameUser(traceId);
         milestoneService.removeStudyTrace(milestoneId, traceId);
+    }
+
+
+    @PostMapping("/milestone/copy")
+    public void copyMilestoneAsEnhancerToKnode(@RequestParam Long milestoneId, @RequestParam Long knodeId){
+        milestoneSameUser(milestoneId);
+        knodeSameUser(knodeId);
+        milestoneService.copyMilestoneAsEnhancerToKnode(milestoneId, knodeId);
     }
 }

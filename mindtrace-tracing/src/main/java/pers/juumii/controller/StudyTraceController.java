@@ -73,9 +73,7 @@ public class StudyTraceController {
     }
 
     @GetMapping("/study/knode/{knodeId}/trace")
-    public List<StudyTraceDTO> getStudyTracesOfKnode(
-            @PathVariable Long knodeId,
-            @RequestParam(required = false) Long userId){
+    public List<StudyTraceDTO> getStudyTracesOfKnode(@PathVariable Long knodeId){
         return StudyTrace.transfer(studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId));
     }
 

@@ -52,15 +52,37 @@ public class MarkdownBuilder {
             case ResourceTypes.CLOZE    -> buildFromClozeType(resource);
             case ResourceTypes.LINKOUT  -> buildFromLinkoutType(resource);
             case ResourceTypes.MINDTRACE_HUB_RESOURCE -> buildFromHubType(resource);
+            case ResourceTypes.AUDIO -> buildFromAudioType(resource);
             default -> "Resource Type not Supported -> " + resource.getType();
         };
     }
 
+    private String buildFromAudioType(ResourceDTO resource) {
+        try {
+            byte[] info = enhancerClient.getDataFromResource(Convert.toLong(resource.getId()), "data.json");
+            String remark = JSONUtil.parseObj(StrUtil.str(info, StandardCharsets.UTF_8)).getStr("remark");
+            return """
+                > [%s](%s)"""
+                    .formatted(remark, enhancerClient.getCosResourceUrl(Convert.toLong(resource.getId()), "audio"));
+        }catch (Exception e){
+            return """
+                > [%s](%s)"""
+                    .formatted("音频资源", enhancerClient.getCosResourceUrl(Convert.toLong(resource.getId()), "audio"));
+        }
+    }
+
     private String buildFromHubType(ResourceDTO resource) {
-        return """
-                [%s](%s)
-                """
-                .formatted("云端资源", enhancerClient.getCosResourceUrl(Convert.toLong(resource.getId()), "data"));
+        try {
+            byte[] info = enhancerClient.getDataFromResource(Convert.toLong(resource.getId()), "data.json");
+            String remark = JSONUtil.parseObj(StrUtil.str(info, StandardCharsets.UTF_8)).getStr("remark");
+            return """
+                > [%s](%s)"""
+                    .formatted(remark, enhancerClient.getCosResourceUrl(Convert.toLong(resource.getId()), "data"));
+        }catch (Exception e){
+            return """
+                > [%s](%s)"""
+                    .formatted("云端资源", enhancerClient.getCosResourceUrl(Convert.toLong(resource.getId()), "data"));
+        }
     }
 
     private String buildFromLinkoutType(ResourceDTO resource) {
@@ -69,15 +91,18 @@ public class MarkdownBuilder {
         String url = data.getStr("url");
         String remark = data.getStr("remark");
         return """
-                [%s](%s)
-                """
+                > [%s](%s)"""
                 .formatted(
                     remark == null ? "" : remark,
                     url    == null ? "" : url);
     }
 
     private String buildFromClozeType(ResourceDTO resource) {
-        return null;
+        byte[] data = enhancerClient.getDataFromResource(Convert.toLong(resource.getId()), "raw.md");
+        return """
+                > %s"""
+                .formatted(StrUtil.str(data, StandardCharsets.UTF_8))
+                .replaceAll("\n","\n>");
     }
 
     private String buildFromQuizcardType(ResourceDTO resource) {
@@ -90,8 +115,7 @@ public class MarkdownBuilder {
                 %s
                 
                 Back:
-                %s
-                """
+                %s"""
                 .formatted(
                     front == null ? "": front,
                     back  == null ? "": back)

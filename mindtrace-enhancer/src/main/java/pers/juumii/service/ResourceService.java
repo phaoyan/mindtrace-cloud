@@ -38,4 +38,5 @@ public interface ResourceService {
 
     void editCreateTime(Long resourceId, String createTime);
 
+    void setResourceIndexInEnhancer(Long enhancerId, Long resourceId, Integer index);
 }

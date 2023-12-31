@@ -3,6 +3,7 @@ package pers.juumii.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.map.MapUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -75,7 +76,7 @@ public class ResourceServiceImpl implements ResourceService {
             dto.setCreateBy(StpUtil.getLoginIdAsString());
         Resource resource = Resource.prototype(dto);
         resourceMapper.insert(resource);
-        errMapper.insert(EnhancerResourceRel.prototype(enhancerId, resource.getId()));
+        errMapper.insert(EnhancerResourceRel.prototype(enhancerId, resource.getId(), getResourcesOfEnhancer(enhancerId).size()));
         return resource;
     }
 
@@ -143,9 +144,11 @@ public class ResourceServiceImpl implements ResourceService {
     public List<Resource> getResourcesOfEnhancer(Long enhancerId) {
         List<Long> resourceIds =
                 errMapper.selectByEnhancerId(enhancerId).stream()
+                .sorted(Comparator.comparingInt(EnhancerResourceRel::getResourceIndex))
                 .map(EnhancerResourceRel::getResourceId).toList();
-        if(resourceIds.isEmpty()) return new ArrayList<>();
-        return resourceMapper.selectBatchIds(resourceIds);
+        return resourceIds.isEmpty() ?
+                new ArrayList<>() :
+                resourceMapper.selectBatchIds(resourceIds);
     }
 
     @Override
@@ -196,6 +199,38 @@ public class ResourceServiceImpl implements ResourceService {
         Resource resource = resourceMapper.selectById(resourceId);
         resource.setCreateTime(TimeUtils.parse(createTime));
         resourceMapper.updateById(resource);
+    }
+
+    @Override
+    @Transactional
+    public void setResourceIndexInEnhancer(Long enhancerId, Long resourceId, Integer index) {
+        if(index < 0)
+            throw new RuntimeException("Wrong Index : " + index);
+        correctResourceIndexInEnhancer(enhancerId);
+        LambdaQueryWrapper<EnhancerResourceRel> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper
+                .eq(EnhancerResourceRel::getEnhancerId, enhancerId)
+                .eq(EnhancerResourceRel::getResourceId, resourceId);
+        EnhancerResourceRel rel = errMapper.selectOne(queryWrapper);
+        LambdaUpdateWrapper<EnhancerResourceRel> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper
+                .eq(EnhancerResourceRel::getEnhancerId, enhancerId)
+                .eq(EnhancerResourceRel::getResourceId, resourceId);
+        errMapper.update(rel, updateWrapper);
+    }
+
+    public void correctResourceIndexInEnhancer(Long enhancerId){
+        List<EnhancerResourceRel> rels = errMapper.selectByEnhancerId(enhancerId);
+        rels.sort(Comparator.comparingInt(EnhancerResourceRel::getResourceIndex));
+        for(int i = 1; i < rels.size(); i ++){
+            EnhancerResourceRel cur = rels.get(i);
+            cur.setResourceIndex(i);
+            LambdaUpdateWrapper<EnhancerResourceRel> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper
+                    .eq(EnhancerResourceRel::getResourceId, cur.getResourceId())
+                    .eq(EnhancerResourceRel::getEnhancerId, cur.getEnhancerId());
+            errMapper.update(cur, updateWrapper);
+        }
     }
 
     @Override

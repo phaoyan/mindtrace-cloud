@@ -110,7 +110,7 @@ public class ResourceController {
             @RequestParam String fileName) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", fileName);
+        headers.setContentDispositionFormData("attachment", new String(fileName.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1));
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(resourceService.getDataFromResource( resourceId, dataName));
@@ -185,6 +185,16 @@ public class ResourceController {
         resourceSameUser(resourceId);
         enhancerSameUser(enhancerId);
         resourceService.connectResourceToEnhancer(enhancerId, resourceId);
+    }
+
+    @PostMapping("/rel/enhancer/resource/index")
+    public void setResourceIndexInEnhancer(
+            @RequestParam Long enhancerId,
+            @RequestParam Long resourceId,
+            @RequestParam Integer index){
+        enhancerSameUser(enhancerId);
+        resourceSameUser(resourceId);
+        resourceService.setResourceIndexInEnhancer(enhancerId, resourceId, index);
     }
 
 }

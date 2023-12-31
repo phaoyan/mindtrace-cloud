@@ -1,6 +1,5 @@
 package pers.juumii.service;
 
-import cn.dev33.satoken.util.SaResult;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Enhancer;
 import pers.juumii.dto.EnhancerDTO;
@@ -52,4 +51,6 @@ public interface EnhancerService {
     List<Enhancer> getEnhancersByDateBeneathKnode(Long knodeId, String left, String right);
 
     List<Long> getKnodeIdsWithQuiz(Long rootId);
+
+    void setEnhancerIndexInKnode(Long knodeId, Long enhancerId, Integer index);
 }

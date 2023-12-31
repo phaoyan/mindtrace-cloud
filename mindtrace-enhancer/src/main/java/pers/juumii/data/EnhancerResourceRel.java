@@ -10,13 +10,18 @@ public class EnhancerResourceRel {
 
     private Long enhancerId;
     private Long resourceId;
+    private Integer resourceIndex;
     @TableLogic
     private Boolean deleted;
 
-    public static EnhancerResourceRel prototype(Long enhancerId, Long resourceId){
+    public static EnhancerResourceRel prototype(
+            Long enhancerId,
+            Long resourceId,
+            Integer resourceIndex){
         EnhancerResourceRel res = new EnhancerResourceRel();
         res.setEnhancerId(enhancerId);
         res.setResourceId(resourceId);
+        res.setResourceIndex(resourceIndex);
         res.setDeleted(false);
         return res;
     }

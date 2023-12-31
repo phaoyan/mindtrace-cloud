@@ -25,29 +25,29 @@ public class SaTokenConfigure implements WebFluxConfigurer {
     @Bean
     public SaReactorFilter getSaReactorFilter() {
         return new SaReactorFilter()
-                // 指定 [拦截路由]
-                .addInclude("/**")    /* 拦截所有path */
-                // 指定 [放行路由]
-                .addExclude("/favicon.ico")
-                // 指定[认证函数]: 每次请求执行
-                .setAuth(obj ->{
-                    SaRouter.match("/**")
-                        .notMatch("/user/login")
-                        .notMatch("/user/register/**")
-                        .notMatch("/hub/resource/**")
-                        .check(()->{
-                            String adminPass = SaHolder.getRequest().getHeader("admin-pass");
-                            if(adminPass == null || !adminPass.equals(System.getenv("MINDTRACE_SECRET")))
-                                StpUtil.checkLogin();
-                        });
-                    SaRouter.match("/hub/resource/**")
-                            .notMatchMethod(String.valueOf(SaHttpMethod.GET))
-                            .check(()->{
-                                String adminPass = SaHolder.getRequest().getHeader("admin-pass");
-                                if(adminPass == null || !adminPass.equals(System.getenv("MINDTRACE_SECRET")))
-                                    StpUtil.checkLogin();
-                            });
-                    })
+//                // 指定 [拦截路由]
+//                .addInclude("/**")    /* 拦截所有path */
+//                // 指定 [放行路由]
+//                .addExclude("/favicon.ico")
+//                // 指定[认证函数]: 每次请求执行
+//                .setAuth(obj ->{
+//                    SaRouter.match("/**")
+//                        .notMatch("/user/login")
+//                        .notMatch("/user/register/**")
+//                        .notMatch("/hub/resource/**")
+//                        .check(()->{
+//                            String adminPass = SaHolder.getRequest().getHeader("admin-pass");
+//                            if(adminPass == null || !adminPass.equals(System.getenv("MINDTRACE_SECRET")))
+//                                StpUtil.checkLogin();
+//                        });
+//                    SaRouter.match("/hub/resource/**")
+//                            .notMatchMethod(String.valueOf(SaHttpMethod.GET))
+//                            .check(()->{
+//                                String adminPass = SaHolder.getRequest().getHeader("admin-pass");
+//                                if(adminPass == null || !adminPass.equals(System.getenv("MINDTRACE_SECRET")))
+//                                    StpUtil.checkLogin();
+//                            });
+//                    })
                 // 指定[异常处理函数]：每次[认证函数]发生异常时执行此函数
                 .setError(e -> {
                     SaRequest request = SaHolder.getRequest();

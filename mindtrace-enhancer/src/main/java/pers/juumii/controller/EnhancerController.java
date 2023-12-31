@@ -166,4 +166,15 @@ public class EnhancerController {
         enhancerService.connectEnhancerToKnode(knodeId, enhancerId);
     }
 
+    @PostMapping("/rel/knode/enhancer/index")
+    void setEnhancerIndexInKnode(
+            @RequestParam Long knodeId,
+            @RequestParam Long enhancerId,
+            @RequestParam Integer index){
+        knodeSameUser(knodeId);
+        enhancerSameUser(enhancerId);
+        enhancerService.setEnhancerIndexInKnode(knodeId, enhancerId, index);
+    }
+
+
 }
