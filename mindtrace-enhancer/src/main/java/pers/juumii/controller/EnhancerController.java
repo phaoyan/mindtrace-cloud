@@ -96,6 +96,11 @@ public class EnhancerController {
         return Enhancer.transfer(enhancerService.getEnhancersFromKnode(knodeId));
     }
 
+    @GetMapping("/enhancer/resource/{resourceId}")
+    public EnhancerDTO getEnhancerByResourceId(@PathVariable Long resourceId){
+        return Enhancer.transfer(enhancerService.getEnhancerByResourceId(resourceId));
+    }
+
     @PostMapping("/batch/knode/enhancer")
     public List<EnhancerDTO> getEnhancerFromKnodeBatch(@RequestBody List<Long> knodeIds){
         return Enhancer.transfer(enhancerService.getEnhancersFromKnodeBatch(knodeIds));

@@ -6,13 +6,13 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.Enhancer;
 import pers.juumii.data.EnhancerKnodeRel;
+import pers.juumii.data.EnhancerResourceRel;
 import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
@@ -20,6 +20,7 @@ import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.MqClient;
 import pers.juumii.mapper.EnhancerKnodeRelationshipMapper;
 import pers.juumii.mapper.EnhancerMapper;
+import pers.juumii.mapper.EnhancerResourceRelationshipMapper;
 import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
@@ -37,6 +38,7 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     private final CoreClient coreClient;
     private final EnhancerMapper enhancerMapper;
+    private final EnhancerResourceRelationshipMapper errMapper;
     private final EnhancerKnodeRelationshipMapper ekrMapper;
     private ResourceService resourceService;
     private final MqClient mqClient;
@@ -51,8 +53,9 @@ public class EnhancerServiceImpl implements EnhancerService {
     public EnhancerServiceImpl(
             CoreClient coreClient,
             EnhancerMapper enhancerMapper,
-            EnhancerKnodeRelationshipMapper ekrMapper,
+            EnhancerResourceRelationshipMapper errMapper, EnhancerKnodeRelationshipMapper ekrMapper,
             MqClient mqClient) {
+        this.errMapper = errMapper;
         this.mqClient = mqClient;
         this.coreClient = coreClient;
         this.enhancerMapper = enhancerMapper;
@@ -154,6 +157,14 @@ public class EnhancerServiceImpl implements EnhancerService {
             else if(rel.getEnhancerIndex().equals(index))
                 ekrMapper.updateIndex(rel.getKnodeId(), rel.getEnhancerId(), oriIndex);
         }
+    }
+
+    @Override
+    public Enhancer getEnhancerByResourceId(Long resourceId) {
+        LambdaQueryWrapper<EnhancerResourceRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(EnhancerResourceRel::getResourceId, resourceId);
+        EnhancerResourceRel rel = errMapper.selectOne(wrapper);
+        return getEnhancerById(rel.getEnhancerId());
     }
 
     private void correctEnhancerIndexInKnode(Long knodeId) {

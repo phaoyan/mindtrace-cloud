@@ -53,4 +53,6 @@ public interface EnhancerService {
     List<Long> getKnodeIdsWithQuiz(Long rootId);
 
     void setEnhancerIndexInKnode(Long knodeId, Long enhancerId, Integer index);
+
+    Enhancer getEnhancerByResourceId(Long resourceId);
 }
