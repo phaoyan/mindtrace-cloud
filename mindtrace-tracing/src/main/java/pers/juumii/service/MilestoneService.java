@@ -2,7 +2,7 @@ package pers.juumii.service;
 
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.Milestone;
-import pers.juumii.data.persistent.MilestoneTraceRel;
+import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.ResourceDTO;
 
 import java.util.List;
@@ -34,11 +34,10 @@ public interface MilestoneService {
 
     void removeStudyTrace(Long milestoneId, Long traceId);
 
-    List<MilestoneTraceRel> getStudyTraces(Long milestoneId);
+    List<StudyTrace> getStudyTraces(Long milestoneId);
 
-    List<MilestoneTraceRel> getMilestones(Long traceId);
+    Milestone getMilestone(Long traceId);
 
     void copyMilestoneAsEnhancerToKnode(Long milestoneId, Long knodeId);
 
-    List<Long> getTracesInMilestones(List<Long> traceIds);
 }

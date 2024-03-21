@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.Milestone;
 import pers.juumii.data.persistent.MilestoneResourceRel;
 import pers.juumii.data.persistent.MilestoneTraceRel;
+import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
@@ -17,11 +18,10 @@ import pers.juumii.feign.EnhancerClient;
 import pers.juumii.mapper.MilestoneMapper;
 import pers.juumii.mapper.MilestoneResourceRelMapper;
 import pers.juumii.mapper.MilestoneTraceRelMapper;
+import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.service.MilestoneService;
-import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.TimeUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,7 +31,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     private final EnhancerClient enhancerClient;
     private final MilestoneMapper milestoneMapper;
     private final MilestoneResourceRelMapper mrrMapper;
-    private final MilestoneTraceRelMapper mtrMapper;
+    private final StudyTraceMapper studyTraceMapper;
 
 
     @Autowired
@@ -40,12 +40,12 @@ public class MilestoneServiceImpl implements MilestoneService {
             EnhancerClient enhancerClient,
             MilestoneMapper milestoneMapper,
             MilestoneResourceRelMapper mrrMapper,
-            MilestoneTraceRelMapper mtrMapper) {
+            StudyTraceMapper studyTraceMapper) {
         this.coreClient = coreClient;
         this.enhancerClient = enhancerClient;
         this.milestoneMapper = milestoneMapper;
         this.mrrMapper = mrrMapper;
-        this.mtrMapper = mtrMapper;
+        this.studyTraceMapper = studyTraceMapper;
     }
 
     @Override
@@ -131,34 +131,31 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Override
     @Transactional
     public void addStudyTrace(Long milestoneId, Long traceId) {
-        List<MilestoneTraceRel> studyTraces = getStudyTraces(milestoneId);
-        if(!studyTraces.stream().filter(trace->trace.getTraceId().equals(traceId)).toList().isEmpty())
-            return;
-        MilestoneTraceRel prototype = MilestoneTraceRel.prototype(milestoneId, traceId);
-        mtrMapper.insert(prototype);
+        StudyTrace trace = studyTraceMapper.selectById(traceId);
+        trace.setMilestoneId(milestoneId);
+        studyTraceMapper.updateById(trace);
     }
 
     @Override
     @Transactional
     public void removeStudyTrace(Long milestoneId, Long traceId) {
-        LambdaUpdateWrapper<MilestoneTraceRel> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(MilestoneTraceRel::getMilestoneId, milestoneId)
-                .eq(MilestoneTraceRel::getTraceId, traceId);
-        mtrMapper.delete(wrapper);
+        StudyTrace trace = studyTraceMapper.selectById(traceId);
+        trace.setMilestoneId(null);
+        studyTraceMapper.updateById(trace);
     }
 
     @Override
-    public List<MilestoneTraceRel> getStudyTraces(Long milestoneId) {
-        LambdaQueryWrapper<MilestoneTraceRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MilestoneTraceRel::getMilestoneId, milestoneId);
-        return mtrMapper.selectList(wrapper);
+    public List<StudyTrace> getStudyTraces(Long milestoneId) {
+        LambdaQueryWrapper<StudyTrace> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StudyTrace::getMilestoneId, milestoneId);
+        return studyTraceMapper.selectList(wrapper);
+
     }
 
     @Override
-    public List<MilestoneTraceRel> getMilestones(Long traceId) {
-        LambdaQueryWrapper<MilestoneTraceRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MilestoneTraceRel::getTraceId, traceId);
-        return mtrMapper.selectList(wrapper);
+    public Milestone getMilestone(Long traceId) {
+        StudyTrace trace = studyTraceMapper.selectById(traceId);
+        return milestoneMapper.selectById(trace.getMilestoneId());
     }
 
     @Override
@@ -174,12 +171,4 @@ public class MilestoneServiceImpl implements MilestoneService {
         enhancerClient.updateEnhancer(enhancerId, enhancer);
     }
 
-    @Override
-    public List<Long> getTracesInMilestones(List<Long> traceIds) {
-        return traceIds.stream().filter(traceId->{
-            LambdaQueryWrapper<MilestoneTraceRel> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(MilestoneTraceRel::getTraceId, traceId);
-            return mtrMapper.exists(wrapper);
-        }).toList();
-    }
 }

@@ -54,7 +54,7 @@ public class MqEventRegistration implements ApplicationRunner {
         if(traceIds.isEmpty()) return;
         //将trace和被删除的knode的父节点关联，以避免记录丢失
         Long stemId = Convert.toLong(knode.getStemId());
-        traceIds.forEach(traceId->studyTraceService.addTraceKnodeRel(IdPair.of(traceId, stemId)));
+        traceIds.forEach(traceId->studyTraceService.addTraceKnodeRel(traceId, stemId));
         //删除trace
         tkrMapper.deleteBatchIds(traceIds);
     }

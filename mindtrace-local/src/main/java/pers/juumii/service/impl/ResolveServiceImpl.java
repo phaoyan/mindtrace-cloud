@@ -69,7 +69,7 @@ public class ResolveServiceImpl implements ResolveService {
                     rel->rel.setLeftId(newTrace.getId()));
         }
         for(IdPair traceKnodeRel: traceKnodeRels)
-            tracingClient.addStudyTraceKnodeRel(traceKnodeRel);
+            tracingClient.addStudyTraceKnodeRel(Convert.toLong(traceKnodeRel.getLeftId()), Convert.toLong(traceKnodeRel.getRightId()));
         for(IdPair traceEnhancerRel: traceEnhancerRels)
             tracingClient.addStudyTraceEnhancerRel(traceEnhancerRel);
     }

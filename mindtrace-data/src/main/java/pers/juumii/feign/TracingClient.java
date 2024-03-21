@@ -16,19 +16,16 @@ public interface TracingClient {
 
     @GetMapping("/tracing/study/trace")
     List<StudyTraceDTO> getUserStudyTraces(@RequestParam(value = "userId", required = false) Long userId);
-
     @PostMapping("/tracing/batch/study/knode/trace")
     List<StudyTraceDTO> getStudyTracesOfKnodeBatch(@RequestBody List<Long> knodeIds);
-
     @PostMapping("/tracing/rel/trace/knode")
     List<IdPair> getTraceKnodeRels(@RequestBody List<Long> traceIds);
-
     @PostMapping("/tracing/rel/trace/enhancer")
     List<IdPair> getTraceEnhancerRels(@RequestBody List<Long> traceIds);
     @PutMapping("/tracing/study/trace")
     StudyTraceDTO addStudyTrace(@RequestBody StudyTraceDTO trace);
-    @PutMapping("/tracing/rel/trace/knode")
-    void addStudyTraceKnodeRel(@RequestBody IdPair traceKnodeRel);
+    @PostMapping("/tracing/study/trace/{traceId}/knode/{knodeId}")
+    void addStudyTraceKnodeRel(@PathVariable Long traceId, @PathVariable Long knodeId);
     @PutMapping("/tracing/rel/trace/enhancer")
     void addStudyTraceEnhancerRel(@RequestBody IdPair traceEnhancerRel);
 }

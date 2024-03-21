@@ -52,7 +52,7 @@ public class MqEventRegistration implements ApplicationRunner {
         List<Long> monitorList = reviewService.getReviewMonitorList(userId);
         for(Long rootId : monitorList)
             if(coreClient.isOffspring(knodeId, rootId)){
-                reviewService.addReviewSchedule(knodeId, 1L);
+                reviewService.addReviewSchedule(knodeId, 0L);
                 break;
             }
     }

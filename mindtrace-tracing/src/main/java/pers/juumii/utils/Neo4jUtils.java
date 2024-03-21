@@ -1,7 +1,7 @@
-package pers.juumii.service.impl.v2.utils;
+package pers.juumii.utils;
 
-import org.neo4j.driver.*;
 import org.neo4j.driver.Record;
+import org.neo4j.driver.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

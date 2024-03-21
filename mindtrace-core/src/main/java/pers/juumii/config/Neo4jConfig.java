@@ -1,4 +1,4 @@
-package pers.juumii.service.impl.v2.utils;
+package pers.juumii.config;
 
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;

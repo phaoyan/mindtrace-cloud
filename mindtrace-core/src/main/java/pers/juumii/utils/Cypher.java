@@ -1,4 +1,4 @@
-package pers.juumii.service.impl.v2.utils;
+package pers.juumii.utils;
 
 import cn.hutool.core.collection.CollectionUtil;
 import lombok.Data;

@@ -8,13 +8,13 @@ import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.ResourceDTO;
 import pers.juumii.dto.tracing.MilestoneDTO;
+import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.MilestoneService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.AuthUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -121,27 +121,16 @@ public class MilestoneController {
     }
 
     @GetMapping("/rel/milestone/trace")
-    public List<?> getMilestoneTraceRels(
-            @RequestParam(required = false) Long milestoneId,
-            @RequestParam(required = false) Long traceId){
-        if(milestoneId != null)
-            return milestoneService.getStudyTraces(milestoneId).stream()
-                .map(rel->studyTraceService.getStudyTrace(rel.getTraceId()))
+    public List<StudyTraceDTO> getTracesByMilestoneId(@RequestParam Long milestoneId){
+        return milestoneService.getStudyTraces(milestoneId).stream()
                 .filter(Objects::nonNull)
                 .map(StudyTrace::transfer)
                 .toList();
-        else if(traceId != null)
-            return milestoneService.getMilestones(traceId).stream()
-                .map(rel->milestoneService.getById(rel.getMilestoneId()))
-                .filter(Objects::nonNull)
-                .map(Milestone::transfer)
-                .toList();
-        else return new ArrayList<>();
     }
 
-    @PostMapping("/batch/exist/rel/milestone/trace")
-    public List<String> getTracesInMilestones(@RequestBody List<Long> traceIds){
-        return milestoneService.getTracesInMilestones(traceIds).stream().map(Convert::toStr).toList();
+    @GetMapping("/rel/trace/milestone")
+    public MilestoneDTO getMilestoneByTraceId(@RequestParam Long traceId){
+        return Milestone.transfer(milestoneService.getMilestone(traceId));
     }
 
 

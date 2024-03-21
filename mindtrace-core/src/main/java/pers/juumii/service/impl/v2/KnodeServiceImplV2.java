@@ -12,10 +12,9 @@ import pers.juumii.feign.MqClient;
 import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.KnodeService;
-import pers.juumii.service.impl.v2.utils.Cypher;
-import pers.juumii.service.impl.v2.utils.Neo4jUtils;
+import pers.juumii.utils.Cypher;
+import pers.juumii.utils.Neo4jUtils;
 import pers.juumii.thread.ThreadUtils;
-import pers.juumii.utils.SerialTimer;
 import pers.juumii.utils.TimeUtils;
 
 import java.util.List;
@@ -113,6 +112,8 @@ public class KnodeServiceImplV2 implements KnodeService {
         Knode target = knodeQuery.check(knodeId);
         if(target == null)
             throw new RuntimeException("Knode Not Found: " + knodeId);
+        if(target.getStem() == null)
+            throw new RuntimeException("Root Must Not Be Deleted: " + knodeId);
         if(target.getBranches().isEmpty()){
             threadUtils.getUserBlockingQueue().add(()-> neo4j.transaction(List.of(deleteBasic(knodeId))));
             mqClient.emit(MessageEvents.REMOVE_KNODE, JSONUtil.toJsonStr(Knode.transfer(target)));

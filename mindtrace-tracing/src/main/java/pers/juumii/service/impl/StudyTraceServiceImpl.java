@@ -6,18 +6,16 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.persistent.TraceEnhancerRel;
 import pers.juumii.data.persistent.TraceKnodeRel;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.tracing.StudyTraceDTO;
-import pers.juumii.feign.CoreClient;
-import pers.juumii.mapper.MilestoneTraceRelMapper;
 import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
 import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
+import pers.juumii.utils.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,21 +23,21 @@ import java.util.stream.Collectors;
 @Service
 public class StudyTraceServiceImpl implements StudyTraceService {
 
+    private final Neo4jUtils neo4j;
     private final StudyTraceMapper studyTraceMapper;
     private final TraceKnodeRelMapper traceKnodeRelMapper;
     private final TraceEnhancerRelMapper traceEnhancerRelMapper;
-    private final CoreClient coreClient;
 
     @Autowired
     public StudyTraceServiceImpl(
+            Neo4jUtils neo4j,
             StudyTraceMapper studyTraceMapper,
             TraceKnodeRelMapper traceKnodeRelMapper,
-            TraceEnhancerRelMapper traceEnhancerRelMapper,
-            CoreClient coreClient) {
+            TraceEnhancerRelMapper traceEnhancerRelMapper) {
+        this.neo4j = neo4j;
         this.studyTraceMapper = studyTraceMapper;
         this.traceKnodeRelMapper = traceKnodeRelMapper;
         this.traceEnhancerRelMapper = traceEnhancerRelMapper;
-        this.coreClient = coreClient;
     }
 
     @Override
@@ -73,11 +71,6 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
-    public List<StudyTrace> getAllStudyTraces() {
-        return studyTraceMapper.selectList(new LambdaQueryWrapper<>());
-    }
-
-    @Override
     public StudyTrace getStudyTrace(Long traceId) {
         return studyTraceMapper.selectById(traceId);
     }
@@ -95,14 +88,17 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     @Override
     @Transactional
-    public void postTraceCoverage(Long traceId, Long knodeId) {
+    public void addTraceKnodeRel(Long traceId, Long knodeId) {
         if(!checkTraceKnodeRel(traceId, knodeId))
             traceKnodeRelMapper.insert(TraceKnodeRel.prototype(traceId, knodeId));
-    }
-
-    @Override
-    public List<TraceKnodeRel> getAllTraceKnodeRels() {
-        return traceKnodeRelMapper.selectList(new LambdaQueryWrapper<>());
+        Cypher cypher = Cypher.cypher("""
+                MERGE (trace: StudyTrace{id: $traceId})
+                WITH trace
+                MATCH (knode: Knode {id: $knodeId})
+                MERGE (knode)-[:HAS_TRACE]->(trace)
+                MERGE (trace)-[:HAS_KNODE]->(knode)
+                """, Map.of("traceId", traceId, "knodeId", knodeId));
+        neo4j.transaction(List.of(cypher));
     }
 
     @Override
@@ -111,6 +107,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         wrapper.eq(TraceKnodeRel::getTraceId, traceId);
         return traceKnodeRelMapper.selectList(wrapper)
                 .stream().map(TraceKnodeRel::getKnodeId)
+                .collect(Collectors.toSet()).stream()
                 .toList();
     }
 
@@ -120,12 +117,8 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         wrapper.in(TraceKnodeRel::getTraceId, traceIds);
         return traceKnodeRelMapper.selectList(wrapper).stream()
                 .map(rel->IdPair.of(rel.getTraceId(), rel.getKnodeId()))
+                .collect(Collectors.toSet()).stream()
                 .toList();
-    }
-
-    @Override
-    public List<TraceEnhancerRel> getAllTraceEnhancerRels() {
-        return traceEnhancerRelMapper.selectList(new LambdaQueryWrapper<>());
     }
 
     @Override
@@ -134,6 +127,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         wrapper.eq(TraceEnhancerRel::getTraceId, traceId);
         return traceEnhancerRelMapper.selectList(wrapper)
                 .stream().map(TraceEnhancerRel::getEnhancerId)
+                .collect(Collectors.toSet()).stream()
                 .toList();
     }
 
@@ -144,6 +138,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         wrapper.in(TraceEnhancerRel::getTraceId, traceIds);
         return traceEnhancerRelMapper.selectList(wrapper).stream()
                 .map(rel->IdPair.of(rel.getTraceId(), rel.getEnhancerId()))
+                .collect(Collectors.toSet()).stream()
                 .toList();
     }
 
@@ -165,34 +160,59 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     @Override
     @Transactional
-    public void removeTraceCoverage(Long traceId, Long knodeId) {
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceKnodeRel::getTraceId, traceId).eq(TraceKnodeRel::getKnodeId, knodeId);
-        TraceKnodeRel coverage = traceKnodeRelMapper.selectOne(wrapper);
-        if(coverage != null)
-            traceKnodeRelMapper.deleteById(coverage);
+    public void removeTraceKnodeRel(Long traceId, Long knodeId) {
+        Cypher cypher = Cypher.cypher("""
+                MATCH (knode: Knode {id: $knodeId})-[r1:HAS_TRACE]->(trace: StudyTrace {id: $traceId}),
+                      (trace: StudyTrace {id: $traceId})-[r2:HAS_KNODE]->(knode: Knode {id: $knodeId})
+                DELETE r1, r2
+                """, Map.of("traceId", traceId, "knodeId", knodeId));
+        neo4j.transaction(List.of(cypher));
     }
 
     @Override
     public List<StudyTrace> getStudyTracesOfKnodeIncludingBeneath(Long knodeId) {
-        List<Long> offspringIds = getTracedKnodeIdsFromList(coreClient.offspringIds(knodeId));
-        if(offspringIds.isEmpty()) return new ArrayList<>();
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(TraceKnodeRel::getKnodeId, offspringIds);
-        List<TraceKnodeRel> rels = traceKnodeRelMapper.selectList(wrapper);
-        List<Long> traceIds = rels.stream().map(TraceKnodeRel::getTraceId).toList();
+        Cypher cypher = Cypher.cypher("""
+                MATCH (n:Knode {id: $knodeId})
+                CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                WITH nodes as all
+                UNWIND all AS knode
+                MATCH (knode)-[:HAS_TRACE]->(trace)
+                RETURN trace.id
+                """, Map.of("knodeId", knodeId));
+        List<Long> traceIds =
+                new HashSet<>(neo4j.session(cypher, (record) ->
+                    record.get(0).isNull() ? null :
+                    record.get(0).asLong()))
+                .stream().toList();
         if(traceIds.isEmpty()) return new ArrayList<>();
         return studyTraceMapper.selectBatchIds(traceIds);
     }
 
     @Override
+    public List<StudyTrace> getStudyTracesOfKnodeIncludingBeneathBySlice(Long knodeId, String moment, Integer count) {
+        List<StudyTrace> traces = getStudyTracesOfKnodeIncludingBeneath(knodeId);
+        traces.sort((a, b)->b.getStartTime().compareTo(a.getStartTime()));
+        for(int i = 0; i < traces.size(); i ++)
+            if(traces.get(i).getStartTime().isBefore(TimeUtils.parse(moment)))
+                return traces.subList(i, Math.min(i + count, traces.size()));
+        return new ArrayList<>();
+    }
+
+    @Override
     public List<StudyTrace> getStudyTracesOfKnodeBatch(List<Long> knodeIds) {
-        if(knodeIds.isEmpty()) return new ArrayList<>();
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(TraceKnodeRel::getKnodeId, knodeIds);
-        List<TraceKnodeRel> rels = traceKnodeRelMapper.selectList(wrapper);
-        if(rels.isEmpty()) return new ArrayList<>();
-        return studyTraceMapper.selectBatchIds(rels.stream().map(TraceKnodeRel::getTraceId).toList());
+        Cypher cypher = Cypher.cypher("""
+                WITH $knodeIds AS knodeIds
+                UNWIND knodeIds AS knodeId
+                MATCH (knode: Knode {id: knodeId})-[:HAS_TRACE]->(tr: StudyTrace)
+                RETURN tr.id
+                """, Map.of("knodeIds", knodeIds));
+        List<Long> traceIds =
+                new HashSet<>(neo4j.session(cypher, (record) ->
+                        record.get(0).isNull() ? null :
+                                record.get(0).asLong()))
+                        .stream().toList();
+        if(traceIds.isEmpty()) return new ArrayList<>();
+        return studyTraceMapper.selectBatchIds(traceIds);
     }
 
     @Override
@@ -202,20 +222,6 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         return traceEnhancerRelMapper.selectList(wrapper).stream()
                 .map(rel->getStudyTrace(rel.getTraceId()))
                 .toList();
-    }
-
-    @Override
-    public boolean isEnhancerTraced(Long enhancerId){
-        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceEnhancerRel::getEnhancerId, enhancerId);
-        return traceEnhancerRelMapper.exists(wrapper);
-    }
-
-    @Override
-    public boolean isKnodeTraced(Long knodeId){
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceKnodeRel::getKnodeId, knodeId);
-        return traceKnodeRelMapper.exists(wrapper);
     }
 
     @Override
@@ -233,40 +239,9 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
-    public List<Long> getTracedKnodeIdsFromList(List<Long> knodeIds){
-        if(knodeIds.isEmpty()) return new ArrayList<>();
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(TraceKnodeRel::getKnodeId, knodeIds);
-        List<TraceKnodeRel> rels = traceKnodeRelMapper.selectList(wrapper);
-        return rels
-                .stream()
-                .map(TraceKnodeRel::getKnodeId)
-                .collect(Collectors.toSet())
-                .stream()
-                .toList();
-    }
-
-
-    @Override
-    @Transactional
-    public void addTraceKnodeRel(IdPair traceKnodeRel) {
-        traceKnodeRelMapper.insert(TraceKnodeRel.prototype(traceKnodeRel.getLeftId(), traceKnodeRel.getRightId()));
-    }
-
-    @Override
     @Transactional
     public void addTraceEnhancerRel(IdPair traceEnhancerRel) {
         traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceEnhancerRel.getLeftId(), traceEnhancerRel.getRightId()));
-    }
-
-    @Override
-    public void removeTraceEnhancerRel(Long id) {
-        traceEnhancerRelMapper.deleteById(id);
-    }
-
-    @Override
-    public void removeTraceKnodeRel(Long id) {
-        traceKnodeRelMapper.deleteById(id);
     }
 
 

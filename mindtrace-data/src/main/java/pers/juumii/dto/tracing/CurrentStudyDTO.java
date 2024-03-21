@@ -9,5 +9,6 @@ public class CurrentStudyDTO {
     private StudyTraceDTO trace;
     private List<String> knodeIds;
     private List<String> enhancerIds;
-
+    private List<String> continueList;
+    private List<String> pauseList;
 }

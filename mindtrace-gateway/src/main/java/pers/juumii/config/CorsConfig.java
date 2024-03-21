@@ -12,8 +12,8 @@ public class CorsConfig implements WebFluxConfigurer {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://"+System.getenv("LOCAL_HOST"));
-        config.addAllowedOrigin("http://"+System.getenv("SERVER_HOST"));
+        config.addAllowedOrigin("http://localhost");
+        config.addAllowedOrigin("http://www.mindtrace-cloud.com");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.setAllowCredentials(true);

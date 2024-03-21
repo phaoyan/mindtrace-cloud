@@ -1,11 +1,11 @@
 package pers.juumii.service;
 
 import pers.juumii.dto.tracing.EnhancerStudyTimeline;
-import pers.juumii.dto.tracing.EnhancerStudyTimelineItem;
 import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
 import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface StudyTraceQueryService {
 
@@ -17,4 +17,13 @@ public interface StudyTraceQueryService {
 
     EnhancerStudyTimeline getEnhancerStudyTimeline(Long knodeId, Long minDuration, Long minInterval);
 
+    Long currentMonthStudyTime(Long knodeId);
+
+    Map<String, Long> studyTimeAccumulation(Long knodeId);
+
+    Integer traceCount(Long knodeId);
+
+    Map<String, Long> calendarDay(Long knodeId);
+
+    Map<String, Long> calendarMonth(Long knodeId);
 }

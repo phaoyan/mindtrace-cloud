@@ -75,9 +75,10 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         CurrentStudy currentStudy = getCurrentStudy();
         if(currentStudy.getTrace().getEndTime() == null)
             currentStudy.getTrace().setEndTime(LocalDateTime.now());
+        currentStudy.getTrace().setSeconds(currentStudy.duration());
         studyTraceService.insertStudyTrace(StudyTrace.transfer(currentStudy.getTrace()));
         for(Long knodeId: currentStudy.getKnodeIds())
-            studyTraceService.postTraceCoverage(currentStudy.getTrace().getId(), knodeId);
+            studyTraceService.addTraceKnodeRel(currentStudy.getTrace().getId(), knodeId);
         for(Long enhancerId: currentStudy.getEnhancerIds())
             traceEnhancerRelService.postEnhancerTraceRel(currentStudy.getTrace().getId(), enhancerId);
         removeCurrentStudy();
@@ -96,7 +97,7 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     public CurrentStudy pauseCurrentStudy() {
         CurrentStudy currentStudy = getCurrentStudy();
         if(currentStudy.getTrace().getEndTime() != null) return currentStudy;
-        currentStudy.getTrace().getPauseList().add(LocalDateTime.now());
+        currentStudy.getPauseList().add(TimeUtils.format(LocalDateTime.now()));
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
     }
@@ -105,7 +106,7 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     public CurrentStudy continueCurrentStudy() {
         CurrentStudy currentStudy = getCurrentStudy();
         if(currentStudy.getTrace().getEndTime() != null) return currentStudy;
-        currentStudy.getTrace().getContinueList().add(LocalDateTime.now());
+        currentStudy.getContinueList().add(TimeUtils.format(LocalDateTime.now()));
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
     }
@@ -118,8 +119,8 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
             throw new RuntimeException("StudyTrace Not Found: " + traceId);
         CurrentStudy currentStudy = startCurrentStudy();
         currentStudy.setTrace(trace);
-        currentStudy.getTrace().getPauseList().add(trace.getEndTime());
-        currentStudy.getTrace().getContinueList().add(LocalDateTime.now());
+        currentStudy.getPauseList().add(TimeUtils.format(trace.getEndTime()));
+        currentStudy.getContinueList().add(TimeUtils.format(LocalDateTime.now()));
         currentStudy.getTrace().setEndTime(null);
         List<Long> traceKnodeIds = studyTraceService.getTraceKnodeRels(trace.getId());
         List<Long> traceEnhancerIds = studyTraceService.getTraceEnhancerRels(trace.getId());

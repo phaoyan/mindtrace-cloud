@@ -49,6 +49,14 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
 
+
+        <!-- https://mvnrepository.com/artifact/com.aliyun/dashvector-java-sdk -->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>dashvector-java-sdk</artifactId>
+            <version>1.0.9</version>
+        </dependency>
+
         <!--mysql + mybatis-->
         <dependency>
             <groupId>com.baomidou</groupId>

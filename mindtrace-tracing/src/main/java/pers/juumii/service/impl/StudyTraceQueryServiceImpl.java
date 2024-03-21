@@ -17,6 +17,8 @@ import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,10 +49,9 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 .toList();
         if(traces.size() == 0) return res;
         res.setDuration(traces.stream()
-                .map(StudyTrace::duration)
-                .reduce(Duration::plus)
-                .orElse(Duration.ZERO)
-                .getSeconds());
+                .map(StudyTrace::getSeconds)
+                .reduce(Long::sum)
+                .orElse(0L));
         res.setReview(traces.size());
         res.setTraces(StudyTrace.transfer(traces));
         return res;
@@ -72,7 +73,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         for(StudyTrace trace: traces){
             List<Long> knodeIds = studyTraceService.getTraceKnodeRels(trace.getId());
             int size = knodeIds.size();
-            long duration = trace.duration().getSeconds();
+            long duration = trace.getSeconds();
             long portion = duration / size;
             for (Long _knodeId: knodeIds.stream().filter(durationMap::containsKey).toList())
                 for(Long ancestorId: ancestorSeriesList.get(_knodeId)){
@@ -137,7 +138,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 else lastSplice.add(trace);
             }
             for(List<StudyTrace> splice: splices){
-                Long duration = splice.stream().map(trace -> trace.duration().getSeconds()).reduce(Long::sum).orElseGet(() -> 0L);
+                Long duration = splice.stream().map(StudyTrace::getSeconds).reduce(Long::sum).orElse(0L);
                 if(duration < minDuration) continue;
                 String start = TimeUtils.format(splice.get(0).getStartTime());
                 String end = TimeUtils.format(splice.get(splice.size() - 1).getEndTime());
@@ -154,6 +155,55 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
             }
         }
         res.getItems().sort(Comparator.comparing(item->TimeUtils.parse(item.getStart())));
+        return res;
+    }
+
+    @Override
+    public Long currentMonthStudyTime(Long knodeId) {
+        return studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId).stream()
+                //过滤出当月的traces
+                .filter(trace -> TimeUtils.inCurrentMonth(trace.getStartTime()))
+                //按秒求和
+                .mapToLong(StudyTrace::getSeconds).sum();
+
+
+    }
+
+    @Override
+    public Map<String, Long> studyTimeAccumulation(Long knodeId) {
+        HashMap<String, Long> res = new HashMap<>();
+        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId);
+        traces.sort(Comparator.comparing(StudyTrace::getStartTime));
+        long curDuration = 0L;
+        for(StudyTrace tr: traces){
+            curDuration += tr.getSeconds();
+            res.put(tr.getId().toString(), curDuration);
+        }
+        return res;
+    }
+
+    @Override
+    public Integer traceCount(Long knodeId) {
+        return studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId).size();
+    }
+
+    @Override
+    public Map<String, Long> calendarDay(Long knodeId) {
+        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId);
+        Map<String, List<StudyTrace>> groups = traces.stream().collect(Collectors.groupingBy(tr->TimeUtils.format(tr.getStartTime()).substring(0,10)));
+        HashMap<String, Long> res = new HashMap<>();
+        for(String key: groups.keySet())
+            res.put(key, groups.get(key).stream().mapToLong(StudyTrace::getSeconds).sum());
+        return res;
+    }
+
+    @Override
+    public Map<String, Long> calendarMonth(Long knodeId) {
+        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId);
+        Map<String, List<StudyTrace>> groups = traces.stream().collect(Collectors.groupingBy(tr->TimeUtils.format(tr.getStartTime()).substring(0,7)));
+        HashMap<String, Long> res = new HashMap<>();
+        for(String key: groups.keySet())
+            res.put(key, groups.get(key).stream().mapToLong(StudyTrace::getSeconds).sum());
         return res;
     }
 

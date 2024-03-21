@@ -2,12 +2,12 @@ package pers.juumii.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.service.StudyTraceService;
 
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -42,8 +42,8 @@ public class StudyTraceController {
     }
 
     @PostMapping("/study/trace/{traceId}/knode/{knodeId}")
-    public void postTraceCoverage(@PathVariable Long traceId, @PathVariable Long knodeId){
-        studyTraceService.postTraceCoverage(traceId, knodeId);
+    public void addTraceKnodeRel(@PathVariable Long traceId, @PathVariable Long knodeId){
+        studyTraceService.addTraceKnodeRel(traceId, knodeId);
     }
 
     @PostMapping("/study/trace")
@@ -68,13 +68,33 @@ public class StudyTraceController {
     }
 
     @DeleteMapping("study/trace/{traceId}/knode/{knodeId}")
-    public void removeTraceCoverage(@PathVariable Long traceId, @PathVariable Long knodeId){
-        studyTraceService.removeTraceCoverage(traceId, knodeId);
+    public void removeTraceKnodeRel(@PathVariable Long traceId, @PathVariable Long knodeId){
+        studyTraceService.removeTraceKnodeRel(traceId, knodeId);
     }
 
     @GetMapping("/study/knode/{knodeId}/trace")
     public List<StudyTraceDTO> getStudyTracesOfKnode(@PathVariable Long knodeId){
         return StudyTrace.transfer(studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId));
+    }
+
+    @GetMapping("/slice/study/knode/{knodeId}/trace")
+    public List<StudyTraceDTO> getStudyTraceOfKnodeBySlice(
+            @PathVariable Long knodeId,
+            @RequestParam String moment,
+            @RequestParam Integer count){
+        return StudyTrace.transfer(studyTraceService.getStudyTracesOfKnodeIncludingBeneathBySlice(knodeId, moment, count));
+    }
+
+    @GetMapping("/page/study/knode/{knodeId}/trace")
+    public List<StudyTraceDTO> getStudyTraceOfKnodeByPage(
+            @PathVariable Long knodeId,
+            @RequestParam Integer page,
+            @RequestParam Integer size){
+        List<StudyTrace> traces =
+                studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId)
+                .stream().sorted(Comparator.comparing(StudyTrace::getStartTime).reversed())
+                .toList();
+        return StudyTrace.transfer(traces.subList(Math.min(page * size, traces.size()), Math.min(traces.size(), (page + 1) * size)));
     }
 
     @PostMapping("/batch/study/knode/trace")
@@ -90,11 +110,6 @@ public class StudyTraceController {
     @PostMapping("/rel/trace/enhancer")
     public List<IdPair> getTraceEnhancerRels(@RequestBody List<Long> traceIds){
         return studyTraceService.getTraceEnhancerRels(traceIds);
-    }
-
-    @PutMapping("/rel/trace/knode")
-    public void addTraceKnodeRel(@RequestBody IdPair traceKnodeRel){
-        studyTraceService.addTraceKnodeRel(traceKnodeRel);
     }
 
     @PutMapping("/rel/trace/enhancer")

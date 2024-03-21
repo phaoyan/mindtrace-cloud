@@ -39,4 +39,10 @@ public class TimeUtils {
     public static boolean ordered(LocalDateTime A, LocalDateTime B, LocalDateTime C) {
         return A.isBefore(B) && B.isBefore(C);
     }
+
+    public static boolean inCurrentMonth(LocalDateTime startTime) {
+        int year = LocalDateTime.now().getYear();
+        int month = LocalDateTime.now().getMonth().getValue();
+        return startTime.getYear() == year && startTime.getMonth().getValue() == month;
+    }
 }

@@ -1,6 +1,5 @@
 package pers.juumii.service.impl.v2;
 
-import cn.hutool.core.lang.hash.Hash;
 import cn.hutool.core.util.StrUtil;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
@@ -11,8 +10,8 @@ import pers.juumii.data.Knode;
 import pers.juumii.data.Label;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.UserService;
-import pers.juumii.service.impl.v2.utils.Cypher;
-import pers.juumii.service.impl.v2.utils.Neo4jUtils;
+import pers.juumii.utils.Cypher;
+import pers.juumii.utils.Neo4jUtils;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
