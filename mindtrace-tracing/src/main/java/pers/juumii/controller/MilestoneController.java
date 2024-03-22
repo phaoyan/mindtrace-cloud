@@ -133,6 +133,11 @@ public class MilestoneController {
         return Milestone.transfer(milestoneService.getMilestone(traceId));
     }
 
+    @GetMapping("/rel/resource/milestone")
+    public MilestoneDTO getMilestoneByResourceId(@RequestParam Long resourceId){
+        return Milestone.transfer(milestoneService.getMilestoneByResourceId(resourceId));
+    }
+
 
     @PutMapping("/rel/milestone/trace")
     public void addMilestoneTraceRel(@RequestParam Long milestoneId, @RequestParam Long traceId){

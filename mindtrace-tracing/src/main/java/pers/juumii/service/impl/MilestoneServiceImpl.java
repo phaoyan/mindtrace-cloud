@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.Milestone;
 import pers.juumii.data.persistent.MilestoneResourceRel;
-import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.EnhancerDTO;
 import pers.juumii.dto.KnodeDTO;
@@ -17,7 +16,6 @@ import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.EnhancerClient;
 import pers.juumii.mapper.MilestoneMapper;
 import pers.juumii.mapper.MilestoneResourceRelMapper;
-import pers.juumii.mapper.MilestoneTraceRelMapper;
 import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.service.MilestoneService;
 import pers.juumii.utils.TimeUtils;
@@ -169,6 +167,14 @@ public class MilestoneServiceImpl implements MilestoneService {
             enhancerClient.addEnhancerResourceRel(enhancerId, Convert.toLong(resource.getId()));
         enhancer.setTitle(milestone.getDescription());
         enhancerClient.updateEnhancer(enhancerId, enhancer);
+    }
+
+    @Override
+    public Milestone getMilestoneByResourceId(Long resourceId) {
+        LambdaQueryWrapper<MilestoneResourceRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MilestoneResourceRel::getResourceId, resourceId);
+        MilestoneResourceRel rel = mrrMapper.selectOne(wrapper);
+        return getById(rel.getMilestoneId());
     }
 
 }

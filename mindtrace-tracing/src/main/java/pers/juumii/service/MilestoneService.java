@@ -40,4 +40,5 @@ public interface MilestoneService {
 
     void copyMilestoneAsEnhancerToKnode(Long milestoneId, Long knodeId);
 
+    Milestone getMilestoneByResourceId(Long resourceId);
 }
