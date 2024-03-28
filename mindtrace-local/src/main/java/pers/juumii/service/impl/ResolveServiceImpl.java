@@ -120,7 +120,6 @@ public class ResolveServiceImpl implements ResolveService {
             EnhancerDTO enhancerDTO = new EnhancerDTO();
             enhancerDTO.setTitle(enhancer.getTitle());
             enhancerDTO.setCreateTime(enhancer.getCreateTime());
-            enhancerDTO.setIntroduction(enhancer.getIntroduction());
             enhancerDTO.setIsQuiz(enhancer.getIsQuiz());
             enhancerClient.updateEnhancer(Convert.toLong(added.getId()), enhancerDTO);
             //将id换成新的以便后续rel对接

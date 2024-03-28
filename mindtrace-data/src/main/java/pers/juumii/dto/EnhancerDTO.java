@@ -9,7 +9,6 @@ public class EnhancerDTO {
 
     private String id;
     private String title;
-    private String introduction;
     private Boolean isQuiz;
     private List<String> resourceIds;
     private Long length;

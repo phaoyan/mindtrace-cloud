@@ -24,7 +24,6 @@ public class Enhancer {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     private String title;
-    private String introduction;
     @TableField(exist = false)
     private List<Resource> resources;
     private Boolean isQuiz;
@@ -51,7 +50,6 @@ public class Enhancer {
         if(enhancer == null) return null;
         EnhancerDTO res = new EnhancerDTO();
         res.setId(enhancer.getId().toString());
-        res.setIntroduction(enhancer.getIntroduction());
         res.setDeleted(enhancer.getDeleted());
         res.setTitle(enhancer.getTitle());
         res.setIsQuiz(enhancer.getIsQuiz());

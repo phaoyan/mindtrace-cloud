@@ -200,7 +200,6 @@ public class EnhancerServiceImpl implements EnhancerService {
     public void updateEnhancer(Long enhancerId, EnhancerDTO updated) {
         Enhancer enhancer = enhancerMapper.selectById(enhancerId);
         Opt.ifPresent(updated.getTitle(), enhancer::setTitle);
-        Opt.ifPresent(updated.getIntroduction(), enhancer::setIntroduction);
         Opt.ifPresent(updated.getIsQuiz(), enhancer::setIsQuiz);
         enhancerMapper.updateById(enhancer);
     }
