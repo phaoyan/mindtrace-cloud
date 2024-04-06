@@ -3,7 +3,7 @@ package pers.juumii.service;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.IdPair;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,7 @@ public interface ResourceService {
     // 删除resource中特定的文件
     Map<String, Boolean> release(Long resourceId, List<String> data);
     // 为enhancer挂载resource
-    void connectResourceToEnhancer(Long enhancerId, Long resourceId);
+    void addEnhancerResourceRel(Long enhancerId, Long resourceId);
     // 将enhancer与resource解绑
     void disconnectResourceFromEnhancer(Long enhancerId, Long resourceId);
 

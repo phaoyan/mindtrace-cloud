@@ -1,14 +1,14 @@
 package pers.juumii.service.impl;
 
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.util.StrUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.IdPair;
-import pers.juumii.dto.tracing.EnhancerStudyTimeline;
-import pers.juumii.dto.tracing.EnhancerStudyTimelineItem;
-import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
-import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
+import pers.juumii.dto.enhancer.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerGroupDTO;
+import pers.juumii.dto.tracing.*;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.StudyTraceQueryService;
@@ -42,18 +42,51 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
     @Override
     public StudyTraceEnhancerInfo getStudyTraceEnhancerInfo(Long enhancerId) {
         StudyTraceEnhancerInfo res = new StudyTraceEnhancerInfo();
-        res.setEnhancerId(enhancerId.toString());
+        EnhancerDTO enhancer = enhancerClient.getEnhancerById(enhancerId);
         List<StudyTrace> traces = studyTraceService
                 .getStudyTracesOfEnhancer(enhancerId)
                 .stream().filter(Objects::nonNull)
                 .toList();
         if(traces.size() == 0) return res;
+        res.setEnhancerId(enhancerId.toString());
+        res.setTitle(enhancer.getTitle());
         res.setDuration(traces.stream()
                 .map(StudyTrace::getSeconds)
                 .reduce(Long::sum)
                 .orElse(0L));
         res.setReview(traces.size());
-        res.setTraces(StudyTrace.transfer(traces));
+        res.setTraces(DataUtils.reverse(StudyTrace.transfer(traces)));
+        return res;
+    }
+
+    @Override
+    public StudyTraceEnhancerGroupInfo getStudyTraceEnhancerGroupInfo(Long groupId) {
+        EnhancerGroupDTO group = enhancerClient.getEnhancerGroupById(groupId);
+        List<Long> enhancerIds = enhancerClient
+                .getRelatedEnhancerIdsByGroupId(groupId)
+                .stream().map(Convert::toLong).toList();
+        List<StudyTraceEnhancerInfo> infos = enhancerIds.stream().map(this::getStudyTraceEnhancerInfo).toList();
+        if(infos.isEmpty()) return new StudyTraceEnhancerGroupInfo(
+                Convert.toStr(groupId),
+                group.getTitle(),
+                0L,
+                0,
+                new ArrayList<>());
+        StudyTraceEnhancerGroupInfo res = new StudyTraceEnhancerGroupInfo();
+        List<StudyTraceDTO> traces = infos.stream()
+                .filter(info->Objects.nonNull(info.getEnhancerId()))
+                .map(StudyTraceEnhancerInfo::getTraces)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet()).stream()
+                .toList();
+        res.setGroupId(Convert.toStr(groupId));
+        res.setTitle(group.getTitle());
+        res.setDuration(traces.stream()
+                .map(StudyTraceDTO::getSeconds)
+                .reduce(Long::sum)
+                .orElse(0L));
+        res.setReview(traces.size());
+        res.setTraces(traces);
         return res;
     }
 
@@ -71,18 +104,19 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         }
         Map<Long, List<Long>> ancestorSeriesList = coreClient.ancestorIdsBatch(offspringIds);
         for(StudyTrace trace: traces){
-            List<Long> knodeIds = studyTraceService.getTraceKnodeRels(trace.getId());
-            int size = knodeIds.size();
-            long duration = trace.getSeconds();
-            long portion = duration / size;
-            for (Long _knodeId: knodeIds.stream().filter(durationMap::containsKey).toList())
-                for(Long ancestorId: ancestorSeriesList.get(_knodeId)){
-                    if(!durationMap.containsKey(ancestorId)) continue;
-                    durationMap.compute(ancestorId, (id, _duration)->_duration + portion);
-                    reviewMap.compute(ancestorId, (id,review)->review + 1);
-                    momentsMap.compute(ancestorId, (id, moments)->
+            Set<Long> knodeIds = studyTraceService.getTraceKnodeRels(trace.getId()).stream()
+                    .filter(ancestorSeriesList::containsKey)
+                    .collect(Collectors.toSet());
+            Set<Long> relatedKnodeIds = knodeIds.stream()
+                    .map(ancestorSeriesList::get)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
+            for(Long relatedKnodeId: relatedKnodeIds){
+                durationMap.computeIfPresent(relatedKnodeId, (_id, duration) -> duration + trace.getSeconds());
+                reviewMap.computeIfPresent(relatedKnodeId, (_id, review) -> review + 1);
+                momentsMap.computeIfPresent(relatedKnodeId, (_id, moments) ->
                         DataUtils.join(moments, TimeUtils.format(trace.getStartTime())));
-                }
+            }
         }
         List<StudyTraceKnodeInfo> res = new ArrayList<>();
         for(Long offspringId: offspringIds){
@@ -165,8 +199,6 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 .filter(trace -> TimeUtils.inCurrentMonth(trace.getStartTime()))
                 //按秒求和
                 .mapToLong(StudyTrace::getSeconds).sum();
-
-
     }
 
     @Override

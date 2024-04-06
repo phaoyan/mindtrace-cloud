@@ -21,4 +21,9 @@ public class MqController {
         consumer.handleRemoveKnode(data);
     }
 
+    @PostMapping("/mq/enhancer/remove")
+    public void handleRemoveEnhancer(@RequestBody String data){
+        consumer.handleRemoveEnhancer(data);
+    }
+
 }

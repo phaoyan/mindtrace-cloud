@@ -44,8 +44,9 @@ public interface StudyTraceService {
 
     List<StudyTrace> getStudyTracesOfEnhancer(Long enhancerId);
 
-    void addTraceEnhancerRel(IdPair traceEnhancerRel);
+    void addTraceEnhancerRel(Long traceId, Long enhancerId);
 
     List<Long> getTracedEnhancerIdsFromList(List<Long> enhancerIds);
 
+    void removeTraceEnhancerRel(Long traceId, Long enhancerId);
 }

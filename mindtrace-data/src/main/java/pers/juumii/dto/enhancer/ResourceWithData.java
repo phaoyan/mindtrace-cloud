@@ -1,4 +1,4 @@
-package pers.juumii.dto;
+package pers.juumii.dto.enhancer;
 
 import lombok.Data;
 

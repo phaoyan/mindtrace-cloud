@@ -3,18 +3,12 @@ package pers.juumii.service.impl.exam.strategy.v2;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.temp.ExamSession;
 import pers.juumii.data.temp.QuizResult;
-import pers.juumii.dto.EnhancerDTO;
-import pers.juumii.dto.KnodeDTO;
-import pers.juumii.feign.CoreClient;
-import pers.juumii.feign.EnhancerClient;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class ExamStrategyUtils {

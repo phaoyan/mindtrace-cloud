@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pers.juumii.dto.tracing.EnhancerStudyTimeline;
+import pers.juumii.dto.tracing.StudyTraceEnhancerGroupInfo;
 import pers.juumii.dto.tracing.StudyTraceEnhancerInfo;
 import pers.juumii.dto.tracing.StudyTraceKnodeInfo;
 import pers.juumii.service.StudyTraceQueryService;
@@ -32,6 +33,11 @@ public class StudyTraceQueryController {
     @GetMapping("/study/enhancer/{enhancerId}")
     public StudyTraceEnhancerInfo getStudyTraceEnhancerInfo(@PathVariable Long enhancerId){
         return studyTraceQueryService.getStudyTraceEnhancerInfo(enhancerId);
+    }
+
+    @GetMapping("/study/enhancer-group/{groupId}")
+    public StudyTraceEnhancerGroupInfo getStudyTraceEnhancerGroupInfo(@PathVariable Long groupId){
+        return studyTraceQueryService.getStudyTraceEnhancerGroupInfo(groupId);
     }
 
     @GetMapping("/study/knode/{knodeId}/enhancer")
@@ -71,5 +77,7 @@ public class StudyTraceQueryController {
     public Map<String, Long> calendarMonth(@PathVariable Long knodeId){
         return studyTraceQueryService.calendarMonth(knodeId);
     }
+
+
 
 }

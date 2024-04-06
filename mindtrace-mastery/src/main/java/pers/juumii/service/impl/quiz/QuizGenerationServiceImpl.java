@@ -3,8 +3,8 @@ package pers.juumii.service.impl.quiz;
 import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pers.juumii.dto.EnhancerDTO;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.feign.EnhancerClient;
 import pers.juumii.service.QuizGenerationService;
 

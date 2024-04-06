@@ -7,9 +7,7 @@ import lombok.NoArgsConstructor;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.utils.SpringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @NoArgsConstructor

@@ -7,7 +7,7 @@ import cn.hutool.json.JSONUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.constants.enhancer.ResourceTypes;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.feign.EnhancerClient;
 
 import java.nio.charset.StandardCharsets;

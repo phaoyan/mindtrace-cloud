@@ -3,7 +3,7 @@ package pers.juumii.service;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.Milestone;
 import pers.juumii.data.persistent.StudyTrace;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 
 import java.util.List;
 

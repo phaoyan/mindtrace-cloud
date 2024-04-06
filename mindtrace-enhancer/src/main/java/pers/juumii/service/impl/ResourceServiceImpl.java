@@ -13,7 +13,7 @@ import pers.juumii.data.EnhancerResourceRel;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.MqClient;
 import pers.juumii.mapper.EnhancerResourceRelationshipMapper;
@@ -126,12 +126,14 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     public void removeResource(Long resourceId) {
-        // 先释放该resource的所有资源文件再删除resource
-        Long userId = getResource(resourceId).getCreateBy();
-        repository.releaseAll(userId, resourceId);
-        resourceMapper.deleteById(resourceId);
-        errMapper.deleteByResourceId(resourceId);
-        mqClient.emit(MessageEvents.REMOVE_RESOURCE, resourceId.toString());
+        try {
+            // 先释放该resource的所有资源文件再删除resource
+            Long userId = getResource(resourceId).getCreateBy();
+            repository.releaseAll(userId, resourceId);
+            resourceMapper.deleteById(resourceId);
+            errMapper.deleteByResourceId(resourceId);
+            mqClient.emit(MessageEvents.REMOVE_RESOURCE, resourceId.toString());
+        } catch (NullPointerException ignored){}
     }
 
     @Override
@@ -142,20 +144,19 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     public List<Resource> getResourcesOfEnhancer(Long enhancerId) {
-        List<Long> resourceIds =
-                errMapper.selectByEnhancerId(enhancerId).stream()
+        return errMapper.selectByEnhancerId(enhancerId).stream()
                 .sorted(Comparator.comparingInt(EnhancerResourceRel::getResourceIndex))
-                .map(EnhancerResourceRel::getResourceId).toList();
-        return resourceIds.isEmpty() ?
-                new ArrayList<>() :
-                resourceMapper.selectBatchIds(resourceIds);
+                .map(rel->resourceMapper.selectById(rel.getResourceId()))
+                .toList();
     }
 
     @Override
-    public void connectResourceToEnhancer(Long enhancerId, Long resourceId) {
+    public void addEnhancerResourceRel(Long enhancerId, Long resourceId) {
+        List<Resource> resources = getResourcesOfEnhancer(enhancerId);
         EnhancerResourceRel target = new EnhancerResourceRel();
         target.setResourceId(resourceId);
         target.setEnhancerId(enhancerId);
+        target.setResourceIndex(resources.size());
         errMapper.insert(target);
     }
 
@@ -208,15 +209,18 @@ public class ResourceServiceImpl implements ResourceService {
             throw new RuntimeException("Wrong Index : " + index);
         correctResourceIndexInEnhancer(enhancerId);
         LambdaQueryWrapper<EnhancerResourceRel> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper
-                .eq(EnhancerResourceRel::getEnhancerId, enhancerId)
-                .eq(EnhancerResourceRel::getResourceId, resourceId);
-        EnhancerResourceRel rel = errMapper.selectOne(queryWrapper);
-        LambdaUpdateWrapper<EnhancerResourceRel> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper
-                .eq(EnhancerResourceRel::getEnhancerId, enhancerId)
-                .eq(EnhancerResourceRel::getResourceId, resourceId);
-        errMapper.update(rel, updateWrapper);
+        queryWrapper.eq(EnhancerResourceRel::getEnhancerId, enhancerId);
+        List<EnhancerResourceRel> rels = errMapper.selectList(queryWrapper);
+        int oriIndex = -1;
+        for(EnhancerResourceRel rel: rels)
+            if(rel.getResourceId().equals(resourceId))
+                oriIndex = rel.getResourceIndex();
+        for(EnhancerResourceRel rel: rels){
+            if(rel.getResourceIndex().equals(oriIndex))
+                errMapper.updateIndex(rel.getEnhancerId(), rel.getResourceId(), index);
+            else if(rel.getResourceIndex().equals(index))
+                errMapper.updateIndex(rel.getEnhancerId(), rel.getResourceId(), oriIndex);
+        }
     }
 
     public void correctResourceIndexInEnhancer(Long enhancerId){
@@ -224,12 +228,7 @@ public class ResourceServiceImpl implements ResourceService {
         rels.sort(Comparator.comparingInt(EnhancerResourceRel::getResourceIndex));
         for(int i = 1; i < rels.size(); i ++){
             EnhancerResourceRel cur = rels.get(i);
-            cur.setResourceIndex(i);
-            LambdaUpdateWrapper<EnhancerResourceRel> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper
-                    .eq(EnhancerResourceRel::getResourceId, cur.getResourceId())
-                    .eq(EnhancerResourceRel::getEnhancerId, cur.getEnhancerId());
-            errMapper.update(cur, updateWrapper);
+            errMapper.updateIndex(enhancerId, cur.getResourceId(), i);
         }
     }
 

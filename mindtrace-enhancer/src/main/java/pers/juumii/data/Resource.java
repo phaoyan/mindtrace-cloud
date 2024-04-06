@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;

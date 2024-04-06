@@ -1,14 +1,13 @@
 package pers.juumii.data;
 
 import cn.hutool.core.util.IdUtil;
-import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 import pers.juumii.service.ResourceService;
 import pers.juumii.utils.SpringUtils;
 import pers.juumii.utils.TimeUtils;
@@ -35,7 +34,7 @@ public class Enhancer {
     @TableLogic
     private Boolean deleted;
 
-    public static Enhancer prototype( Long userId) {
+    public static Enhancer prototype(Long userId) {
         Enhancer res = new Enhancer();
         res.setId(IdUtil.getSnowflakeNextId());
         res.setCreateTime(LocalDateTime.now());

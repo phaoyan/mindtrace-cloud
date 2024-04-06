@@ -6,7 +6,7 @@ import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.Enhancer;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
@@ -50,6 +50,13 @@ public class EnhancerController {
     @GetMapping("/enhancer/{enhancerId}")
     public EnhancerDTO getEnhancerById(@PathVariable Long enhancerId){
         return Enhancer.transfer(enhancerService.getEnhancerById(enhancerId));
+    }
+
+    @GetMapping("/like/user/{userId}/enhancer")
+    public List<EnhancerDTO> getEnhancersByLike(
+            @PathVariable Long userId,
+            @RequestParam String txt){
+        return Enhancer.transfer(enhancerService.getEnhancersByLike(userId, txt));
     }
 
     @GetMapping("/date/enhancer")
@@ -143,7 +150,7 @@ public class EnhancerController {
             @PathVariable Long enhancerId){
         knodeSameUser(knodeId);
         enhancerSameUser(enhancerId);
-        enhancerService.connectEnhancerToKnode(knodeId, enhancerId);
+        enhancerService.addKnodeEnhancerRel(knodeId, enhancerId);
     }
 
     @DeleteMapping("knode/{knodeId}/enhancer/{enhancerId}")
@@ -168,7 +175,7 @@ public class EnhancerController {
 
     @PutMapping("/rel/knode/enhancer")
     void addKnodeEnhancerRel(@RequestParam Long knodeId, @RequestParam Long enhancerId){
-        enhancerService.connectEnhancerToKnode(knodeId, enhancerId);
+        enhancerService.addKnodeEnhancerRel(knodeId, enhancerId);
     }
 
     @PostMapping("/rel/knode/enhancer/index")

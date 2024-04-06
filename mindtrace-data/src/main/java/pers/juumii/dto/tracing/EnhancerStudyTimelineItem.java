@@ -1,7 +1,7 @@
 package pers.juumii.dto.tracing;
 
 import lombok.Data;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 
 import java.util.List;
 

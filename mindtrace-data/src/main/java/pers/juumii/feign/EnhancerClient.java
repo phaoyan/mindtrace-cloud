@@ -4,6 +4,10 @@ import cn.dev33.satoken.util.SaResult;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.dto.*;
+import pers.juumii.dto.enhancer.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerGroupDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceWithData;
 import pers.juumii.feign.interceptor.FeignSecurityInterceptor;
 
 import java.util.List;
@@ -79,4 +83,8 @@ public interface EnhancerClient {
     void removeResourceById(@PathVariable Long resourceId);
     @GetMapping("/enhancer/resource/{resourceId}/data/{dataName}/url")
     String getCosResourceUrl(@PathVariable Long resourceId, @PathVariable String dataName);
+    @GetMapping("/enhancer/enhancer-group/{groupId}")
+    EnhancerGroupDTO getEnhancerGroupById(@PathVariable Long groupId);
+    @GetMapping("/enhancer/rel/enhancer-group/{groupId}/enhancer/id")
+    List<String> getRelatedEnhancerIdsByGroupId(@PathVariable Long groupId);
 }

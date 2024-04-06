@@ -2,7 +2,7 @@ package pers.juumii.service;
 
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Enhancer;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 
@@ -30,7 +30,7 @@ public interface EnhancerService {
 
     void removeEnhancer(Long enhancerId);
 
-    void connectEnhancerToKnode(Long knodeId, Long enhancerId);
+    void addKnodeEnhancerRel(Long knodeId, Long enhancerId);
 
     void disconnectEnhancerFromKnode(Long knodeId, Long enhancerId);
 
@@ -55,4 +55,6 @@ public interface EnhancerService {
     void setEnhancerIndexInKnode(Long knodeId, Long enhancerId, Integer index);
 
     Enhancer getEnhancerByResourceId(Long resourceId);
+
+    List<Enhancer> getEnhancersByLike(Long userId, String txt);
 }

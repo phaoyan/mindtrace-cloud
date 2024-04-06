@@ -1,10 +1,10 @@
 package pers.juumii.data;
 
 import lombok.Data;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 
 import java.util.List;

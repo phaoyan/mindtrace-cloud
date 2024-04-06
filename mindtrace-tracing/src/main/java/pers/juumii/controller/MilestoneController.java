@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.persistent.Milestone;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.KnodeDTO;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.dto.tracing.MilestoneDTO;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.feign.CoreClient;

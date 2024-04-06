@@ -239,9 +239,18 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
+    public void removeTraceEnhancerRel(Long traceId, Long enhancerId) {
+        LambdaUpdateWrapper<TraceEnhancerRel> wrapper = new LambdaUpdateWrapper<>();
+        wrapper
+                .eq(TraceEnhancerRel::getTraceId, traceId)
+                .eq(TraceEnhancerRel::getEnhancerId, enhancerId);
+        traceEnhancerRelMapper.delete(wrapper);
+    }
+
+    @Override
     @Transactional
-    public void addTraceEnhancerRel(IdPair traceEnhancerRel) {
-        traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceEnhancerRel.getLeftId(), traceEnhancerRel.getRightId()));
+    public void addTraceEnhancerRel(Long traceId, Long enhancerId) {
+        traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceId, enhancerId));
     }
 
 

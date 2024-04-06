@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.data.Enhancer;
 import pers.juumii.data.Resource;
 import pers.juumii.dto.IdPair;
-import pers.juumii.dto.ResourceDTO;
+import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
 import pers.juumii.utils.AuthUtils;
@@ -184,7 +184,7 @@ public class ResourceController {
     public void addEnhancerResourceRel(@RequestParam Long enhancerId, @RequestParam Long resourceId){
         resourceSameUser(resourceId);
         enhancerSameUser(enhancerId);
-        resourceService.connectResourceToEnhancer(enhancerId, resourceId);
+        resourceService.addEnhancerResourceRel(enhancerId, resourceId);
     }
 
     @PostMapping("/rel/enhancer/resource/index")

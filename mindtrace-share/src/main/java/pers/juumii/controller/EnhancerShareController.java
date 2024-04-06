@@ -3,7 +3,7 @@ package pers.juumii.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.EnhancerShare;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 import pers.juumii.dto.share.EnhancerShareDTO;
 import pers.juumii.service.EnhancerShareService;
 

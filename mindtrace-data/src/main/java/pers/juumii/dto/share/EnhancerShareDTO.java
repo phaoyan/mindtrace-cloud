@@ -1,7 +1,7 @@
 package pers.juumii.dto.share;
 
 import lombok.Data;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 
 @Data
 public class EnhancerShareDTO {

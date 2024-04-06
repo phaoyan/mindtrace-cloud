@@ -11,6 +11,7 @@ import pers.juumii.data.Label;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.UserService;
 import pers.juumii.utils.Cypher;
+import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.Neo4jUtils;
 import pers.juumii.utils.TimeUtils;
 
@@ -191,7 +192,7 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                         """, Map.of("knodeId", knodeId))
                 .append(shallowLink())
                 .append(basicReturn());
-        return neo4j.session(cypher, knodeResolver);
+        return DataUtils.reverse(neo4j.session(cypher, knodeResolver));
     }
 
     @Override

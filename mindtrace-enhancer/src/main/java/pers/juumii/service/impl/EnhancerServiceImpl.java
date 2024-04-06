@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.Enhancer;
 import pers.juumii.data.EnhancerKnodeRel;
 import pers.juumii.data.EnhancerResourceRel;
-import pers.juumii.dto.EnhancerDTO;
+import pers.juumii.dto.enhancer.EnhancerDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
@@ -167,12 +167,21 @@ public class EnhancerServiceImpl implements EnhancerService {
         return getEnhancerById(rel.getEnhancerId());
     }
 
+    @Override
+    public List<Enhancer> getEnhancersByLike(Long userId, String txt) {
+        if(StrUtil.isBlank(txt)) return new ArrayList<>();
+        LambdaQueryWrapper<Enhancer> wrapper = new LambdaQueryWrapper<>();
+        wrapper
+                .eq(Enhancer::getCreateBy, userId)
+                .like(Enhancer::getTitle, txt);
+        return enhancerMapper.selectList(wrapper);
+    }
+
     private void correctEnhancerIndexInKnode(Long knodeId) {
         List<EnhancerKnodeRel> rels = ekrMapper.getByKnodeId(knodeId);
         rels.sort(Comparator.comparingInt(EnhancerKnodeRel::getEnhancerIndex));
         for(int i = 1; i < rels.size(); i ++){
             EnhancerKnodeRel cur = rels.get(i);
-            cur.setEnhancerIndex(i);
             ekrMapper.updateIndex(knodeId, cur.getEnhancerId(), i);
         }
     }
@@ -191,7 +200,7 @@ public class EnhancerServiceImpl implements EnhancerService {
     public Enhancer addEnhancerToKnode(Long knodeId) {
         KnodeDTO knode = coreClient.check(knodeId);
         Enhancer enhancer = addEnhancerToUser(Convert.toLong(knode.getCreateBy()));
-        connectEnhancerToKnode(knodeId, enhancer.getId());
+        addKnodeEnhancerRel(knodeId, enhancer.getId());
         return enhancer;
     }
 
@@ -236,12 +245,8 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     @Transactional
-    public void connectEnhancerToKnode(Long knodeId, Long enhancerId) {
-        EnhancerKnodeRel relationship = new EnhancerKnodeRel();
-        relationship.setEnhancerId(enhancerId);
-        relationship.setKnodeId(knodeId);
-        relationship.setEnhancerIndex(getEnhancersFromKnode(knodeId).size());
-        relationship.setDeleted(false);
+    public void addKnodeEnhancerRel(Long knodeId, Long enhancerId) {
+        EnhancerKnodeRel relationship = EnhancerKnodeRel.prototype(knodeId, enhancerId, getEnhancersFromKnode(knodeId).size());
         ekrMapper.insert(relationship);
     }
 

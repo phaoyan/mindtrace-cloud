@@ -113,8 +113,13 @@ public class StudyTraceController {
     }
 
     @PutMapping("/rel/trace/enhancer")
-    public void addTraceEnhancerRel(@RequestBody IdPair traceEnhancerRel){
-        studyTraceService.addTraceEnhancerRel(traceEnhancerRel);
+    public void addTraceEnhancerRel(@RequestParam Long traceId, @RequestParam Long enhancerId){
+        studyTraceService.addTraceEnhancerRel(traceId, enhancerId);
+    }
+
+    @DeleteMapping("/rel/trace/enhancer")
+    public void removeTraceEnhancerRel(@RequestParam Long traceId, @RequestParam Long enhancerId){
+        studyTraceService.removeTraceEnhancerRel(traceId, enhancerId);
     }
 
 
