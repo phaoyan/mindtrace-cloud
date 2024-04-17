@@ -26,4 +26,9 @@ public class MqController {
         consumer.handleRemoveEnhancer(data);
     }
 
+    @PostMapping("/mq/resource/remove")
+    public void handleRemoveResource(@RequestBody String data){
+        consumer.handleRemoveResource(data);
+    }
+
 }

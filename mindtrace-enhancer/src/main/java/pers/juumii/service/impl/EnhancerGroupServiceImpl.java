@@ -1,5 +1,6 @@
 package pers.juumii.service.impl;
 
+import cn.hutool.core.collection.ListUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,24 +93,32 @@ public class EnhancerGroupServiceImpl implements EnhancerGroupService {
     }
 
     @Override
+    public List<Long> getEnhancerGroupIdsByResourceId(Long resourceId) {
+        LambdaQueryWrapper<EnhancerGroupResourceRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(EnhancerGroupResourceRel::getResourceId, resourceId);
+        return groupResourceRelMapper.selectList(wrapper).stream()
+                .map(EnhancerGroupResourceRel::getGroupId).toList();
+    }
+
+    @Override
     public List<EnhancerGroup> getGroupsByKnodeId(Long knodeId) {
         List<Long> groupIds = getEnhancerGroupIdsByKnodeId(knodeId);
         if(groupIds.isEmpty()) return new ArrayList<>();
-        return groupMapper.selectBatchIds(groupIds);
+        return groupMapper.selectBatchIds(groupIds).stream().filter(Objects::nonNull).toList();
     }
 
     @Override
     public List<Enhancer> getEnhancersByGroupId(Long groupId) {
         List<Long> enhancerIds = getRelatedEnhancerIdsByGroupId(groupId);
         if(enhancerIds.isEmpty()) return new ArrayList<>();
-        return enhancerMapper.selectBatchIds(enhancerIds).stream().filter(Objects::nonNull).toList();
+        return enhancerIds.stream().map(enhancerMapper::selectById).filter(Objects::nonNull).toList();
     }
 
     @Override
     public List<Resource> getResourcesByGroupId(Long groupId) {
         List<Long> resourceIds = getRelatedResourceIdsByGroupId(groupId);
         if(resourceIds.isEmpty()) return new ArrayList<>();
-        return resourceMapper.selectBatchIds(resourceIds);
+        return resourceMapper.selectBatchIds(resourceIds).stream().filter(Objects::nonNull).toList();
     }
 
     @Override
@@ -227,5 +236,29 @@ public class EnhancerGroupServiceImpl implements EnhancerGroupService {
         EnhancerGroup prototype = EnhancerGroup.prototype(userId);
         groupMapper.insert(prototype);
         addEnhancerGroupKnodeRel(prototype.getId(), knodeId);
+    }
+
+    @Override
+    @Transactional
+    public void setEnhancerIndexInEnhancerGroup(Long groupId, Long enhancerId, Integer index) {
+        LambdaQueryWrapper<EnhancerGroupRel> baseWrapper = new LambdaQueryWrapper<>();
+        baseWrapper.eq(EnhancerGroupRel::getGroupId, groupId);
+        List<EnhancerGroupRel> rels = enhancerGroupRelMapper.selectList(baseWrapper);
+        if(index < 0 || index >= rels.size()) return;
+        rels.sort(Comparator.comparingInt(EnhancerGroupRel::getEnhancerIndex));
+        int oriIndex = ListUtil.lastIndexOf(rels, (rel) -> rel.getEnhancerId().equals(enhancerId));
+        for(Integer i = 0; i < rels.size(); i ++){
+            if(i.equals(oriIndex))
+                rels.get(i).setEnhancerIndex(index);
+            else if(i.equals(index))
+                rels.get(i).setEnhancerIndex(oriIndex);
+            else
+                rels.get(i).setEnhancerIndex(i);
+            LambdaUpdateWrapper<EnhancerGroupRel> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper
+                    .eq(EnhancerGroupRel::getGroupId, rels.get(i).getGroupId())
+                    .eq(EnhancerGroupRel::getEnhancerId, rels.get(i).getEnhancerId());
+            enhancerGroupRelMapper.update(rels.get(i), updateWrapper);
+        }
     }
 }

@@ -1,11 +1,13 @@
 package pers.juumii.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.org.checkerframework.checker.nullness.Opt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -143,20 +145,43 @@ public class EnhancerServiceImpl implements EnhancerService {
     @Override
     @Transactional
     public void setEnhancerIndexInKnode(Long knodeId, Long enhancerId, Integer index) {
-        if(index < 0)
-            throw new RuntimeException("Wrong Index : " + index);
-        correctEnhancerIndexInKnode(knodeId);
-        List<EnhancerKnodeRel> rels = ekrMapper.getByKnodeId(knodeId);
-        int oriIndex = -1;
-        for(EnhancerKnodeRel rel: rels)
-            if(rel.getEnhancerId().equals(enhancerId))
-                oriIndex = rel.getEnhancerIndex();
-        for(EnhancerKnodeRel rel: rels){
-            if(rel.getEnhancerIndex().equals(oriIndex))
-                ekrMapper.updateIndex(rel.getKnodeId(), rel.getEnhancerId(), index);
-            else if(rel.getEnhancerIndex().equals(index))
-                ekrMapper.updateIndex(rel.getKnodeId(), rel.getEnhancerId(), oriIndex);
+        List<EnhancerKnodeRel> rels = new ArrayList<>(ekrMapper.getByKnodeId(knodeId));
+        if(index < 0 || index >= rels.size()) return;
+        rels.sort(Comparator.comparingInt(EnhancerKnodeRel::getEnhancerIndex));
+        Integer oriIndex = ListUtil.lastIndexOf(rels, (rel) -> rel.getEnhancerId().equals(enhancerId));
+        if(oriIndex > index){
+            for (Integer i = 0; i < rels.size(); i ++){
+                if(index <= i && i < oriIndex)
+                    rels.get(i).setEnhancerIndex(i+1);
+                else if(i.equals(oriIndex))
+                    rels.get(i).setEnhancerIndex(index);
+                LambdaUpdateWrapper<EnhancerKnodeRel> wrapper = new LambdaUpdateWrapper<>();
+                wrapper.eq(EnhancerKnodeRel::getKnodeId, rels.get(i).getKnodeId())
+                        .eq(EnhancerKnodeRel::getEnhancerId, rels.get(i).getEnhancerId());
+                ekrMapper.update(rels.get(i), wrapper);
+            }
+        }else if(oriIndex < index) {
+            for (Integer i = 0; i < rels.size(); i ++){
+                if(i.equals(oriIndex))
+                    rels.get(i).setEnhancerIndex(index);
+                else if(oriIndex < i && i <= index)
+                    rels.get(i).setEnhancerIndex(i-1);
+                LambdaUpdateWrapper<EnhancerKnodeRel> wrapper = new LambdaUpdateWrapper<>();
+                wrapper.eq(EnhancerKnodeRel::getKnodeId, rels.get(i).getKnodeId())
+                        .eq(EnhancerKnodeRel::getEnhancerId, rels.get(i).getEnhancerId());
+                ekrMapper.update(rels.get(i), wrapper);
+            }
         }
+
+//        for(Integer i = 0; i < rels.size(); i ++){
+//            if(i.equals(oriIndex))
+//                rels.get(i).setEnhancerIndex(index);
+//            else if(i.equals(index))
+//                rels.get(i).setEnhancerIndex(oriIndex);
+//            else
+//                rels.get(i).setEnhancerIndex(i);
+//
+//        }
     }
 
     @Override
@@ -175,15 +200,6 @@ public class EnhancerServiceImpl implements EnhancerService {
                 .eq(Enhancer::getCreateBy, userId)
                 .like(Enhancer::getTitle, txt);
         return enhancerMapper.selectList(wrapper);
-    }
-
-    private void correctEnhancerIndexInKnode(Long knodeId) {
-        List<EnhancerKnodeRel> rels = ekrMapper.getByKnodeId(knodeId);
-        rels.sort(Comparator.comparingInt(EnhancerKnodeRel::getEnhancerIndex));
-        for(int i = 1; i < rels.size(); i ++){
-            EnhancerKnodeRel cur = rels.get(i);
-            ekrMapper.updateIndex(knodeId, cur.getEnhancerId(), i);
-        }
     }
 
     @Override

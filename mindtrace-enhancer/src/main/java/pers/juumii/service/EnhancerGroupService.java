@@ -20,6 +20,8 @@ public interface EnhancerGroupService {
 
     List<Long> getEnhancerGroupIdsByEnhancerId(Long enhancerId);
 
+    List<Long> getEnhancerGroupIdsByResourceId(Long resourceId);
+
     List<EnhancerGroup> getGroupsByKnodeId(Long knodeId);
 
     List<Enhancer> getEnhancersByGroupId(Long groupId);
@@ -50,4 +52,5 @@ public interface EnhancerGroupService {
 
     void addEnhancerGroupToKnode(Long userId, Long knodeId);
 
+    void setEnhancerIndexInEnhancerGroup(Long groupId, Long enhancerId, Integer index);
 }

@@ -21,6 +21,7 @@ import pers.juumii.service.MilestoneService;
 import pers.juumii.utils.TimeUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class MilestoneServiceImpl implements MilestoneService {
@@ -123,7 +124,10 @@ public class MilestoneServiceImpl implements MilestoneService {
         LambdaQueryWrapper<MilestoneResourceRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(MilestoneResourceRel::getMilestoneId, id);
         List<MilestoneResourceRel> rels = mrrMapper.selectList(wrapper);
-        return rels.stream().map(rel->enhancerClient.getResourceById(rel.getResourceId())).toList();
+        return rels.stream()
+                .map(rel->enhancerClient.getResourceById(rel.getResourceId()))
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     @Override

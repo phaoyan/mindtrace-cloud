@@ -155,7 +155,7 @@ public class EnhancerGroupController {
         groupService.removeEnhancerGroup(groupId);
     }
 
-    @DeleteMapping("/rel/enhancer-group/{groupId}/enhancerId/{enhancerId}")
+    @DeleteMapping("/rel/enhancer-group/{groupId}/enhancer/{enhancerId}")
     public void removeEnhancerGroupRel(@PathVariable Long enhancerId, @PathVariable Long groupId){
         enhancerSameUser(enhancerId);
         groupSameUser(groupId);
@@ -190,7 +190,15 @@ public class EnhancerGroupController {
         groupService.setEnhancerGroupTitle(groupId, title);
     }
 
-
+    @PutMapping("/enhancer-group/{groupId}/enhancer/{enhancerId}/index")
+    public void setEnhancerIndexInEnhancerGroup(
+            @PathVariable Long groupId,
+            @PathVariable Long enhancerId,
+            @RequestParam Integer index){
+        groupSameUser(groupId);
+        enhancerSameUser(enhancerId);
+        groupService.setEnhancerIndexInEnhancerGroup(groupId, enhancerId, index);
+    }
 
 
 }

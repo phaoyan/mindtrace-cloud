@@ -39,13 +39,21 @@ public class KnodeShareServiceImpl implements KnodeShareService {
 
     @Override
     public List<KnodeShare> getRelatedKnodeShare(Long knodeId, Double threshold){
-        KnodeDTO knode = coreClient.check(knodeId);
         return knodeSimilarityClient.getNearestNeighbors(knodeId, threshold).stream()
                 .filter(data->coreClient.check(Convert.toLong(data.get("knodeId"))) != null)
                 .filter(data->Convert.toDouble(data.get("score")) > threshold)
                 .map(data->getKnodeShare(Convert.toLong(data.get("knodeId"))))
                 .filter(Objects::nonNull)
-                .filter(share->!share.getUserId().equals(Convert.toLong(knode.getCreateBy())))
+                .toList();
+    }
+
+    @Override
+    public List<KnodeShare> getRelatedKnodeShareByTitle(String title, Double threshold) {
+        return knodeSimilarityClient.getNearestNeighborsByTitle(title, threshold).stream()
+                .filter(data->coreClient.check(Convert.toLong(data.get("knodeId"))) != null)
+                .filter(data->Convert.toDouble(data.get("score")) > threshold)
+                .map(data->getKnodeShare(Convert.toLong(data.get("knodeId"))))
+                .filter(Objects::nonNull)
                 .toList();
     }
 

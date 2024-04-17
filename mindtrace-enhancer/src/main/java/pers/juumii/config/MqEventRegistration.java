@@ -55,11 +55,21 @@ public class MqEventRegistration implements ApplicationRunner {
         groupIds.forEach(groupId->enhancerGroupService.removeEnhancerGroupRel(enhancerId, groupId));
     }
 
+    public void handleRemoveResource(String message){
+        Long resourceId = Convert.toLong(message);
+        List<Long> groupIds = enhancerGroupService.getEnhancerGroupIdsByResourceId(resourceId);
+        groupIds.forEach(groupId->enhancerGroupService.removeEnhancerGroupResourceRel(groupId, resourceId));
+    }
+
     @Override
     public void run(ApplicationArguments args) throws InterruptedException {
         Thread.sleep(1000);
         ServiceInstance self = loadBalancerClient.choose("mindtrace-enhancer");
-        String targetUrl = self.getUri().toString() + "/mq/knode/remove";
-        mqClient.addListener(MessageEvents.REMOVE_KNODE, targetUrl);
+        String targetUrlRemoveKnode = self.getUri().toString() + "/mq/knode/remove";
+        String targetUrlRemoveEnhancer = self.getUri().toString() + "/mq/enhancer/remove";
+        String targetUrlRemoveResource = self.getUri().toString() + "/mq/resource/remove";
+        mqClient.addListener(MessageEvents.REMOVE_KNODE, targetUrlRemoveKnode);
+        mqClient.addListener(MessageEvents.REMOVE_ENHANCER, targetUrlRemoveEnhancer);
+        mqClient.addListener(MessageEvents.REMOVE_RESOURCE, targetUrlRemoveResource);
     }
 }

@@ -14,4 +14,7 @@ public interface KnodeSimilarityClient {
     @GetMapping("/knode/similar")
     List<Map<String, ?>> getNearestNeighbors(@RequestParam Long knodeId, @RequestParam Double threshold);
 
+    @GetMapping("/title/similar")
+    List<Map<String, ?>> getNearestNeighborsByTitle(@RequestParam String title, @RequestParam Double threshold);
+
 }

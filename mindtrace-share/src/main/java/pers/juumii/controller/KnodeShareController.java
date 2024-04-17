@@ -35,6 +35,13 @@ public class KnodeShareController {
         return KnodeShare.transfer(knodeShareService.getRelatedKnodeShare(knodeId, threshold));
     }
 
+    @GetMapping("/knode/similar")
+    public List<KnodeShareDTO> getRelatedKnodeShareByTitle(
+            @RequestParam String title,
+            @RequestParam(required = false) Double threshold){
+        return KnodeShare.transfer(knodeShareService.getRelatedKnodeShareByTitle(title, threshold));
+    }
+
     @PostMapping("/knodeShare/{shareId}/to/{targetId}")
     public void forkKnodeShare(@PathVariable Long shareId, @PathVariable Long targetId){
         knodeShareService.forkKnodeShare(shareId, targetId);

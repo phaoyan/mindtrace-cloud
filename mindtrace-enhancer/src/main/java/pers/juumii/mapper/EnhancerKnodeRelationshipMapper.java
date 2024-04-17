@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import pers.juumii.data.EnhancerKnodeRel;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Mapper
@@ -27,7 +28,9 @@ public interface EnhancerKnodeRelationshipMapper extends BaseMapper<EnhancerKnod
     default List<EnhancerKnodeRel> getByKnodeId(Long knodeId){
         LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(EnhancerKnodeRel::getKnodeId, knodeId);
-        return selectList(wrapper);
+        return selectList(wrapper).stream()
+                .sorted(Comparator.comparingInt(EnhancerKnodeRel::getEnhancerIndex))
+                .toList();
     }
 
     default void updateIndex(Long knodeId, Long enhancerId, Integer index){

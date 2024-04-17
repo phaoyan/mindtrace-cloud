@@ -8,9 +8,12 @@ import java.util.List;
 public interface KnodeShareService {
     List<KnodeShare> getRelatedKnodeShare(Long knodeId, Double threshold);
 
+    List<KnodeShare> getRelatedKnodeShareByTitle(String title, Double threshold);
+
     KnodeShare getKnodeShare(Long knodeId);
 
     void updateKnodeShare(Long knodeId, KnodeShareDTO dto);
 
     void forkKnodeShare(Long shareId, Long targetId);
+
 }
