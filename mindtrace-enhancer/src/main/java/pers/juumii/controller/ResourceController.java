@@ -12,14 +12,17 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pers.juumii.data.Enhancer;
 import pers.juumii.data.Resource;
+import pers.juumii.dto.EmbeddingVectorDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
 import pers.juumii.utils.AuthUtils;
+import pers.juumii.utils.EnvUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +58,13 @@ public class ResourceController {
         authUtils.same(Convert.toLong(resource.getCreateBy()));
     }
 
+    @GetMapping("/resource")
+    public List<ResourceDTO> getAllResources(@RequestParam String password){
+        if(!password.equals(EnvUtils.MINDTRACE_SECRET))
+            return new ArrayList<>();
+        return Resource.transfer(resourceService.getAllResource());
+    }
+
     @PostMapping("/enhancer/{enhancerId}/resource")
     public ResourceDTO addResource(@PathVariable Long enhancerId, @RequestBody ResourceDTO dto){
         enhancerSameUser(enhancerId);
@@ -86,6 +96,11 @@ public class ResourceController {
         return Resource.transfer(resourceService.getResource(resourceId));
     }
 
+    @PostMapping("/batch/resource/meta")
+    public List<ResourceDTO> getResourceBatch(@RequestBody List<Long> resourceIds){
+        return Resource.transfer(resourceService.getResourceBatch(resourceIds));
+    }
+
     @GetMapping("/resource/{resourceId}/data")
     public Map<String, byte[]> getDataFromResource(@PathVariable Long resourceId){
         return resourceService.getDataFromResource(resourceId);
@@ -100,7 +115,7 @@ public class ResourceController {
     public byte[] getDataFromResource(
             @PathVariable Long resourceId,
             @PathVariable String dataName) {
-        return resourceService.getDataFromResource( resourceId, dataName);
+        return resourceService.getDataFromResource(resourceId, dataName);
     }
 
     @GetMapping("/resource/{resourceId}/data/{dataName}/file")
@@ -195,6 +210,25 @@ public class ResourceController {
         enhancerSameUser(enhancerId);
         resourceSameUser(resourceId);
         resourceService.setResourceIndexInEnhancer(enhancerId, resourceId, index);
+    }
+
+    @GetMapping("/resource/{resourceId}/embedding-text")
+    public String getEmbeddingText(@PathVariable Long resourceId){
+        return resourceService.getEmbeddingText(resourceId);
+    }
+
+    @GetMapping("/resource/similar")
+    public List<EmbeddingVectorDTO> getSimilarResources(
+            @RequestParam String txt,
+            @RequestParam Double threshold){
+        return resourceService.getSimilarResources(txt, threshold);
+    }
+
+    @PutMapping("/resource/vector-base")
+    public void resetResourceVectorBase(@RequestParam String password){
+        if(!password.equals(EnvUtils.MINDTRACE_SECRET))
+            return;
+        resourceService.resetResourceVectorBase();
     }
 
 }

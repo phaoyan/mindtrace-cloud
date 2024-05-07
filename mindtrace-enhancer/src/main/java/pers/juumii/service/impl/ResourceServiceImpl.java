@@ -1,28 +1,37 @@
 package pers.juumii.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.qcloud.cos.exception.CosServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.EnhancerResourceRel;
 import pers.juumii.data.Resource;
+import pers.juumii.dto.EmbeddingVectorDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.MqClient;
+import pers.juumii.feign.VectorClient;
 import pers.juumii.mapper.EnhancerResourceRelationshipMapper;
 import pers.juumii.mapper.ResourceMapper;
 import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceRepository;
 import pers.juumii.service.ResourceService;
+import pers.juumii.service.impl.embedding.ResourceEmbeddingService;
 import pers.juumii.utils.DataUtils;
+import pers.juumii.utils.DesignPatternUtils;
 import pers.juumii.utils.TimeUtils;
 
 import java.io.InputStream;
@@ -31,7 +40,7 @@ import java.util.*;
 @Service
 public class ResourceServiceImpl implements ResourceService {
 
-
+    private final VectorClient vectorClient;
     private final ResourceMapper resourceMapper;
     private final ResourceRepository repository;
     private final EnhancerResourceRelationshipMapper errMapper;
@@ -47,11 +56,12 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Autowired
     public ResourceServiceImpl(
-            ResourceMapper resourceMapper,
+            VectorClient vectorClient, ResourceMapper resourceMapper,
             ResourceRepository repository,
             EnhancerResourceRelationshipMapper errMapper,
             CoreClient coreClient,
             MqClient mqClient) {
+        this.vectorClient = vectorClient;
         this.resourceMapper = resourceMapper;
         this.repository = repository;
         this.errMapper = errMapper;
@@ -107,12 +117,14 @@ public class ResourceServiceImpl implements ResourceService {
     public void addDataToResource(Long resourceId, Map<String, byte[]> data) {
         Resource meta = getResource(resourceId);
         repository.save(meta.getCreateBy(), meta.getId(), MapUtil.map(data, (k,v)->IoUtil.toStream(v)));
+        mqClient.emit(MessageEvents.ADD_DATA_TO_RESOURCE, resourceId.toString());
     }
 
     @Override
     public void addDataToResource(Long resourceId, String dataName, byte[] data) {
         Resource meta = getResource(resourceId);
         repository.save(meta.getCreateBy(), meta.getId(), dataName, IoUtil.toStream(data));
+        mqClient.emit(MessageEvents.ADD_DATA_TO_RESOURCE, resourceId.toString());
     }
 
     @Override
@@ -221,6 +233,55 @@ public class ResourceServiceImpl implements ResourceService {
             else if(rel.getResourceIndex().equals(index))
                 errMapper.updateIndex(rel.getEnhancerId(), rel.getResourceId(), oriIndex);
         }
+    }
+
+    @Override
+    public List<Resource> getAllResource() {
+        return resourceMapper.selectList(null);
+    }
+
+    @Override
+    public String getEmbeddingText(Long resourceId) {
+        try {
+            return DesignPatternUtils.route(
+                            ResourceEmbeddingService.class,
+                            (impl)->impl.match(getResource(resourceId).getType()))
+                    .getEmbeddingText(resourceId);
+        }catch (CosServiceException | NullPointerException e){
+            return null;
+        }
+    }
+
+    @Override
+    public List<EmbeddingVectorDTO> getSimilarResources(String txt, Double threshold) {
+        List<String> splitTxts = StrUtil.split(txt, ' ');
+        return vectorClient.searchSimilarMultiTxts(JSONUtil.toJsonStr(splitTxts), "resource", threshold)
+                .stream().sorted(Comparator.comparingDouble(EmbeddingVectorDTO::getScore).reversed())
+                .toList();
+    }
+
+    @Override
+    public void resetResourceVectorBase() {
+        List<Resource> resources = getAllResource();
+        List<JSONObject> data = resources.stream()
+                .map(resource -> Convert.toLong(resource.getId()))
+                .map(resourceId -> JSONUtil.createObj()
+                        .set("id", resourceId)
+                        .set("txt", getEmbeddingText(resourceId)))
+                .filter(result-> Objects.nonNull(result.get("txt")))
+                .toList();
+        JSONObject params = JSONUtil.createObj()
+                .set("data", data)
+                .set("vector-base", "resource");
+        try {
+            vectorClient.resetVectorBase(JSONUtil.toJsonStr(params));
+        }catch (Exception ignored){}
+    }
+
+    @Override
+    public List<Resource> getResourceBatch(List<Long> resourceIds) {
+        if(resourceIds.isEmpty()) return new ArrayList<>();
+        return resourceMapper.selectBatchIds(resourceIds);
     }
 
     public void correctResourceIndexInEnhancer(Long enhancerId){

@@ -37,6 +37,11 @@ public class CurrentStudyController {
         return CurrentStudy.transfer(currentStudyService.updateEndTime(endTime));
     }
 
+    @PostMapping("/study/current/duration-offset")
+    public CurrentStudyDTO updateDurationOffset(@RequestParam Long offset){
+        return CurrentStudy.transfer(currentStudyService.updateDurationOffset(offset));
+    }
+
     @GetMapping("/study/current")
     public CurrentStudyDTO getCurrentStudy(){
         return CurrentStudy.transfer(currentStudyService.getCurrentStudy());

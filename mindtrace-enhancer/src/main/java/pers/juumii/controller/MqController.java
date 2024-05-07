@@ -31,4 +31,6 @@ public class MqController {
         consumer.handleRemoveResource(data);
     }
 
+    @PostMapping("/mq/data/add")
+    public void handleAddDataToResource(@RequestBody String data){consumer.handleAddDataToResource(data);}
 }

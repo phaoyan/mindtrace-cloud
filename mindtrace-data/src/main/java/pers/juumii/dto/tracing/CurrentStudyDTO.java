@@ -11,4 +11,5 @@ public class CurrentStudyDTO {
     private List<String> enhancerIds;
     private List<String> continueList;
     private List<String> pauseList;
+    private Long durationOffset;
 }

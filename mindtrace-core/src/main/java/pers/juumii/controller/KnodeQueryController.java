@@ -5,11 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.Knode;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.service.KnodeQueryService;
+import pers.juumii.utils.EnvUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @RestController
 public class KnodeQueryController {
@@ -29,7 +27,9 @@ public class KnodeQueryController {
 
 
     @GetMapping("/knode")
-    public List<KnodeDTO> checkAll(){
+    public List<KnodeDTO> checkAll(@RequestParam String password){
+        if(!password.equals(EnvUtils.MINDTRACE_SECRET))
+            return new ArrayList<>();
         return Knode.transfer(knodeQuery.checkAll()).stream().filter(Objects::nonNull).toList();
     }
 
@@ -49,6 +49,17 @@ public class KnodeQueryController {
             @RequestParam String right,
             @RequestParam Long knodeId){
         return Knode.transfer(knodeQuery.checkByDate(left, right, knodeId));
+    }
+
+    @GetMapping("/similar/knode")
+    public List<KnodeDTO> checkBySimilar(@RequestParam String txt, @RequestParam Double threshold){
+        return Knode.transfer(knodeQuery.checkBySimilar(txt, threshold));
+    }
+
+    @PutMapping("/knode/vector-base")
+    public void resetKnodeVectorBase(@RequestParam String password){
+        if(!password.equals(EnvUtils.MINDTRACE_SECRET)) return;
+        knodeQuery.resetKnodeVectorBase();
     }
 
     @GetMapping("/like/knode")

@@ -14,6 +14,8 @@ import java.util.Map;
         configuration = FeignSecurityInterceptor.class)
 public interface CoreClient {
 
+    @GetMapping("/knode")
+    List<KnodeDTO> checkAll(@RequestParam String password);
     @GetMapping("/core/knode/{knodeId}")
     KnodeDTO check(@PathVariable Long knodeId);
     @PostMapping("/core/batch/knode")

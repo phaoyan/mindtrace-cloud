@@ -32,7 +32,7 @@ public interface EnhancerService {
 
     void addKnodeEnhancerRel(Long knodeId, Long enhancerId);
 
-    void disconnectEnhancerFromKnode(Long knodeId, Long enhancerId);
+    void removeKnodeEnhancerRel(Long knodeId, Long enhancerId);
 
     List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId);
 
@@ -54,7 +54,7 @@ public interface EnhancerService {
 
     void setEnhancerIndexInKnode(Long knodeId, Long enhancerId, Integer index);
 
-    Enhancer getEnhancerByResourceId(Long resourceId);
+    List<Enhancer> getEnhancersByResourceId(Long resourceId);
 
     List<Enhancer> getEnhancersByLike(Long userId, String txt);
 }

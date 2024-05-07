@@ -10,5 +10,5 @@ public class StudyTraceEnhancerInfo {
     private String title;
     private Long duration; //学习时长
     private Integer review; //学习次数
-    private List<StudyTraceDTO> traces;
+    private List<String> traceIds;
 }

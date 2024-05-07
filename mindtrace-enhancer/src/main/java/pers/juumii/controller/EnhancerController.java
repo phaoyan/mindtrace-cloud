@@ -104,8 +104,8 @@ public class EnhancerController {
     }
 
     @GetMapping("/enhancer/resource/{resourceId}")
-    public EnhancerDTO getEnhancerByResourceId(@PathVariable Long resourceId){
-        return Enhancer.transfer(enhancerService.getEnhancerByResourceId(resourceId));
+    public List<EnhancerDTO> getEnhancerByResourceId(@PathVariable Long resourceId){
+        return Enhancer.transfer(enhancerService.getEnhancersByResourceId(resourceId));
     }
 
     @PostMapping("/batch/knode/enhancer")
@@ -159,7 +159,7 @@ public class EnhancerController {
             @PathVariable Long knodeId){
         knodeSameUser(knodeId);
         enhancerSameUser(enhancerId);
-        enhancerService.disconnectEnhancerFromKnode(knodeId,enhancerId);
+        enhancerService.removeKnodeEnhancerRel(knodeId,enhancerId);
     }
 
     @GetMapping("/knode/{knodeId}/enhancer/count")

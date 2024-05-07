@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.Enhancer;
+import pers.juumii.data.EnhancerGroupRel;
 import pers.juumii.data.EnhancerKnodeRel;
 import pers.juumii.data.EnhancerResourceRel;
 import pers.juumii.dto.enhancer.EnhancerDTO;
@@ -20,20 +21,17 @@ import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
 import pers.juumii.feign.CoreClient;
 import pers.juumii.feign.MqClient;
-import pers.juumii.mapper.EnhancerKnodeRelationshipMapper;
-import pers.juumii.mapper.EnhancerMapper;
-import pers.juumii.mapper.EnhancerResourceRelationshipMapper;
+import pers.juumii.mapper.*;
 import pers.juumii.mq.MessageEvents;
 import pers.juumii.service.EnhancerService;
 import pers.juumii.service.ResourceService;
+import pers.juumii.utils.Cypher;
 import pers.juumii.utils.DataUtils;
+import pers.juumii.utils.Neo4jUtils;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class EnhancerServiceImpl implements EnhancerService {
@@ -42,8 +40,11 @@ public class EnhancerServiceImpl implements EnhancerService {
     private final EnhancerMapper enhancerMapper;
     private final EnhancerResourceRelationshipMapper errMapper;
     private final EnhancerKnodeRelationshipMapper ekrMapper;
+    private final EnhancerGroupRelMapper enhancerGroupRelMapper;
     private ResourceService resourceService;
     private final MqClient mqClient;
+    private final Neo4jUtils neo4j;
+
 
     @Lazy
     @Autowired
@@ -55,13 +56,17 @@ public class EnhancerServiceImpl implements EnhancerService {
     public EnhancerServiceImpl(
             CoreClient coreClient,
             EnhancerMapper enhancerMapper,
-            EnhancerResourceRelationshipMapper errMapper, EnhancerKnodeRelationshipMapper ekrMapper,
-            MqClient mqClient) {
+            EnhancerResourceRelationshipMapper errMapper,
+            EnhancerKnodeRelationshipMapper ekrMapper,
+            EnhancerGroupRelMapper enhancerGroupRelMapper,
+            MqClient mqClient, Neo4jUtils neo4j) {
         this.errMapper = errMapper;
+        this.enhancerGroupRelMapper = enhancerGroupRelMapper;
         this.mqClient = mqClient;
         this.coreClient = coreClient;
         this.enhancerMapper = enhancerMapper;
         this.ekrMapper = ekrMapper;
+        this.neo4j = neo4j;
     }
 
     @Override
@@ -71,28 +76,35 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     public List<Enhancer> getEnhancersFromKnode(Long knodeId) {
-        return
-                ekrMapper.getByKnodeId(knodeId).stream()
-                .sorted(Comparator.comparingInt(EnhancerKnodeRel::getEnhancerIndex))
-                .map(rel->enhancerMapper.selectById(rel.getEnhancerId()))
-                .toList();
+        Cypher cypher = Cypher.cypher("""
+                MATCH (knode: Knode {id: $knodeId})-[:KNODE_TO_ENHANCER]->(enhancer: Enhancer)
+                RETURN enhancer.id
+                """, Map.of("knodeId", knodeId));
+        List<Long> enhancerIds = neo4j.session(cypher, record -> record.get(0).isNull() ? null : record.get(0).asLong());
+        if(enhancerIds.isEmpty()) return new ArrayList<>();
+        return enhancerMapper.selectBatchIds(enhancerIds);
     }
 
     public List<Enhancer> getEnhancersFromKnodeBatch(List<Long> knodeIds){
-        if(knodeIds.isEmpty()) return new ArrayList<>();
-        LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(EnhancerKnodeRel::getKnodeId, knodeIds);
-        List<EnhancerKnodeRel> rel = ekrMapper.selectList(wrapper);
-        List<Long> enhancerIds = rel.stream().map(EnhancerKnodeRel::getEnhancerId).toList();
-        if(enhancerIds.isEmpty()) return new ArrayList<>();
-        return enhancerMapper.selectBatchIds(enhancerIds);
+        Cypher cypher = Cypher.cypher("""
+                WITH $knodeIds AS knodeIds
+                UNWIND knodeIds AS knodeId
+                MATCH (knode: Knode {id: knodeId})-[:KNODE_TO_ENHANCER]->(enhancer: Enhancer)
+                RETURN enhancer.id
+                """, Map.of("knodeIds", knodeIds));
+        List<Long> enhancerId =
+                new HashSet<>(neo4j.session(cypher, (record) ->
+                        record.get(0).isNull() ? null :
+                        record.get(0).asLong()))
+                        .stream().toList();
+        if(enhancerId.isEmpty()) return new ArrayList<>();
+        return enhancerMapper.selectBatchIds(enhancerId);
     }
 
 
     @Override
     public List<KnodeDTO> getKnodeByEnhancerId(Long enhancerId) {
         List<EnhancerKnodeRel> rels = ekrMapper.getByEnhancerId(enhancerId);
-        if(rels.isEmpty()) removeEnhancer(enhancerId);
         return coreClient.checkBatch(rels.stream().map(EnhancerKnodeRel::getKnodeId).toList());
     }
 
@@ -172,24 +184,14 @@ public class EnhancerServiceImpl implements EnhancerService {
                 ekrMapper.update(rels.get(i), wrapper);
             }
         }
-
-//        for(Integer i = 0; i < rels.size(); i ++){
-//            if(i.equals(oriIndex))
-//                rels.get(i).setEnhancerIndex(index);
-//            else if(i.equals(index))
-//                rels.get(i).setEnhancerIndex(oriIndex);
-//            else
-//                rels.get(i).setEnhancerIndex(i);
-//
-//        }
     }
 
     @Override
-    public Enhancer getEnhancerByResourceId(Long resourceId) {
+    public List<Enhancer> getEnhancersByResourceId(Long resourceId) {
         LambdaQueryWrapper<EnhancerResourceRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(EnhancerResourceRel::getResourceId, resourceId);
-        EnhancerResourceRel rel = errMapper.selectOne(wrapper);
-        return getEnhancerById(rel.getEnhancerId());
+        List<EnhancerResourceRel> rels = errMapper.selectList(wrapper);
+        return rels.stream().map((rel)->getEnhancerById(rel.getEnhancerId())).toList();
     }
 
     @Override
@@ -252,23 +254,46 @@ public class EnhancerServiceImpl implements EnhancerService {
         if(target == null) return;
         resourceService.removeAllResourcesFromEnhancer(enhancerId);
         enhancerMapper.deleteById(enhancerId);
-        List<Long> knodeIds =
-                ekrMapper.getByEnhancerId(enhancerId).stream()
-                .map(EnhancerKnodeRel::getKnodeId).toList();
-        knodeIds.forEach(knodeId-> ekrMapper.deleteRelationship(enhancerId, knodeId));
+        List<Long> knodeIds = ekrMapper.getByEnhancerId(enhancerId).stream().map(EnhancerKnodeRel::getKnodeId).toList();
+        LambdaUpdateWrapper<EnhancerGroupRel> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(EnhancerGroupRel::getEnhancerId, enhancerId);
+        enhancerGroupRelMapper.delete(wrapper);
+        knodeIds.forEach(knodeId-> removeKnodeEnhancerRel(knodeId, enhancerId));
         mqClient.emit(MessageEvents.REMOVE_ENHANCER, enhancerId.toString());
     }
 
     @Override
     @Transactional
     public void addKnodeEnhancerRel(Long knodeId, Long enhancerId) {
+        Cypher cypher = Cypher.cypher("""
+                MERGE (enhancer: Enhancer{id: $enhancerId})
+                WITH enhancer
+                MATCH (knode: Knode {id: $knodeId})
+                MERGE (knode)-[:KNODE_TO_ENHANCER]->(enhancer)
+                MERGE (enhancer)-[:ENHANCER_TO_KNODE]->(knode)
+                """, Map.of("enhancerId", enhancerId, "knodeId", knodeId));
+        neo4j.transaction(List.of(cypher));
+        if(checkKnodeEnhancerRel(knodeId, enhancerId)) return;
         EnhancerKnodeRel relationship = EnhancerKnodeRel.prototype(knodeId, enhancerId, getEnhancersFromKnode(knodeId).size());
         ekrMapper.insert(relationship);
     }
 
+    private Boolean checkKnodeEnhancerRel(Long knodeId, Long enhancerId) {
+        LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(EnhancerKnodeRel::getKnodeId, knodeId)
+                .eq(EnhancerKnodeRel::getEnhancerId, enhancerId);
+        return ekrMapper.exists(wrapper);
+    }
+
     @Override
     @Transactional
-    public void disconnectEnhancerFromKnode(Long knodeId, Long enhancerId){
+    public void removeKnodeEnhancerRel(Long knodeId, Long enhancerId){
+        Cypher cypher = Cypher.cypher("""
+                MATCH (knode: Knode {id: $knodeId})-[r1:KNODE_TO_ENHANCER]->(enhancer: Enhancer {id: $enhancerId}),
+                      (enhancer: Enhancer {id: $enhancerId})-[r2:ENHANCER_TO_KNODE]->(knode: Knode {id: $knodeId})
+                DELETE r1, r2
+                """, Map.of("enhancerId", enhancerId, "knodeId", knodeId));
+        neo4j.transaction(List.of(cypher));
         ekrMapper.deleteRelationship(enhancerId, knodeId);
         if(ekrMapper.getByEnhancerId(enhancerId).size() == 0)
             removeEnhancer(enhancerId);
@@ -276,24 +301,30 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     public List<Enhancer> getEnhancersFromKnodeIncludingBeneath(Long knodeId) {
-        return getEnhancersFromKnodeBatch(coreClient.offspringIds(knodeId));
+        Cypher cypher = Cypher.cypher("""
+                MATCH (n:Knode {id: $knodeId})
+                CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
+                WITH nodes as all
+                UNWIND all AS knode
+                MATCH (knode)-[:KNODE_TO_ENHANCER]->(enhancer)
+                RETURN enhancer.id
+                """, Map.of("knodeId", knodeId));
+        Set<Long> enhancerIds = new HashSet<>(neo4j.session(cypher, (record) ->
+                record.get(0).isNull() ? null :
+                record.get(0).asLong()));
+        if(enhancerIds.isEmpty()) return new ArrayList<>();
+        return enhancerMapper.selectBatchIds(enhancerIds);
     }
 
     @Override
     public List<Long> getEnhancerIdsFromKnodeIncludingBeneath(Long knodeId){
-        return getEnhancersFromKnodeIncludingBeneath(knodeId)
-                .stream().map(Enhancer::getId)
-                .toList();
+        return getEnhancersFromKnodeIncludingBeneath(knodeId).stream().map(Enhancer::getId).toList();
     }
 
 
     @Override
     public Long getEnhancerCount(Long knodeId){
-        List<Long> offspringIds = coreClient.offspringIds(knodeId);
-        if(offspringIds.isEmpty()) return 0L;
-        LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(EnhancerKnodeRel::getKnodeId, offspringIds);
-        return ekrMapper.selectCount(wrapper);
+        return Convert.toLong(getEnhancersFromKnodeIncludingBeneath(knodeId).size());
     }
 
 }

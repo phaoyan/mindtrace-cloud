@@ -29,6 +29,8 @@ public interface EnhancerClient {
     List<EnhancerDTO> getEnhancersFromKnodeIncludingBeneath(@PathVariable Long knodeId);
     @GetMapping("/enhancer/knode/{knodeId}/offspring/enhancer/id")
     List<Long> getEnhancerIdsFromKnodeIncludingBeneath(@PathVariable Long knodeId);
+    @GetMapping("/resource")
+    List<ResourceDTO> getAllResources(@RequestParam String password);
     @GetMapping("/enhancer/enhancer/{enhancerId}/resource")
     List<ResourceDTO> getResourcesOfEnhancer(@PathVariable Long enhancerId);
     @PostMapping("/enhancer/batch/enhancer/resource")
@@ -87,4 +89,6 @@ public interface EnhancerClient {
     EnhancerGroupDTO getEnhancerGroupById(@PathVariable Long groupId);
     @GetMapping("/enhancer/rel/enhancer-group/{groupId}/enhancer/id")
     List<String> getRelatedEnhancerIdsByGroupId(@PathVariable Long groupId);
+    @GetMapping("/resource/{resourceId}/embedding-text")
+    String getEmbeddingText(@PathVariable Long resourceId);
 }

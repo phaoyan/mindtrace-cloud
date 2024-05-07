@@ -36,4 +36,5 @@ public interface CurrentStudyService {
 
     CurrentStudy updateEndTime(String endTime);
 
+    CurrentStudy updateDurationOffset(Long offset);
 }

@@ -1,7 +1,6 @@
 package pers.juumii.service.impl;
 
 import cn.hutool.core.convert.Convert;
-import cn.hutool.core.util.StrUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.persistent.StudyTrace;
@@ -17,8 +16,6 @@ import pers.juumii.utils.DataUtils;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,10 +39,12 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
     @Override
     public StudyTraceEnhancerInfo getStudyTraceEnhancerInfo(Long enhancerId) {
         StudyTraceEnhancerInfo res = new StudyTraceEnhancerInfo();
+        res.setTraceIds(new ArrayList<>());
         EnhancerDTO enhancer = enhancerClient.getEnhancerById(enhancerId);
         List<StudyTrace> traces = studyTraceService
                 .getStudyTracesOfEnhancer(enhancerId)
                 .stream().filter(Objects::nonNull)
+                .sorted(Comparator.comparing(StudyTrace::getStartTime))
                 .toList();
         if(traces.size() == 0) return res;
         res.setEnhancerId(enhancerId.toString());
@@ -55,7 +54,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 .reduce(Long::sum)
                 .orElse(0L));
         res.setReview(traces.size());
-        res.setTraces(DataUtils.reverse(StudyTrace.transfer(traces)));
+        res.setTraceIds(DataUtils.reverse(traces.stream().map(trace->Convert.toStr(trace.getId())).toList()));
         return res;
     }
 
@@ -69,24 +68,23 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         if(infos.isEmpty()) return new StudyTraceEnhancerGroupInfo(
                 Convert.toStr(groupId),
                 group.getTitle(),
-                0L,
-                0,
+                0L, 0,
                 new ArrayList<>());
         StudyTraceEnhancerGroupInfo res = new StudyTraceEnhancerGroupInfo();
-        List<StudyTraceDTO> traces = infos.stream()
+        List<String> traceIds = infos.stream()
                 .filter(info->Objects.nonNull(info.getEnhancerId()))
-                .map(StudyTraceEnhancerInfo::getTraces)
+                .map(StudyTraceEnhancerInfo::getTraceIds)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet()).stream()
                 .toList();
         res.setGroupId(Convert.toStr(groupId));
         res.setTitle(group.getTitle());
-        res.setDuration(traces.stream()
-                .map(StudyTraceDTO::getSeconds)
+        res.setDuration(traceIds.stream()
+                .map((traceId)->studyTraceService.getStudyTrace(Convert.toLong(traceId)).getSeconds())
                 .reduce(Long::sum)
                 .orElse(0L));
-        res.setReview(traces.size());
-        res.setTraces(traces);
+        res.setReview(traceIds.size());
+        res.setTraceIds(traceIds);
         return res;
     }
 
@@ -136,7 +134,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         List<Long> tracedEnhancerIds = studyTraceService.getTracedEnhancerIdsFromList(enhancerIds);
         return tracedEnhancerIds.stream()
                 .map(this::getStudyTraceEnhancerInfo)
-                .filter(info -> info.getTraces() != null && !info.getTraces().isEmpty())
+                .filter(info -> info.getTraceIds() != null && !info.getTraceIds().isEmpty())
                 .toList();
     }
 

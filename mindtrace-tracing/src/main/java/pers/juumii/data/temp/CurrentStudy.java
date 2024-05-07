@@ -18,6 +18,7 @@ public class CurrentStudy {
     private List<Long> enhancerIds;
     private List<String> continueList;
     private List<String> pauseList;
+    private Long durationOffset;
 
     public Long duration() {
         Duration duration = Duration.between(trace.getStartTime(), trace.getEndTime());
@@ -29,7 +30,7 @@ public class CurrentStudy {
             duration = duration.minus(Duration.between(
                     TimeUtils.parse(getPauseList().get(getPauseList().size() - 1)),
                     trace.getEndTime()));
-        return duration.toSeconds();
+        return duration.toSeconds() + durationOffset;
     }
 
     public static CurrentStudy prototype(StudyTrace trace) {
@@ -39,6 +40,7 @@ public class CurrentStudy {
         res.setEnhancerIds(new ArrayList<>());
         res.setContinueList(new ArrayList<>());
         res.setPauseList(new ArrayList<>());
+        res.setDurationOffset(0L);
         return res;
     }
 
@@ -50,6 +52,7 @@ public class CurrentStudy {
         res.setEnhancerIds(new ArrayList<>(current.getEnhancerIds().stream().map(Object::toString).toList()));
         res.setContinueList(current.getContinueList());
         res.setPauseList(current.getPauseList());
+        res.setDurationOffset(current.getDurationOffset());
         return res;
     }
 
@@ -61,6 +64,7 @@ public class CurrentStudy {
         res.setEnhancerIds(new ArrayList<>(dto.getEnhancerIds().stream().map(Convert::toLong).toList()));
         res.setContinueList(dto.getContinueList());
         res.setPauseList(dto.getPauseList());
+        res.setDurationOffset(dto.getDurationOffset());
         return res;
     }
 

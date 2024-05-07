@@ -132,7 +132,7 @@ public class KnodeServiceImplV2 implements KnodeService {
         Opt.ifPresent(dto.getTitle(), knode::setTitle);
         Opt.ifPresent(dto.getIndex(), knode::setIndex);
         threadUtils.getUserBlockingQueue().add(()-> neo4j.transaction(List.of(updateBasic(knode))));
-        mqClient.emit(MessageEvents.UPDATE_KNODE, JSONUtil.toJsonStr(Knode.transfer(knode)));
+        mqClient.emit(MessageEvents.UPDATE_KNODE, knode.getId().toString());
     }
 
     @Override

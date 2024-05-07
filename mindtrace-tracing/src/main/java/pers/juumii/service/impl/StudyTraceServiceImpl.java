@@ -78,12 +78,11 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Override
     @Transactional
     public void removeStudyTrace(Long traceId) {
+        List<Long> traceKnodeRels = getTraceKnodeRels(traceId);
+        List<Long> traceEnhancerRels = getTraceEnhancerRels(traceId);
+        traceKnodeRels.forEach(knodeId->removeTraceKnodeRel(traceId, knodeId));
+        traceEnhancerRels.forEach(enhancerId->removeTraceEnhancerRel(traceId, enhancerId));
         studyTraceMapper.deleteById(traceId);
-        LambdaUpdateWrapper<TraceKnodeRel> tkrWrapper = new LambdaUpdateWrapper<>();
-        LambdaUpdateWrapper<TraceEnhancerRel> terWrapper = new LambdaUpdateWrapper<>();
-        terWrapper.eq(TraceEnhancerRel::getTraceId, traceId);
-        tkrWrapper.eq(TraceKnodeRel::getTraceId, traceId);
-        traceKnodeRelMapper.delete(tkrWrapper);
     }
 
     @Override
@@ -167,6 +166,10 @@ public class StudyTraceServiceImpl implements StudyTraceService {
                 DELETE r1, r2
                 """, Map.of("traceId", traceId, "knodeId", knodeId));
         neo4j.transaction(List.of(cypher));
+        LambdaUpdateWrapper<TraceKnodeRel> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(TraceKnodeRel::getKnodeId, knodeId)
+                .eq(TraceKnodeRel::getTraceId, traceId);
+        traceKnodeRelMapper.delete(wrapper);
     }
 
     @Override
@@ -217,29 +220,36 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     @Override
     public List<StudyTrace> getStudyTracesOfEnhancer(Long enhancerId) {
-        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceEnhancerRel::getEnhancerId, enhancerId);
-        return traceEnhancerRelMapper.selectList(wrapper).stream()
-                .map(rel->getStudyTrace(rel.getTraceId()))
-                .toList();
+        Cypher cypher = Cypher.cypher("""
+                MATCH (enhancer: Enhancer {id:$enhancerId})-[:ENHANCER_TO_TRACE]->(trace: StudyTrace)
+                RETURN trace.id
+                """, Map.of("enhancerId", enhancerId));
+        List<Long> traceIds = neo4j.session(cypher, (record -> record.get(0).isNull() ? null : record.get(0).asLong()));
+        traceIds = new HashSet<>(traceIds).stream().toList();
+        return traceIds.stream().map(this::getStudyTrace).toList();
     }
 
     @Override
     public List<Long> getTracedEnhancerIdsFromList(List<Long> enhancerIds){
         if(enhancerIds.isEmpty()) return new ArrayList<>();
-        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(TraceEnhancerRel::getEnhancerId, enhancerIds);
-        List<TraceEnhancerRel> rels = traceEnhancerRelMapper.selectList(wrapper);
-        return rels
-                .stream()
-                .map(TraceEnhancerRel::getEnhancerId)
-                .collect(Collectors.toSet())
-                .stream()
-                .toList();
+        Cypher cypher = Cypher.cypher("""
+                WITH $enhancerIds AS enhancerIds
+                UNWIND enhancerIds AS enhancerId
+                MATCH (enhancer: Enhancer {id: enhancerId})-[:ENHANCER_TO_TRACE]->(trace: StudyTrace)
+                RETURN enhancer.id
+                """, Map.of("enhancerIds", enhancerIds));
+        List<Long> tracedEnhancerIds = neo4j.session(cypher, record -> record.get(0).isNull() ? null : record.get(0).asLong());
+        return new HashSet<>(tracedEnhancerIds).stream().toList();
     }
 
     @Override
     public void removeTraceEnhancerRel(Long traceId, Long enhancerId) {
+        Cypher cypher = Cypher.cypher("""
+                MATCH (enhancer: Enhancer {id: $enhancerId})-[r1:ENHANCER_TO_TRACE]->(trace: StudyTrace {id: $traceId}),
+                (trace: StudyTrace {id: $traceId})-[r2:TRACE_TO_ENHANCER]->(enhancer: Enhancer {id: $enhancerId})
+                DELETE r1, r2
+                """, Map.of("traceId", traceId, "enhancerId", enhancerId));
+        neo4j.transaction(List.of(cypher));
         LambdaUpdateWrapper<TraceEnhancerRel> wrapper = new LambdaUpdateWrapper<>();
         wrapper
                 .eq(TraceEnhancerRel::getTraceId, traceId)
@@ -250,7 +260,23 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Override
     @Transactional
     public void addTraceEnhancerRel(Long traceId, Long enhancerId) {
-        traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceId, enhancerId));
+        Cypher cypher = Cypher.cypher("""
+                MERGE (trace: StudyTrace{id: $traceId})
+                WITH trace
+                MATCH (enhancer: Enhancer {id: $enhancerId})
+                MERGE (enhancer)-[:ENHANCER_TO_TRACE]->(trace)
+                MERGE (trace)-[:TRACE_TO_ENHANCER]->(enhancer)
+                """, Map.of("traceId", traceId, "enhancerId", enhancerId));
+        neo4j.transaction(List.of(cypher));
+        if(!checkTraceEnhancerRel(traceId, enhancerId))
+            traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceId, enhancerId));
+    }
+
+    private Boolean checkTraceEnhancerRel(Long traceId, Long enhancerId) {
+        LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TraceEnhancerRel::getEnhancerId, enhancerId)
+                .eq(TraceEnhancerRel::getTraceId, traceId);
+        return traceEnhancerRelMapper.exists(wrapper);
     }
 
 

@@ -43,8 +43,6 @@ public interface KnodeQueryService {
     List<Knode> checkAll(Long userId);
     List<Knode> checkAll();
 
-    List<Knode> similar(Long knodeId);
-
     Map<String, List<String>> chainStyleTitleBeneath(Long knodeId);
 
     Boolean isOffspring(Long childId, Long parentId);
@@ -56,4 +54,7 @@ public interface KnodeQueryService {
 
     List<Long> offspringIds(Long knodeId);
 
+    List<Knode> checkBySimilar(String txt, Double threshold);
+
+    void resetKnodeVectorBase();
 }

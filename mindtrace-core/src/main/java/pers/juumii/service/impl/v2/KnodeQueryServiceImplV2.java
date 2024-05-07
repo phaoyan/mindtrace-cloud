@@ -1,6 +1,9 @@
 package pers.juumii.service.impl.v2;
 
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Value;
 import org.neo4j.driver.internal.InternalNode;
@@ -8,18 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pers.juumii.data.Knode;
 import pers.juumii.data.Label;
+import pers.juumii.dto.EmbeddingVectorDTO;
+import pers.juumii.feign.VectorClient;
 import pers.juumii.service.KnodeQueryService;
 import pers.juumii.service.UserService;
-import pers.juumii.utils.Cypher;
-import pers.juumii.utils.DataUtils;
-import pers.juumii.utils.Neo4jUtils;
-import pers.juumii.utils.TimeUtils;
+import pers.juumii.utils.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 @Service
@@ -27,6 +26,7 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
 
     private final Neo4jUtils neo4j;
     private final UserService userService;
+    private final VectorClient vectorClient;
 
     public static Cypher shallowLink(){
         return Cypher.cypher("""
@@ -71,9 +71,10 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
     };
 
     @Autowired
-    public KnodeQueryServiceImplV2(Neo4jUtils neo4j, UserService userService) {
+    public KnodeQueryServiceImplV2(Neo4jUtils neo4j, UserService userService, VectorClient vectorClient) {
         this.neo4j = neo4j;
         this.userService = userService;
+        this.vectorClient = vectorClient;
     }
 
     @Override
@@ -311,6 +312,34 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
     }
 
     @Override
+    public List<Knode> checkBySimilar(String txt, Double threshold) {
+        List<EmbeddingVectorDTO> dataList = vectorClient.searchSimilar(txt, "knode", threshold);
+        return dataList.stream()
+                .sorted(Comparator.comparing(EmbeddingVectorDTO::getScore).reversed())
+                .map(data -> check(Convert.toLong(data.getId())))
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    @Override
+    public void resetKnodeVectorBase() {
+        try {
+            List<Knode> knodes = checkAll();
+            List<JSONObject> data = knodes.stream()
+                    .map(Knode::getId)
+                    .filter(Objects::nonNull)
+                    .map(knodeId -> JSONUtil.createObj()
+                            .set("id", knodeId)
+                            .set("txt", StringUtils.spacedTexts(chainStyleTitle(knodeId))))
+                    .toList();
+            JSONObject params = JSONUtil.createObj()
+                    .set("data", data)
+                    .set("vector-base", "knode");
+            vectorClient.resetVectorBase(JSONUtil.toJsonStr(params));
+        }catch (Exception ignored){}
+    }
+
+    @Override
     public List<Knode> checkAll(Long userId) {
         Cypher cypher = Cypher
                 .cypher("""
@@ -335,11 +364,6 @@ public class KnodeQueryServiceImplV2 implements KnodeQueryService {
                 .append(shallowLink())
                 .append(basicReturn());
         return neo4j.session(cypher, knodeResolver);
-    }
-
-    @Override
-    public List<Knode> similar(Long knodeId) {
-        return null;
     }
 
 

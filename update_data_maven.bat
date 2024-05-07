@@ -1,0 +1,1 @@
+copy .\mindtrace-data\target\mindtrace-data-1.0-SNAPSHOT.jar.original "D:\coding\tools\m2\repository\pers\juumii\mindtrace-data\1.0-SNAPSHOT\mindtrace-data-1.0-SNAPSHOT.jar"

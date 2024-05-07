@@ -15,7 +15,6 @@ import pers.juumii.dto.tracing.CurrentStudyDTO;
 import pers.juumii.mapper.MilestoneTraceRelMapper;
 import pers.juumii.service.CurrentStudyService;
 import pers.juumii.service.StudyTraceService;
-import pers.juumii.service.TraceEnhancerRelService;
 import pers.juumii.utils.TimeUtils;
 
 import java.time.LocalDateTime;
@@ -26,18 +25,15 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
 
     private final StringRedisTemplate redis;
     private final StudyTraceService studyTraceService;
-    private final TraceEnhancerRelService traceEnhancerRelService;
     private final MilestoneTraceRelMapper milestoneTraceRelMapper;
 
     @Autowired
     public CurrentStudyServiceImpl(
             StringRedisTemplate redis,
             StudyTraceService studyTraceService,
-            TraceEnhancerRelService traceEnhancerRelService,
             MilestoneTraceRelMapper milestoneTraceRelMapper) {
         this.redis = redis;
         this.studyTraceService = studyTraceService;
-        this.traceEnhancerRelService = traceEnhancerRelService;
         this.milestoneTraceRelMapper = milestoneTraceRelMapper;
     }
 
@@ -80,7 +76,7 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         for(Long knodeId: currentStudy.getKnodeIds())
             studyTraceService.addTraceKnodeRel(currentStudy.getTrace().getId(), knodeId);
         for(Long enhancerId: currentStudy.getEnhancerIds())
-            traceEnhancerRelService.postEnhancerTraceRel(currentStudy.getTrace().getId(), enhancerId);
+            studyTraceService.addTraceEnhancerRel(currentStudy.getTrace().getId(), enhancerId);
         removeCurrentStudy();
         return currentStudy.getTrace();
     }
@@ -147,6 +143,14 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
     public CurrentStudy updateEndTime(String endTime) {
         CurrentStudy currentStudy = getCurrentStudy();
         currentStudy.getTrace().setEndTime(TimeUtils.parse(endTime));
+        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
+        return currentStudy;
+    }
+
+    @Override
+    public CurrentStudy updateDurationOffset(Long offset) {
+        CurrentStudy currentStudy = getCurrentStudy();
+        currentStudy.setDurationOffset(offset);
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
     }
