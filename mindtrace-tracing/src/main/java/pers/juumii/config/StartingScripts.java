@@ -46,13 +46,6 @@ public class StartingScripts implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        List<MilestoneTraceRel> mtRels = relMapper.selectList(null);
-        for(MilestoneTraceRel rel : mtRels){
-            StudyTrace trace = studyTraceMapper.selectById(rel.getTraceId());
-            if(trace == null) continue;
-            trace.setMilestoneId(rel.getMilestoneId());
-            studyTraceMapper.updateById(trace);
-        }
         List<TraceEnhancerRel> teRels = terMapper.selectList(null);
         for(TraceEnhancerRel rel: teRels){
             Long enhancerId = rel.getEnhancerId();

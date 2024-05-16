@@ -76,13 +76,14 @@ public class EnhancerServiceImpl implements EnhancerService {
 
     @Override
     public List<Enhancer> getEnhancersFromKnode(Long knodeId) {
-        Cypher cypher = Cypher.cypher("""
-                MATCH (knode: Knode {id: $knodeId})-[:KNODE_TO_ENHANCER]->(enhancer: Enhancer)
-                RETURN enhancer.id
-                """, Map.of("knodeId", knodeId));
-        List<Long> enhancerIds = neo4j.session(cypher, record -> record.get(0).isNull() ? null : record.get(0).asLong());
-        if(enhancerIds.isEmpty()) return new ArrayList<>();
-        return enhancerMapper.selectBatchIds(enhancerIds);
+        LambdaQueryWrapper<EnhancerKnodeRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(EnhancerKnodeRel::getKnodeId, knodeId);
+        List<EnhancerKnodeRel> rels = ekrMapper.selectList(wrapper);
+        return rels.stream()
+                .sorted(Comparator.comparing(EnhancerKnodeRel::getEnhancerIndex))
+                .map(rel->enhancerMapper.selectById(rel.getEnhancerId()))
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     public List<Enhancer> getEnhancersFromKnodeBatch(List<Long> knodeIds){

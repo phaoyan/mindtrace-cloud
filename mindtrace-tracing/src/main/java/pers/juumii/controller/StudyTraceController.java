@@ -1,11 +1,15 @@
 package pers.juumii.controller;
 
+import cn.hutool.core.convert.Convert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.dto.IdPair;
+import pers.juumii.dto.KnodeDTO;
 import pers.juumii.dto.tracing.StudyTraceDTO;
+import pers.juumii.feign.CoreClient;
 import pers.juumii.service.StudyTraceService;
+import pers.juumii.utils.AuthUtils;
 
 import java.util.Comparator;
 import java.util.List;
@@ -14,10 +18,25 @@ import java.util.List;
 public class StudyTraceController {
 
     private final StudyTraceService studyTraceService;
+    private final CoreClient coreClient;
+    private final AuthUtils authUtils;
+
+    private void traceSameUser(Long traceId){
+        StudyTrace studyTrace = studyTraceService.getStudyTrace(traceId);
+        authUtils.same(studyTrace.getUserId());
+    }
+
+    private Long knodeSameUser(Long knodeId){
+        KnodeDTO knode = coreClient.check(knodeId);
+        authUtils.same(Convert.toLong(knode.getCreateBy()));
+        return Convert.toLong(knode.getCreateBy());
+    }
 
     @Autowired
-    public StudyTraceController(StudyTraceService studyTraceService) {
+    public StudyTraceController(StudyTraceService studyTraceService, CoreClient coreClient, AuthUtils authUtils) {
         this.studyTraceService = studyTraceService;
+        this.coreClient = coreClient;
+        this.authUtils = authUtils;
     }
 
     @PutMapping("/study/trace")
@@ -38,16 +57,20 @@ public class StudyTraceController {
 
     @DeleteMapping("/study/trace/{traceId}")
     public void removeStudyTrace(@PathVariable Long traceId){
+        traceSameUser(traceId);
         studyTraceService.removeStudyTrace(traceId);
     }
 
     @PostMapping("/study/trace/{traceId}/knode/{knodeId}")
     public void addTraceKnodeRel(@PathVariable Long traceId, @PathVariable Long knodeId){
+        traceSameUser(traceId);
+        knodeSameUser(knodeId);
         studyTraceService.addTraceKnodeRel(traceId, knodeId);
     }
 
     @PostMapping("/study/trace")
     public void updateTraceTitle(@RequestBody StudyTraceDTO trace){
+        traceSameUser(Convert.toLong(trace.getId()));
         studyTraceService.updateStudyTrace(trace);
     }
 
@@ -69,6 +92,8 @@ public class StudyTraceController {
 
     @DeleteMapping("study/trace/{traceId}/knode/{knodeId}")
     public void removeTraceKnodeRel(@PathVariable Long traceId, @PathVariable Long knodeId){
+        traceSameUser(traceId);
+        knodeSameUser(knodeId);
         studyTraceService.removeTraceKnodeRel(traceId, knodeId);
     }
 
@@ -114,11 +139,13 @@ public class StudyTraceController {
 
     @PutMapping("/rel/trace/enhancer")
     public void addTraceEnhancerRel(@RequestParam Long traceId, @RequestParam Long enhancerId){
+        traceSameUser(traceId);
         studyTraceService.addTraceEnhancerRel(traceId, enhancerId);
     }
 
     @DeleteMapping("/rel/trace/enhancer")
     public void removeTraceEnhancerRel(@RequestParam Long traceId, @RequestParam Long enhancerId){
+        traceSameUser(traceId);
         studyTraceService.removeTraceEnhancerRel(traceId, enhancerId);
     }
 

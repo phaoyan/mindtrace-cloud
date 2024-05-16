@@ -15,6 +15,7 @@ import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
 import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
+import pers.juumii.service.TraceGroupService;
 import pers.juumii.utils.*;
 
 import java.util.*;
@@ -27,17 +28,20 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     private final StudyTraceMapper studyTraceMapper;
     private final TraceKnodeRelMapper traceKnodeRelMapper;
     private final TraceEnhancerRelMapper traceEnhancerRelMapper;
+    private final TraceGroupService traceGroupService;
 
     @Autowired
     public StudyTraceServiceImpl(
             Neo4jUtils neo4j,
             StudyTraceMapper studyTraceMapper,
             TraceKnodeRelMapper traceKnodeRelMapper,
-            TraceEnhancerRelMapper traceEnhancerRelMapper) {
+            TraceEnhancerRelMapper traceEnhancerRelMapper,
+            TraceGroupService traceGroupService) {
         this.neo4j = neo4j;
         this.studyTraceMapper = studyTraceMapper;
         this.traceKnodeRelMapper = traceKnodeRelMapper;
         this.traceEnhancerRelMapper = traceEnhancerRelMapper;
+        this.traceGroupService = traceGroupService;
     }
 
     @Override
@@ -82,6 +86,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         List<Long> traceEnhancerRels = getTraceEnhancerRels(traceId);
         traceKnodeRels.forEach(knodeId->removeTraceKnodeRel(traceId, knodeId));
         traceEnhancerRels.forEach(enhancerId->removeTraceEnhancerRel(traceId, enhancerId));
+        traceGroupService.remove(traceId);
         studyTraceMapper.deleteById(traceId);
     }
 

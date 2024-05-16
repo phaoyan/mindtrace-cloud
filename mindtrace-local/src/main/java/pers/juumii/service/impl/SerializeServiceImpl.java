@@ -12,6 +12,7 @@ import pers.juumii.data.KnodeInfoCollection;
 import pers.juumii.dto.enhancer.EnhancerDTO;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.KnodeDTO;
+import pers.juumii.dto.enhancer.EnhancerGroupDTO;
 import pers.juumii.dto.enhancer.ResourceDTO;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.feign.CoreClient;
@@ -149,15 +150,39 @@ public class SerializeServiceImpl implements SerializeService {
             throw new RuntimeException("请求超时");
         threadPool.shutdown();
 
-        String markdown = markdownBuilder.buildMarkdownInLayer(titles, contents, layerMap);
+        return wrapResult(offsprings.get(0).getTitle(), markdownBuilder.buildMarkdownInLayer(titles, contents, layerMap));
+    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        String title = new String(offsprings.get(0).getTitle().getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
-        headers.setContentDispositionFormData("attachment", title + ".md");
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(markdown.getBytes(StandardCharsets.UTF_8));
+    @Override
+    public ResponseEntity<byte[]> serializeEnhancerContent(Long enhancerId) {
+        EnhancerDTO enhancer = enhancerClient.getEnhancerById(enhancerId);
+        return wrapResult(enhancer.getTitle(), getEnhancerMarkdown(enhancerId));
+    }
+
+    @Override
+    public ResponseEntity<byte[]> serializeEnhancerContents(String title, List<Long> enhancerIds) {
+        StringBuilder res = new StringBuilder();
+        List<String> contents = enhancerIds.stream().map(this::getEnhancerMarkdown).toList();
+        contents.forEach(content->res.append(content).append("\n"));
+        return wrapResult(title, res.toString());
+    }
+
+    @Override
+    public ResponseEntity<byte[]> serializeEnhancerGroupContent(Long groupId) {
+        EnhancerGroupDTO group = enhancerClient.getEnhancerGroupById(groupId);
+        List<Long> enhancerIds = enhancerClient.getRelatedEnhancerIdsByGroupId(groupId).stream().map(Convert::toLong).toList();
+        return serializeEnhancerContents(group.getTitle(), enhancerIds);
+    }
+
+    @Override
+    public String getEnhancerMarkdown(Long enhancerId) {
+        StringBuilder res = new StringBuilder();
+        EnhancerDTO enhancer = enhancerClient.getEnhancerById(enhancerId);
+        List<ResourceDTO> resources = enhancerClient.getResourcesOfEnhancer(enhancerId);
+        List<String> contents = resources.stream().map(markdownBuilder::buildResourceContent).toList();
+        res.append("### ").append(enhancer.getTitle()).append("\n");
+        contents.forEach(content->res.append(content).append("\n"));
+        return res.toString();
     }
 
     private List<Long> getLayerMap(List<KnodeDTO> sorted) {
@@ -214,5 +239,15 @@ public class SerializeServiceImpl implements SerializeService {
         }
 
         return res;
+    }
+
+    private ResponseEntity<byte[]> wrapResult(String title, String content){
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        title = new String(title.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
+        headers.setContentDispositionFormData("attachment", title + ".md");
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(content.getBytes(StandardCharsets.UTF_8));
     }
 }

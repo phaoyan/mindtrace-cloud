@@ -34,6 +34,16 @@ public class SerializeController {
         return serializeService.serializeContentsToMarkdown(knodeId);
     }
 
+    @GetMapping("/enhancer/{enhancerId}/content")
+    public ResponseEntity<byte[]> serializeEnhancerContent(@PathVariable Long enhancerId){
+        return serializeService.serializeEnhancerContent(enhancerId);
+    }
+
+    @GetMapping("/enhancer-group/{groupId}/content")
+    public ResponseEntity<byte[]> serializeEnhancerGroupContent(@PathVariable Long groupId){
+        return serializeService.serializeEnhancerGroupContent(groupId);
+    }
+
 
 
 }

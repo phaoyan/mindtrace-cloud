@@ -23,11 +23,7 @@ public class Enhancer {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     private String title;
-    @TableField(exist = false)
-    private List<Resource> resources;
     private Boolean isQuiz;
-    @TableField(exist = false)
-    private List<Label> labels;
     private LocalDateTime createTime;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long createBy;
@@ -39,8 +35,6 @@ public class Enhancer {
         res.setId(IdUtil.getSnowflakeNextId());
         res.setCreateTime(LocalDateTime.now());
         res.setCreateBy(userId);
-        res.setResources(new ArrayList<>());
-        res.setLabels(new ArrayList<>());
         res.setIsQuiz(true);
         return res;
     }
@@ -54,10 +48,6 @@ public class Enhancer {
         res.setIsQuiz(enhancer.getIsQuiz());
         res.setCreateBy(enhancer.getCreateBy().toString());
         res.setCreateTime(enhancer.getCreateTime().format(TimeUtils.DEFAULT_DATE_TIME_FORMATTER));
-        res.setResourceIds(
-            SpringUtils.getBean(ResourceService.class)
-            .getResourcesOfEnhancer(enhancer.getId()).stream()
-            .map(resource->resource.getId().toString()).toList());
         return res;
     }
 
