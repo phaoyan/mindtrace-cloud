@@ -14,7 +14,6 @@ import java.util.List;
 public class CurrentStudy {
 
     private StudyTrace trace;
-    private List<Long> knodeIds;
     private List<Long> enhancerIds;
     private List<String> continueList;
     private List<String> pauseList;
@@ -36,7 +35,6 @@ public class CurrentStudy {
     public static CurrentStudy prototype(StudyTrace trace) {
         CurrentStudy res = new CurrentStudy();
         res.setTrace(trace);
-        res.setKnodeIds(new ArrayList<>());
         res.setEnhancerIds(new ArrayList<>());
         res.setContinueList(new ArrayList<>());
         res.setPauseList(new ArrayList<>());
@@ -48,7 +46,6 @@ public class CurrentStudy {
         if(current == null) return null;
         CurrentStudyDTO res = new CurrentStudyDTO();
         res.setTrace(StudyTrace.transfer(current.getTrace()));
-        res.setKnodeIds(new ArrayList<>(current.getKnodeIds().stream().map(Object::toString).toList()));
         res.setEnhancerIds(new ArrayList<>(current.getEnhancerIds().stream().map(Object::toString).toList()));
         res.setContinueList(current.getContinueList());
         res.setPauseList(current.getPauseList());
@@ -60,7 +57,6 @@ public class CurrentStudy {
         if(dto == null) return null;
         CurrentStudy res = new CurrentStudy();
         res.setTrace(StudyTrace.transfer(dto.getTrace()));
-        res.setKnodeIds(new ArrayList<>(dto.getKnodeIds().stream().map(Convert::toLong).toList()));
         res.setEnhancerIds(new ArrayList<>(dto.getEnhancerIds().stream().map(Convert::toLong).toList()));
         res.setContinueList(dto.getContinueList());
         res.setPauseList(dto.getPauseList());

@@ -20,25 +20,13 @@ public interface StudyTraceService {
 
     void removeStudyTrace(Long traceId);
 
-    void addTraceKnodeRel(Long traceId, Long knodeId);
+    List<Long> getKnodeIdsByTraceId(Long traceId);
 
-    List<Long> getTraceKnodeRels(Long traceId);
+    List<Long> getEnhancerIdsByTraceId(Long traceId);
 
-    List<IdPair> getTraceKnodeRels(List<Long> traceIds);
-
-    List<Long> getTraceEnhancerRels(Long traceId);
-
-    List<IdPair> getTraceEnhancerRels(List<Long> traceIds);
-
-    Boolean checkTraceKnodeRel(Long traceId, Long knodeId);
-
-    List<Long> getStudyTracesOfKnode(Long knodeId);
-
-    void removeTraceKnodeRel(Long traceId, Long knodeId);
+    List<IdPair> getEnhancerIdsByTraceId(List<Long> traceIds);
 
     List<StudyTrace> getStudyTracesOfKnodeIncludingBeneath(Long knodeId);
-
-    List<StudyTrace> getStudyTracesOfKnodeIncludingBeneathBySlice(Long knodeId, String moment, Integer count);
 
     List<StudyTrace> getStudyTracesOfKnodeBatch(List<Long> knodeIds);
 

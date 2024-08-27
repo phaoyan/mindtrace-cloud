@@ -39,18 +39,18 @@ public class StartingScripts implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        List<EnhancerKnodeRel> rels = ekrMapper.selectList(null);
-        for(EnhancerKnodeRel rel: rels){
-            Long enhancerId = rel.getEnhancerId();
-            Long knodeId = rel.getKnodeId();
-            if(Objects.isNull(coreClient.check(knodeId))) continue;
-            Cypher query = Cypher.cypher("""
-                    MATCH (knode: Knode {id:$knodeId})-[r:KNODE_TO_ENHANCER]->(enhancer: Enhancer {id: $enhancerId})
-                    RETURN r
-                    """, Map.of("knodeId", knodeId, "enhancerId", enhancerId));
-            if(neo4j.session(query, (record)->record.get(0)).isEmpty())
-                enhancerService.addKnodeEnhancerRel(knodeId, enhancerId);
-
-        }
+//        List<EnhancerKnodeRel> rels = ekrMapper.selectList(null);
+//        for(EnhancerKnodeRel rel: rels){
+//            Long enhancerId = rel.getEnhancerId();
+//            Long knodeId = rel.getKnodeId();
+//            if(Objects.isNull(coreClient.check(knodeId))) continue;
+//            Cypher query = Cypher.cypher("""
+//                    MATCH (knode: Knode {id:$knodeId})-[r:KNODE_TO_ENHANCER]->(enhancer: Enhancer {id: $enhancerId})
+//                    RETURN r
+//                    """, Map.of("knodeId", knodeId, "enhancerId", enhancerId));
+//            if(neo4j.session(query, (record)->record.get(0)).isEmpty())
+//                enhancerService.addKnodeEnhancerRel(knodeId, enhancerId);
+//
+//        }
     }
 }

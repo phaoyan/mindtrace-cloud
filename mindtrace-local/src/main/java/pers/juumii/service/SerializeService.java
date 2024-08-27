@@ -5,8 +5,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 public interface SerializeService {
-    ResponseEntity<byte[]> serializeAll(Long knodeId);
-
     ResponseEntity<byte[]> serializeContentsToMarkdown(Long knodeId);
 
     ResponseEntity<byte[]> serializeEnhancerContent(Long enhancerId);

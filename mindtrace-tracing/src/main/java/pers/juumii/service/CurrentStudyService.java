@@ -24,10 +24,6 @@ public interface CurrentStudyService {
 
     CurrentStudy editCurrentStudyTitle(String title);
 
-    List<Long> addKnodeId(Long knodeId);
-
-    void removeKnodeId(Long knodeId);
-
     List<Long> addTraceEnhancerRel(Long enhancerId);
 
     void removeTraceEnhancerRel(Long enhancerId);

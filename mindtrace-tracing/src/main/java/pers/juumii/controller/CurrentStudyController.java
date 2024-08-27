@@ -68,16 +68,6 @@ public class CurrentStudyController {
         return CurrentStudy.transfer(currentStudyService.continueCurrentStudy());
     }
 
-    @PostMapping("/study/current/knode/{knodeId}")
-    public List<String> addTraceCoverage(@PathVariable Long knodeId){
-        return currentStudyService.addKnodeId(knodeId).stream().map(Object::toString).toList();
-    }
-
-    @DeleteMapping("/study/current/knode/{knodeId}")
-    public void removeTraceCoverage(@PathVariable Long knodeId){
-        currentStudyService.removeKnodeId(knodeId);
-    }
-
     @PostMapping("/study/current/enhancer/{enhancerId}")
     public List<String> addTraceEnhancerRel(@PathVariable Long enhancerId){
         return currentStudyService.addTraceEnhancerRel(enhancerId).stream().map(Object::toString).toList();

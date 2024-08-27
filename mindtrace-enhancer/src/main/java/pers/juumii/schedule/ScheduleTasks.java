@@ -28,7 +28,7 @@ public class ScheduleTasks {
     }
 
 
-    @Scheduled(cron = "0 4 0 * * ?")
+    @Scheduled(cron = "0 0 4 * * ?")
     @PostMapping("/schedule/vector")
     public void updateResourceVectorBase() {
         String key = RedisKeys.RESOURCE_VECTOR_UPDATE_LIST;
@@ -43,4 +43,5 @@ public class ScheduleTasks {
                 .forEach(json->vectorClient.addVector(JSONUtil.toJsonStr(json)));
         redis.opsForValue().set(key, "[]");
     }
+
 }

@@ -3,16 +3,13 @@ package pers.juumii.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pers.juumii.data.persistent.MilestoneTraceRel;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.temp.CurrentStudy;
 import pers.juumii.dto.tracing.CurrentStudyDTO;
-import pers.juumii.mapper.MilestoneTraceRelMapper;
 import pers.juumii.service.CurrentStudyService;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.utils.TimeUtils;
@@ -25,16 +22,13 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
 
     private final StringRedisTemplate redis;
     private final StudyTraceService studyTraceService;
-    private final MilestoneTraceRelMapper milestoneTraceRelMapper;
 
     @Autowired
     public CurrentStudyServiceImpl(
             StringRedisTemplate redis,
-            StudyTraceService studyTraceService,
-            MilestoneTraceRelMapper milestoneTraceRelMapper) {
+            StudyTraceService studyTraceService) {
         this.redis = redis;
         this.studyTraceService = studyTraceService;
-        this.milestoneTraceRelMapper = milestoneTraceRelMapper;
     }
 
     private String key(){
@@ -73,8 +67,6 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
             currentStudy.getTrace().setEndTime(LocalDateTime.now());
         currentStudy.getTrace().setSeconds(currentStudy.duration());
         studyTraceService.insertStudyTrace(StudyTrace.transfer(currentStudy.getTrace()));
-        for(Long knodeId: currentStudy.getKnodeIds())
-            studyTraceService.addTraceKnodeRel(currentStudy.getTrace().getId(), knodeId);
         for(Long enhancerId: currentStudy.getEnhancerIds())
             studyTraceService.addTraceEnhancerRel(currentStudy.getTrace().getId(), enhancerId);
         removeCurrentStudy();
@@ -118,14 +110,9 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         currentStudy.getPauseList().add(TimeUtils.format(trace.getEndTime()));
         currentStudy.getContinueList().add(TimeUtils.format(LocalDateTime.now()));
         currentStudy.getTrace().setEndTime(null);
-        List<Long> traceKnodeIds = studyTraceService.getTraceKnodeRels(trace.getId());
-        List<Long> traceEnhancerIds = studyTraceService.getTraceEnhancerRels(trace.getId());
-        currentStudy.setKnodeIds(traceKnodeIds);
+        List<Long> traceEnhancerIds = studyTraceService.getEnhancerIdsByTraceId(trace.getId());
         currentStudy.setEnhancerIds(traceEnhancerIds);
         studyTraceService.removeStudyTrace(trace.getId());
-        LambdaUpdateWrapper<MilestoneTraceRel> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(MilestoneTraceRel::getTraceId, traceId);
-        milestoneTraceRelMapper.delete(wrapper);
         currentStudy.getTrace().setId(IdUtil.getSnowflakeNextId());
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
@@ -153,21 +140,6 @@ public class CurrentStudyServiceImpl implements CurrentStudyService {
         currentStudy.setDurationOffset(offset);
         redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
         return currentStudy;
-    }
-
-    @Override
-    public List<Long> addKnodeId(Long knodeId) {
-        CurrentStudy currentStudy = getCurrentStudy();
-        currentStudy.getKnodeIds().add(knodeId);
-        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
-        return currentStudy.getKnodeIds();
-    }
-
-    @Override
-    public void removeKnodeId(Long knodeId) {
-        CurrentStudy currentStudy = getCurrentStudy();
-        currentStudy.getKnodeIds().removeIf(_knodeId->_knodeId.equals(knodeId));
-        redis.opsForValue().set(key(),JSONUtil.toJsonStr(CurrentStudy.transfer(currentStudy)));
     }
 
     @Override

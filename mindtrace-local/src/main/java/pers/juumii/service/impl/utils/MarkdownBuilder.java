@@ -75,9 +75,14 @@ public class MarkdownBuilder {
         try {
             byte[] info = enhancerClient.getDataFromResource(Convert.toLong(resource.getId()), "data.json");
             String remark = JSONUtil.parseObj(StrUtil.str(info, StandardCharsets.UTF_8)).getStr("remark");
+            String description = JSONUtil.parseObj(StrUtil.str(info, StandardCharsets.UTF_8)).getStr("description");
             return """
-                > [%s](%s)"""
-                    .formatted(remark, enhancerClient.getCosResourceUrl(Convert.toLong(resource.getId()), "data"));
+                > [%s](%s)
+                > %s"""
+                    .formatted(
+                            remark,
+                            enhancerClient.getCosResourceUrl(Convert.toLong(resource.getId()), "data"),
+                            description);
         }catch (Exception e){
             return """
                 > [%s](%s)"""

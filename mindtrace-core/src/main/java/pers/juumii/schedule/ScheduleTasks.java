@@ -25,7 +25,7 @@ public class ScheduleTasks {
         this.redis = redis;
     }
 
-    @Scheduled(cron = "0 4 0 * * ?")
+    @Scheduled(cron = "0 0 4 * * ?")
     @PostMapping("/schedule/vector")
     public void updateKnodeVectorBase() {
         String key = RedisKeys.VECTOR_UPDATE_LIST;

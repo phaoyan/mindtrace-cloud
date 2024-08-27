@@ -8,12 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pers.juumii.data.persistent.StudyTrace;
 import pers.juumii.data.persistent.TraceEnhancerRel;
-import pers.juumii.data.persistent.TraceKnodeRel;
 import pers.juumii.dto.IdPair;
 import pers.juumii.dto.tracing.StudyTraceDTO;
 import pers.juumii.mapper.StudyTraceMapper;
 import pers.juumii.mapper.TraceEnhancerRelMapper;
-import pers.juumii.mapper.TraceKnodeRelMapper;
 import pers.juumii.service.StudyTraceService;
 import pers.juumii.service.TraceGroupService;
 import pers.juumii.utils.*;
@@ -26,7 +24,6 @@ public class StudyTraceServiceImpl implements StudyTraceService {
 
     private final Neo4jUtils neo4j;
     private final StudyTraceMapper studyTraceMapper;
-    private final TraceKnodeRelMapper traceKnodeRelMapper;
     private final TraceEnhancerRelMapper traceEnhancerRelMapper;
     private final TraceGroupService traceGroupService;
 
@@ -34,12 +31,10 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     public StudyTraceServiceImpl(
             Neo4jUtils neo4j,
             StudyTraceMapper studyTraceMapper,
-            TraceKnodeRelMapper traceKnodeRelMapper,
             TraceEnhancerRelMapper traceEnhancerRelMapper,
             TraceGroupService traceGroupService) {
         this.neo4j = neo4j;
         this.studyTraceMapper = studyTraceMapper;
-        this.traceKnodeRelMapper = traceKnodeRelMapper;
         this.traceEnhancerRelMapper = traceEnhancerRelMapper;
         this.traceGroupService = traceGroupService;
     }
@@ -82,51 +77,27 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Override
     @Transactional
     public void removeStudyTrace(Long traceId) {
-        List<Long> traceKnodeRels = getTraceKnodeRels(traceId);
-        List<Long> traceEnhancerRels = getTraceEnhancerRels(traceId);
-        traceKnodeRels.forEach(knodeId->removeTraceKnodeRel(traceId, knodeId));
+        List<Long> traceEnhancerRels = getEnhancerIdsByTraceId(traceId);
         traceEnhancerRels.forEach(enhancerId->removeTraceEnhancerRel(traceId, enhancerId));
         traceGroupService.remove(traceId);
         studyTraceMapper.deleteById(traceId);
     }
 
     @Override
-    @Transactional
-    public void addTraceKnodeRel(Long traceId, Long knodeId) {
-        if(!checkTraceKnodeRel(traceId, knodeId))
-            traceKnodeRelMapper.insert(TraceKnodeRel.prototype(traceId, knodeId));
+    public List<Long> getKnodeIdsByTraceId(Long traceId) {
         Cypher cypher = Cypher.cypher("""
-                MERGE (trace: StudyTrace{id: $traceId})
-                WITH trace
-                MATCH (knode: Knode {id: $knodeId})
-                MERGE (knode)-[:HAS_TRACE]->(trace)
-                MERGE (trace)-[:HAS_KNODE]->(knode)
-                """, Map.of("traceId", traceId, "knodeId", knodeId));
-        neo4j.transaction(List.of(cypher));
+                MATCH (trace:StudyTrace {id: $traceId})<-[:ENHANCER_TO_TRACE]-(enhancer: Enhancer)
+                MATCH (enhancer)<-[:KNODE_TO_ENHANCER]-(knode:Knode)
+                RETURN knode.id
+                """, Map.of("traceId", traceId));
+        return new HashSet<>(neo4j.session(cypher, (record) ->
+                        record.get(0).isNull() ? null :
+                                record.get(0).asLong()))
+                        .stream().toList();
     }
 
     @Override
-    public List<Long> getTraceKnodeRels(Long traceId) {
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceKnodeRel::getTraceId, traceId);
-        return traceKnodeRelMapper.selectList(wrapper)
-                .stream().map(TraceKnodeRel::getKnodeId)
-                .collect(Collectors.toSet()).stream()
-                .toList();
-    }
-
-    @Override
-    public List<IdPair> getTraceKnodeRels(List<Long> traceIds) {
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(TraceKnodeRel::getTraceId, traceIds);
-        return traceKnodeRelMapper.selectList(wrapper).stream()
-                .map(rel->IdPair.of(rel.getTraceId(), rel.getKnodeId()))
-                .collect(Collectors.toSet()).stream()
-                .toList();
-    }
-
-    @Override
-    public List<Long> getTraceEnhancerRels(Long traceId) {
+    public List<Long> getEnhancerIdsByTraceId(Long traceId) {
         LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TraceEnhancerRel::getTraceId, traceId);
         return traceEnhancerRelMapper.selectList(wrapper)
@@ -136,7 +107,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
-    public List<IdPair> getTraceEnhancerRels(List<Long> traceIds) {
+    public List<IdPair> getEnhancerIdsByTraceId(List<Long> traceIds) {
         LambdaQueryWrapper<TraceEnhancerRel> wrapper = new LambdaQueryWrapper<>();
         if(traceIds.isEmpty()) return new ArrayList<>();
         wrapper.in(TraceEnhancerRel::getTraceId, traceIds);
@@ -147,44 +118,14 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     }
 
     @Override
-    public Boolean checkTraceKnodeRel(Long traceId, Long knodeId) {
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceKnodeRel::getTraceId, traceId).eq(TraceKnodeRel::getKnodeId, knodeId);
-        return traceKnodeRelMapper.exists(wrapper);
-    }
-
-    @Override
-    public List<Long> getStudyTracesOfKnode(Long knodeId) {
-        LambdaQueryWrapper<TraceKnodeRel> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TraceKnodeRel::getKnodeId, knodeId);
-        return traceKnodeRelMapper.selectList(wrapper)
-                .stream().map(TraceKnodeRel::getTraceId)
-                .toList();
-    }
-
-    @Override
-    @Transactional
-    public void removeTraceKnodeRel(Long traceId, Long knodeId) {
-        Cypher cypher = Cypher.cypher("""
-                MATCH (knode: Knode {id: $knodeId})-[r1:HAS_TRACE]->(trace: StudyTrace {id: $traceId}),
-                      (trace: StudyTrace {id: $traceId})-[r2:HAS_KNODE]->(knode: Knode {id: $knodeId})
-                DELETE r1, r2
-                """, Map.of("traceId", traceId, "knodeId", knodeId));
-        neo4j.transaction(List.of(cypher));
-        LambdaUpdateWrapper<TraceKnodeRel> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(TraceKnodeRel::getKnodeId, knodeId)
-                .eq(TraceKnodeRel::getTraceId, traceId);
-        traceKnodeRelMapper.delete(wrapper);
-    }
-
-    @Override
     public List<StudyTrace> getStudyTracesOfKnodeIncludingBeneath(Long knodeId) {
         Cypher cypher = Cypher.cypher("""
                 MATCH (n:Knode {id: $knodeId})
                 CALL apoc.path.subgraphAll(n, {relationshipFilter: 'BRANCH_TO>'}) YIELD nodes
                 WITH nodes as all
                 UNWIND all AS knode
-                MATCH (knode)-[:HAS_TRACE]->(trace)
+                MATCH (knode)-[:KNODE_TO_ENHANCER]->(enhancer)
+                MATCH (enhancer)-[:ENHANCER_TO_TRACE]->(trace)
                 RETURN trace.id
                 """, Map.of("knodeId", knodeId));
         List<Long> traceIds =
@@ -194,16 +135,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
                 .stream().toList();
         if(traceIds.isEmpty()) return new ArrayList<>();
         return studyTraceMapper.selectBatchIds(traceIds);
-    }
 
-    @Override
-    public List<StudyTrace> getStudyTracesOfKnodeIncludingBeneathBySlice(Long knodeId, String moment, Integer count) {
-        List<StudyTrace> traces = getStudyTracesOfKnodeIncludingBeneath(knodeId);
-        traces.sort((a, b)->b.getStartTime().compareTo(a.getStartTime()));
-        for(int i = 0; i < traces.size(); i ++)
-            if(traces.get(i).getStartTime().isBefore(TimeUtils.parse(moment)))
-                return traces.subList(i, Math.min(i + count, traces.size()));
-        return new ArrayList<>();
     }
 
     @Override
@@ -211,8 +143,9 @@ public class StudyTraceServiceImpl implements StudyTraceService {
         Cypher cypher = Cypher.cypher("""
                 WITH $knodeIds AS knodeIds
                 UNWIND knodeIds AS knodeId
-                MATCH (knode: Knode {id: knodeId})-[:HAS_TRACE]->(tr: StudyTrace)
-                RETURN tr.id
+                MATCH (knode: Knode {id: knodeId})-[:KNODE_TO_ENHANCER]->(enhancer: Enhancer)
+                MATCH (enhancer)-[:ENHANCER_TO_TRACE]->(trace)
+                RETURN trace.id
                 """, Map.of("knodeIds", knodeIds));
         List<Long> traceIds =
                 new HashSet<>(neo4j.session(cypher, (record) ->
@@ -265,7 +198,8 @@ public class StudyTraceServiceImpl implements StudyTraceService {
     @Override
     @Transactional
     public void addTraceEnhancerRel(Long traceId, Long enhancerId) {
-        Cypher cypher = Cypher.cypher("""
+        if(checkTraceEnhancerRel(traceId, enhancerId)) return;
+            Cypher cypher = Cypher.cypher("""
                 MERGE (trace: StudyTrace{id: $traceId})
                 WITH trace
                 MATCH (enhancer: Enhancer {id: $enhancerId})
@@ -273,8 +207,7 @@ public class StudyTraceServiceImpl implements StudyTraceService {
                 MERGE (trace)-[:TRACE_TO_ENHANCER]->(enhancer)
                 """, Map.of("traceId", traceId, "enhancerId", enhancerId));
         neo4j.transaction(List.of(cypher));
-        if(!checkTraceEnhancerRel(traceId, enhancerId))
-            traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceId, enhancerId));
+        traceEnhancerRelMapper.insert(TraceEnhancerRel.prototype(traceId, enhancerId));
     }
 
     private Boolean checkTraceEnhancerRel(Long traceId, Long enhancerId) {

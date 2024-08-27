@@ -102,7 +102,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
         }
         Map<Long, List<Long>> ancestorSeriesList = coreClient.ancestorIdsBatch(offspringIds);
         for(StudyTrace trace: traces){
-            Set<Long> knodeIds = studyTraceService.getTraceKnodeRels(trace.getId()).stream()
+            Set<Long> knodeIds = studyTraceService.getKnodeIdsByTraceId(trace.getId()).stream()
                     .filter(ancestorSeriesList::containsKey)
                     .collect(Collectors.toSet());
             Set<Long> relatedKnodeIds = knodeIds.stream()
@@ -150,7 +150,7 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
                 studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId)
                 .stream().map(StudyTrace::getId)
                 .toList();
-        List<IdPair> rels = studyTraceService.getTraceEnhancerRels(traceIds);
+        List<IdPair> rels = studyTraceService.getEnhancerIdsByTraceId(traceIds);
         Map<String, List<IdPair>> relMap = rels.stream().collect(Collectors.groupingBy(IdPair::getRightId));
         for(String enhancerId: relMap.keySet()){
             List<StudyTrace> traces = relMap.get(enhancerId).stream()
@@ -202,8 +202,9 @@ public class StudyTraceQueryServiceImpl implements StudyTraceQueryService {
     @Override
     public Map<String, Long> studyTimeAccumulation(Long knodeId) {
         HashMap<String, Long> res = new HashMap<>();
-        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId);
-        traces.sort(Comparator.comparing(StudyTrace::getStartTime));
+        List<StudyTrace> traces = studyTraceService.getStudyTracesOfKnodeIncludingBeneath(knodeId).stream()
+                .sorted(Comparator.comparing(StudyTrace::getStartTime))
+                .toList();
         long curDuration = 0L;
         for(StudyTrace tr: traces){
             curDuration += tr.getSeconds();
