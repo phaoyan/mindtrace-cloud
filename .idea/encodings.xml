@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/mindtrace-chat-java/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-core/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-core/src/main/java/pers/juumii/data/Knode.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mindtrace-data/src/main/java" charset="UTF-8" />
@@ -16,6 +17,7 @@
     <file url="file://$PROJECT_DIR$/mindtrace-tracing/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/../../../../tools/m2/repository/org/springframework/boot/spring-boot-starter-parent/3.3.4/src/main/resources" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

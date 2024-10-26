@@ -36,18 +36,18 @@ public class StartingScripts implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        List<TraceEnhancerRel> teRels = terMapper.selectList(null);
-        for(TraceEnhancerRel rel: teRels){
-            Long enhancerId = rel.getEnhancerId();
-            Long traceId = rel.getTraceId();
-            if(Objects.isNull(enhancerClient.getEnhancerById(enhancerId))) continue;
-            Cypher cypher = Cypher.cypher("""
-                    MATCH (trace: StudyTrace {id: $traceId})-[r:TRACE_TO_ENHANCER]->(enhancer: Enhancer {id: $enhancerId})
-                    RETURN r
-                    """, Map.of("traceId", traceId, "enhancerId", enhancerId));
-            if(neo4j.session(cypher, (record)->record.get(0)).isEmpty())
-                studyTraceService.addTraceEnhancerRel(traceId, enhancerId);
-        }
+//        List<TraceEnhancerRel> teRels = terMapper.selectList(null);
+//        for(TraceEnhancerRel rel: teRels){
+//            Long enhancerId = rel.getEnhancerId();
+//            Long traceId = rel.getTraceId();
+//            if(Objects.isNull(enhancerClient.getEnhancerById(enhancerId))) continue;
+//            Cypher cypher = Cypher.cypher("""
+//                    MATCH (trace: StudyTrace {id: $traceId})-[r:TRACE_TO_ENHANCER]->(enhancer: Enhancer {id: $enhancerId})
+//                    RETURN r
+//                    """, Map.of("traceId", traceId, "enhancerId", enhancerId));
+//            if(neo4j.session(cypher, (record)->record.get(0)).isEmpty())
+//                studyTraceService.addTraceEnhancerRel(traceId, enhancerId);
+//        }
 
     }
 }

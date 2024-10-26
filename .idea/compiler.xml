@@ -7,22 +7,24 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="mindtrace-data" />
-        <module name="mindtrace-enhancer" />
         <module name="mindtrace-gateway" />
         <module name="mindtrace-local" />
-        <module name="mindtrace-share" />
         <module name="mindtrace-path-optimizer" />
+        <module name="mindtrace-core" />
+        <module name="mindtrace-chat-java" />
+        <module name="mindtrace-hub" />
+        <module name="mindtrace-mq" />
+        <module name="mindtrace-data" />
+        <module name="mindtrace-enhancer" />
+        <module name="mindtrace-share" />
         <module name="mindtrace-tracing" />
         <module name="mindtrace-recommend" />
         <module name="mindtrace-mastery" />
-        <module name="mindtrace-core" />
-        <module name="mindtrace-hub" />
-        <module name="mindtrace-mq" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="mindtrace-analyzer" target="18" />
+      <module name="mindtrace-chat-java" target="17" />
       <module name="mindtrace-security" target="18" />
       <module name="mindtrace-trace" target="18" />
     </bytecodeTargetLevel>
@@ -30,6 +32,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="mindtrace-analyzer" options="-parameters" />
+      <module name="mindtrace-chat-java" options="-parameters" />
       <module name="mindtrace-cloud" options="-parameters" />
       <module name="mindtrace-core" options="-parameters" />
       <module name="mindtrace-data" options="-parameters" />

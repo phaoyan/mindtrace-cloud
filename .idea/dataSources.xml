@@ -106,5 +106,12 @@
       <jdbc-url>jdbc:mysql://111.230.211.24:3306/mindtrace_vector</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="sakila@localhost" uuid="148a1c4b-0d9e-4330-814b-3d6c597a5c42">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://localhost:3306/sakila</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
